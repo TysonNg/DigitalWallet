@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PersistenceUnitSettings">
+    <persistence-units>
+      <persistence-unit moduleName="digitalwallet-infrastructure" name="digitalwallet-infrastructure" framework="JPA" ormUnit="digitalwallet-infrastructure:digitalwallet-infrastructure" defaultDataSourceId="4bb1459c-aaf8-4c92-a14f-edc74a492a63" />
+      <persistence-unit moduleName="digitalwallet-application" name="digitalwallet-application" framework="JPA" ormUnit="digitalwallet-application:digitalwallet-application" defaultDataSourceId="4bb1459c-aaf8-4c92-a14f-edc74a492a63" />
+    </persistence-units>
+  </component>
+</project>

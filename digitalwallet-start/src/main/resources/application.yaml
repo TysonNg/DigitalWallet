@@ -1,0 +1,14 @@
+spring:
+  application:
+    name:  digital-wallet
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    database: POSTGRESQL
+  datasource:
+    url: jdbc:postgresql://localhost:5432/digital_wallet
+    username: admin
+    password: admin123
+server:
+  port: 3006
