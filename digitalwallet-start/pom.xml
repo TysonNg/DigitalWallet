@@ -26,6 +26,12 @@
 
         <dependency>
             <groupId>com.tyson.digitalwallet</groupId>
+            <artifactId>digitalwallet-application</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.tyson.digitalwallet</groupId>
             <artifactId>digitalwallet-infrastructure</artifactId>
             <version>${project.version}</version>
         </dependency>

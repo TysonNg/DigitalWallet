@@ -29,6 +29,7 @@
                 <artifactId>digitalwallet-start</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -41,4 +42,5 @@
             <scope>compile</scope>
         </dependency>
     </dependencies>
+
 </project>

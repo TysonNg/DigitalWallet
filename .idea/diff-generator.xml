@@ -3,5 +3,7 @@
   <component name="DiffGenerationConfig">
     <option name="snapshotDb" value="false" />
     <option name="snapshotModelValue" value="digitalwallet-application:entityManagerFactory" />
+    <option name="sourceModelValue" value="digitalwallet-infrastructure:entityManagerFactory" />
+    <option name="targetDbValue" value="4bb1459c-aaf8-4c92-a14f-edc74a492a63__digital_wallet_public" />
   </component>
 </project>
