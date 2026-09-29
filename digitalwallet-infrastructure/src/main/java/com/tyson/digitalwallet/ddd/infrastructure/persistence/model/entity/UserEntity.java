@@ -3,6 +3,7 @@ package com.tyson.digitalwallet.ddd.infrastructure.persistence.model.entity;
 import com.tyson.digitalwallet.ddd.domain.model.enums.UserStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,6 +12,9 @@ import java.util.UUID;
 @Entity
 @Table(name = "users")
 public class UserEntity {
+
+    public UserEntity() {
+    }
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)
@@ -36,21 +40,13 @@ public class UserEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToOne(mappedBy = "user")
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private WalletEntity wallet;
 
-    public UserEntity() {
-    }
-
-    public UserEntity(UUID id, String fullName, String email, String phoneNumber, LocalDate dob, UserStatus status, LocalDateTime createdAt) {
-        this.id = id;
-        this.fullName = fullName;
-        this.email = email;
-        this.phoneNumber = phoneNumber;
-        this.dob = dob;
-        this.status = status;
-        this.createdAt = createdAt;
-    }
 
     public UUID getId() {
         return id;
@@ -74,6 +70,18 @@ public class UserEntity {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public WalletEntity getWallet() {
+        return wallet;
+    }
+
+    public void setWallet(WalletEntity wallet) {
+        this.wallet = wallet;
+
+        if(wallet != null) {
+            wallet.setUser(this);
+        }
     }
 
     public String getPhoneNumber() {
@@ -106,5 +114,13 @@ public class UserEntity {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

@@ -14,8 +14,8 @@ CREATE TABLE wallets
     -- 2. Khóa ngoại trỏ sang users (chặn xóa user nếu ví vẫn còn tồn tại để bảo vệ dữ liệu tài chính)
     CONSTRAINT fk_wallets_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE RESTRICT,
 
-    -- 3. Một user chỉ được có duy nhất 1 ví cho mỗi loại tiền tệ (1 ví VND, 1 ví USD)
-    CONSTRAINT uq_wallets_user_currency UNIQUE (user_id, currency),
+    -- 3. Một user chỉ được có duy nhất 1 ví trong hệ thống
+    CONSTRAINT uq_wallets_user_id UNIQUE (user_id),
 
     -- 4. Tầng bảo vệ an toàn: Ngăn chặn số dư bị âm ngay ở tầng Database
     CONSTRAINT chk_wallets_balance CHECK (balance >= 0)

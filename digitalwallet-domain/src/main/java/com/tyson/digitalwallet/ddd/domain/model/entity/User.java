@@ -15,11 +15,13 @@ public class User {
     private String email;
     private String phoneNumber;
 
+
     private LocalDate dob;
     private UserStatus status;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    public User(UUID id, String fullName, String email, String phoneNumber, LocalDate dob, UserStatus status, LocalDateTime createdAt) {
+    public User(UUID id, String fullName, String email, String phoneNumber, LocalDate dob, UserStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
@@ -27,6 +29,7 @@ public class User {
         this.dob = dob;
         this.status = status;
         this.createdAt = createdAt;
+        this.updatedAt= updatedAt;
     }
 
     public static User create(
@@ -42,6 +45,7 @@ public class User {
                 phoneNumber,
                 dob,
                 UserStatus.ACTIVE,
+                LocalDateTime.now(),
                 LocalDateTime.now()
         );
     }
@@ -61,6 +65,7 @@ public class User {
             );
         }
         status = UserStatus.SUSPENDED;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public void activate() {
@@ -71,6 +76,7 @@ public class User {
         }
 
         status = UserStatus.ACTIVE;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public void close() {
@@ -80,6 +86,7 @@ public class User {
             );
         }
         status = UserStatus.CLOSED;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public void changeEmail(String email){
@@ -89,6 +96,7 @@ public class User {
             );
         }
         this.email = email;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public UUID getId() {
@@ -117,5 +125,9 @@ public class User {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 }

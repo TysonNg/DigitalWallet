@@ -1,4 +1,4 @@
-package com.tyson.digitalwallet.ddd.controller.dto.response;
+package com.tyson.digitalwallet.ddd.controller.dto.response.user;
 
 import com.tyson.digitalwallet.ddd.application.usecase.user.response.UserResponse;
 import com.tyson.digitalwallet.ddd.domain.model.enums.UserStatus;

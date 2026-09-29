@@ -1,4 +1,4 @@
-package com.tyson.digitalwallet.ddd.controller.dto.request;
+package com.tyson.digitalwallet.ddd.controller.dto.request.user;
 
 import com.tyson.digitalwallet.ddd.application.usecase.user.command.RegisterUserCommand;
 
