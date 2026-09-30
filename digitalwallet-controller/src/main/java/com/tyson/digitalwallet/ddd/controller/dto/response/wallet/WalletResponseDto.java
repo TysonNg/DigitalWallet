@@ -1,8 +1,6 @@
 package com.tyson.digitalwallet.ddd.controller.dto.response.wallet;
 
-import com.tyson.digitalwallet.ddd.application.usecase.user.response.UserResponse;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
-import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,17 +13,17 @@ public record WalletResponseDto(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static WalletResponseDto from(WalletResponse response) {
-        if(response == null) {
-            return null;
-        }
-
-        return new WalletResponseDto(
-                response.id(),
-                response.balance(),
-                response.currency(),
-                response.created_at(),
-                response.updated_at()
+    public WalletResponseDto(WalletResponse r) {
+        this(
+                r.id(),
+                r.balance(),
+                r.currency(),
+                r.created_at(),
+                r.updated_at()
         );
+    }
+
+    public static WalletResponseDto from(WalletResponse response) {
+        return response == null ? null : new WalletResponseDto(response);
     }
 }

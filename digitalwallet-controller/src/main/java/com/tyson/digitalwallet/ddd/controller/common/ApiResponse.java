@@ -1,49 +1,37 @@
 package com.tyson.digitalwallet.ddd.controller.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.tyson.digitalwallet.ddd.controller.enums.ErrorStatus;
 import com.tyson.digitalwallet.ddd.controller.enums.SuccessStatus;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-public class ApiResponse<T> {
-    protected int statusCode;
-    protected String message;
-    protected T data;
+import java.time.Instant;
 
-    public ApiResponse(int statusCode, String message, T data) {
-        this.statusCode = statusCode;
-        this.message = message;
-        this.data = data;
-    }
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public record ApiResponse<T>(
+        boolean success,
+        int statusCode,
+        String message,
+        T data,
+        Instant timestamp
+) {
 
-    public static <T> ApiResponse<T> success(
-            String message,
-            T data
-    ) {
-        return new ApiResponse<>(
-                SuccessStatus.SUCCESS.getCode(),
-                message,
-                data
+    public static <T> ResponseEntity<ApiResponse<T>> ok(String message, T data) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, SuccessStatus.SUCCESS.getCode(), message, data, Instant.now())
         );
     }
 
-    public static <T> ApiResponse<T> created(
-            String message,
-            T data
-    ) {
-        return new ApiResponse<>(
-                SuccessStatus.CREATED.getCode(),
-                message,
-                data
+    public static <T> ResponseEntity<ApiResponse<T>> created(String message, T data) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ApiResponse<>(true, SuccessStatus.CREATED.getCode(), message, data, Instant.now())
         );
     }
 
-   public static ApiResponse<Void> error(
-           int code,
-           String message
-   ) {
-        return new ApiResponse<>(
-                code,
-                message,
-                null
+    public static ResponseEntity<ApiResponse<Void>> error(ErrorStatus status, String message) {
+        return ResponseEntity.status(status.getCode()).body(
+                new ApiResponse<>(false, status.getCode(), message, null, Instant.now())
         );
-   }
+    }
 }

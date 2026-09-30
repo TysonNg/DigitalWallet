@@ -4,10 +4,10 @@ import com.tyson.digitalwallet.ddd.application.usecase.user.ChangeEmailUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.user.GetUserUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.user.RegisterUserUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.user.response.UserResponse;
+import com.tyson.digitalwallet.ddd.controller.common.ApiResponse;
 import com.tyson.digitalwallet.ddd.controller.dto.request.user.ChangeEmailUserRequestDto;
 import com.tyson.digitalwallet.ddd.controller.dto.request.user.RegisterUserRequestDto;
 import com.tyson.digitalwallet.ddd.controller.dto.response.user.UserResponseDto;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,27 +25,27 @@ public class UserController {
             RegisterUserUseCase registerUserUseCase,
             GetUserUseCase getUserUseCase,
             ChangeEmailUseCase changeEmailUseCase
-            ) {
+    ) {
         this.registerUserUseCase = registerUserUseCase;
         this.getUserUseCase = getUserUseCase;
         this.changeEmailUseCase = changeEmailUseCase;
     }
 
     @PostMapping
-    public ResponseEntity<UserResponseDto> register(@RequestBody RegisterUserRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<UserResponseDto>> register(@RequestBody RegisterUserRequestDto requestDto) {
         UserResponse response = registerUserUseCase.registerAccount(requestDto.toCommand());
-        return ResponseEntity.status(HttpStatus.CREATED).body(UserResponseDto.from(response));
+        return ApiResponse.created("User registered successfully", UserResponseDto.from(response));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<UserResponseDto>> getUserById(@PathVariable UUID id) {
         UserResponse response = getUserUseCase.getUserById(id);
-        return ResponseEntity.ok(UserResponseDto.from(response));
+        return ApiResponse.ok("Get user successfully!",UserResponseDto.from(response));
     }
 
     @PostMapping("/email")
-    public ResponseEntity<UserResponseDto> changeEmail(@RequestBody ChangeEmailUserRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<UserResponseDto>> changeEmail(@RequestBody ChangeEmailUserRequestDto requestDto) {
         UserResponse response = changeEmailUseCase.changeEmail(requestDto.toCommand());
-        return ResponseEntity.ok(UserResponseDto.from(response));
+        return ApiResponse.ok("Email updated successfully", UserResponseDto.from(response));
     }
 }

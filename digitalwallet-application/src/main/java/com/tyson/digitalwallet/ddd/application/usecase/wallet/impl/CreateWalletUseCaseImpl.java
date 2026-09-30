@@ -1,6 +1,7 @@
 package com.tyson.digitalwallet.ddd.application.usecase.wallet.impl;
 
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.CreateWalletUseCase;
+import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.CreateWalletCommand;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
 import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
@@ -26,7 +27,10 @@ public class CreateWalletUseCaseImpl implements CreateWalletUseCase {
     }
 
     @Override
-    public WalletResponse createWallet(UUID userId, String currency) {
+    public WalletResponse createWallet(CreateWalletCommand createWalletCommand) {
+        UUID userId = createWalletCommand.userId();
+        String currency = createWalletCommand.currency();
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("User not found with id: " + userId));
 

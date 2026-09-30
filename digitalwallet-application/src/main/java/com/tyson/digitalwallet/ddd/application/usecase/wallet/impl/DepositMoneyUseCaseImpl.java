@@ -1,0 +1,40 @@
+package com.tyson.digitalwallet.ddd.application.usecase.wallet.impl;
+
+import com.tyson.digitalwallet.ddd.application.exception.WalletNotFoundException;
+import com.tyson.digitalwallet.ddd.application.usecase.wallet.DepositMoneyUseCase;
+import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.DepositMoneyCommand;
+import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
+import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
+import com.tyson.digitalwallet.ddd.domain.repository.UserRepository;
+import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@Service
+public class DepositMoneyUseCaseImpl implements DepositMoneyUseCase {
+    private final WalletRepository walletRepository;
+
+    public DepositMoneyUseCaseImpl(WalletRepository walletRepository) {
+        this.walletRepository = walletRepository;
+    }
+
+
+    @Override
+    @Transactional
+    public WalletResponse deposit(DepositMoneyCommand command) {
+        UUID walletId = command.walletId();
+        BigDecimal amount = command.amount();
+
+        Wallet wallet = walletRepository.findById(walletId).orElseThrow(() -> new WalletNotFoundException("Not found wallet with id " + walletId));
+
+        wallet.deposit(amount);
+
+        Wallet savedWallet = walletRepository.saveWallet(wallet);
+
+        return WalletResponse.from(savedWallet);
+
+    }
+}

@@ -6,9 +6,5 @@ import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletRes
 import java.util.UUID;
 
 public interface CreateWalletUseCase {
-    WalletResponse createWallet(UUID userId, String currency);
-
-    default WalletResponse createWallet(CreateWalletCommand command) {
-        return createWallet(command.userId(), command.currency());
-    }
+    WalletResponse createWallet(CreateWalletCommand command);
 }

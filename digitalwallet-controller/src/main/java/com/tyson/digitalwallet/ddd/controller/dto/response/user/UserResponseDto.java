@@ -16,19 +16,19 @@ public record UserResponseDto(
         UserStatus status,
         LocalDateTime createdAt
 ) {
-    public static UserResponseDto from(UserResponse response) {
-        if (response == null) {
-            return null;
-        }
-
-        return new UserResponseDto(
-                response.id(),
-                response.fullName(),
-                response.email(),
-                response.phoneNumber(),
-                response.dob(),
-                response.status(),
-                response.createdAt()
+    public UserResponseDto(UserResponse r) {
+        this(
+                r.id(),
+                r.fullName(),
+                r.email(),
+                r.phoneNumber(),
+                r.dob(),
+                r.status(),
+                r.createdAt()
         );
+    }
+
+    public static UserResponseDto from(UserResponse response) {
+        return response == null ? null : new UserResponseDto(response);
     }
 }

@@ -134,16 +134,18 @@ public class Wallet {
 
     public void withdraw(BigDecimal amount) {
         if(status != WalletStatus.ACTIVE) {
-            throw new IllegalStateException("Cannot deposit: Wallet is " + this.status);
+            throw new IllegalStateException("Cannot withdraw: Wallet is " + this.status);
+        }
+
+        if(amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalStateException("Withdraw amount must be greater than zero");
         }
 
         if(balance.compareTo(amount) < 0) {
             throw new IllegalStateException("Insufficient balance. Available: " + this.balance + ", Required: " + amount);
         }
 
-        if(amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalStateException("Withdraw amount must be greater than zero");
-        }
+
 
         this.balance = balance.subtract(amount);
         this.updatedAt = LocalDateTime.now();
