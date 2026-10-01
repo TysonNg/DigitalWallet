@@ -29,6 +29,9 @@ public class UserEntity {
     @Column(name = "phone_number", nullable = false, length = 13)
     private String phoneNumber;
 
+    @Column(name = "password", nullable = false)
+    private String password;
+
     @Column(name = "dob", nullable = false)
     private LocalDate dob;
 

@@ -14,17 +14,28 @@ public class User {
     private String fullName;
     private String email;
     private String phoneNumber;
-
+    private String password;
 
     private LocalDate dob;
     private UserStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public User(UUID id, String fullName, String email, String phoneNumber, LocalDate dob, UserStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public User(
+            UUID id,
+            String fullName,
+            String email,
+            String password,
+            String phoneNumber,
+            LocalDate dob,
+            UserStatus status,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
+        this.password = password;
         this.phoneNumber = phoneNumber;
         this.dob = dob;
         this.status = status;
@@ -35,6 +46,7 @@ public class User {
     public static User create(
             String fullName,
             String email,
+            String password,
             String phoneNumber,
             LocalDate dob
     ) {
@@ -42,6 +54,7 @@ public class User {
                 UUID.randomUUID(),
                 fullName,
                 email,
+                password,
                 phoneNumber,
                 dob,
                 UserStatus.ACTIVE,
@@ -97,6 +110,14 @@ public class User {
         }
         this.email = email;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public UUID getId() {

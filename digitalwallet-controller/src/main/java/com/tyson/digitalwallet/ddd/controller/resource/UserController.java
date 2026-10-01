@@ -2,7 +2,6 @@ package com.tyson.digitalwallet.ddd.controller.resource;
 
 import com.tyson.digitalwallet.ddd.application.usecase.user.ChangeEmailUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.user.GetUserUseCase;
-import com.tyson.digitalwallet.ddd.application.usecase.user.RegisterUserUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.user.response.UserResponse;
 import com.tyson.digitalwallet.ddd.controller.common.ApiResponse;
 import com.tyson.digitalwallet.ddd.controller.dto.request.user.ChangeEmailUserRequestDto;
