@@ -32,6 +32,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Optional<User> findByEmail(String email) {
+        return springDataUserRepository.findByEmail(email).map(userMapper::toDomain);
+    }
+
+    @Override
     public User save(User user) {
         UserEntity entity = userMapper.toEntity(user);
         UserEntity savedEntity = springDataUserRepository.save(entity);

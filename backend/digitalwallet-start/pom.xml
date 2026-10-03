@@ -35,6 +35,7 @@
             <artifactId>digitalwallet-infrastructure</artifactId>
             <version>${project.version}</version>
         </dependency>
+
     </dependencies>
 
     <build>

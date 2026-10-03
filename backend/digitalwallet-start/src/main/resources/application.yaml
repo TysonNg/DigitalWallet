@@ -17,5 +17,23 @@ spring:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: ${SPRING_DATA_REDIS_PORT:6379}
+  jwt:
+    secret: ${TOKEN_SECRET:secret}
+    access-token-expiration: ${ACCESS_TOKEN_EXPIRATION}
+    refresh-token-expiration: ${REFRESH_TOKEN_EXPIRATION}
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:test@gmail.com}
+    password: ${MAIL_PASSWORD:password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 server:
   port: 3006
