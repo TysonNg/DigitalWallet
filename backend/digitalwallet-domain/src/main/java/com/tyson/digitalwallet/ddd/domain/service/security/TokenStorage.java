@@ -9,4 +9,9 @@ public interface TokenStorage {
 
     void blacklistToken(String token, long remainingDuration);
     boolean isBlacklistToken(String token);
+
+    void saveActiveSession(UUID userId, String sessionId);
+    String getActiveSession(UUID userId);
+    void deleteActiveSession(UUID userId);
+    boolean isValidSession(UUID userId, String sessionId);
 }

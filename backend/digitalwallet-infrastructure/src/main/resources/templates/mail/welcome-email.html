@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chào mừng bạn đến với Digital Wallet</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f6f9fc;
+            margin: 0;
+            padding: 30px 15px;
+            color: #333333;
+        }
+        .container {
+            max-width: 540px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 40px 32px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eef2f6;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2563eb;
+            text-align: center;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+        }
+        .title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .badge {
+            display: inline-block;
+            background-color: #dcfce7;
+            color: #15803d;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            margin-bottom: 20px;
+        }
+        .badge-wrapper {
+            text-align: center;
+        }
+        .message {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 24px;
+        }
+        .info-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-left: 4px solid #2563eb;
+        }
+        .info-item {
+            font-size: 14px;
+            color: #334155;
+            margin: 6px 0;
+        }
+        .info-item strong {
+            color: #1e293b;
+        }
+        .footer {
+            margin-top: 32px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+            font-size: 12px;
+            color: #94a3b8;
+            text-align: center;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Digital Wallet</div>
+        <div class="badge-wrapper">
+            <span class="badge">✓ Đăng ký thành công</span>
+        </div>
+        <div class="title">Chào mừng gia nhập Digital Wallet!</div>
+        <p class="message">
+            Xin chào <strong th:text="${fullName}">Quý khách</strong>,<br><br>
+            Chúc mừng bạn đã hoàn tất đăng ký và kích hoạt tài khoản ví điện tử thành công. Giờ đây bạn đã có thể đăng nhập và trải nghiệm các dịch vụ chuyển tiền, nạp tiền nhanh chóng và an toàn.
+        </p>
+        <div class="info-card">
+            <div class="info-item">Họ và tên: <strong th:text="${fullName}">Nguyễn Văn A</strong></div>
+            <div class="info-item">Email tài khoản: <strong th:text="${email}">email@example.com</strong></div>
+        </div>
+        <p class="message">
+            Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ, đừng ngần ngại liên hệ với bộ phận chăm sóc khách hàng của chúng tôi.
+        </p>
+        <div class="footer">
+            &copy; 2026 Digital Wallet. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

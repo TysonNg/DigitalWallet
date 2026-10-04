@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public interface TokenProvider {
     String generateAccessToken(User user);
+    String generateAccessToken(User user, String sessionId);
     long getAccessTokenExpiration();
 
     String generateRefreshToken(User user);
@@ -13,5 +14,7 @@ public interface TokenProvider {
 
     UUID extractUserId(String token);
     String extractEmail(String token);
+    String extractSessionId(String token);
+    long getRemainingExpiration(String token);
     boolean validateToken(String token);
 }

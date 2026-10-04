@@ -3,13 +3,10 @@ package com.tyson.digitalwallet.ddd.domain.event;
 import java.time.Instant;
 import java.util.UUID;
 
-public record UserRegisteredEvent(
+public record UserLoggedInEvent(
         UUID userId,
         String email,
-        String fullName,
+        String sessionId,
         Instant occurredAt
 ) implements DomainEvent {
-    public UserRegisteredEvent(UUID userId, String email, Instant occurredAt) {
-        this(userId, email, null, occurredAt);
-    }
 }

@@ -5,21 +5,23 @@ import com.tyson.digitalwallet.ddd.domain.service.security.TokenProvider;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
 import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-@Slf4j
 @Component
 public class TokenProviderImpl implements TokenProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(TokenProviderImpl.class);
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -36,6 +38,11 @@ public class TokenProviderImpl implements TokenProvider {
 
     @Override
     public String generateAccessToken(User user) {
+        return generateAccessToken(user, UUID.randomUUID().toString());
+    }
+
+    @Override
+    public String generateAccessToken(User user, String sessionId) {
         Instant now = Instant.now();
         Instant expiration = now.plusMillis(accessTokenExpiration);
 
@@ -44,6 +51,9 @@ public class TokenProviderImpl implements TokenProvider {
         claims.put("email", user.getEmail());
         claims.put("phoneNumber", user.getPhoneNumber());
         claims.put("fullName", user.getFullName());
+        if (sessionId != null) {
+            claims.put("sessionId", sessionId);
+        }
 
         return Jwts.builder()
                 .id(UUID.randomUUID().toString())
@@ -92,6 +102,24 @@ public class TokenProviderImpl implements TokenProvider {
     public String extractEmail(String token) {
         Claims claims = extractAllClaims(token);
         return claims.get("email", String.class);
+    }
+
+    @Override
+    public String extractSessionId(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("sessionId", String.class);
+    }
+
+    @Override
+    public long getRemainingExpiration(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            Date expiration = claims.getExpiration();
+            long remaining = expiration.getTime() - System.currentTimeMillis();
+            return Math.max(remaining, 0);
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     @Override
