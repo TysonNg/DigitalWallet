@@ -18,9 +18,11 @@ public record ApiResponse<T>(
 ) {
 
     public static <T> ResponseEntity<ApiResponse<T>> ok(String message, T data) {
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, SuccessStatus.SUCCESS.getCode(), message, data, Instant.now())
-        );
+        return ResponseEntity.ok(okBody(message, data));
+    }
+
+    public static <T> ApiResponse<T> okBody(String message, T data) {
+        return new ApiResponse<>(true, SuccessStatus.SUCCESS.getCode(), message, data, Instant.now());
     }
 
     public static <T> ResponseEntity<ApiResponse<T>> created(String message, T data) {

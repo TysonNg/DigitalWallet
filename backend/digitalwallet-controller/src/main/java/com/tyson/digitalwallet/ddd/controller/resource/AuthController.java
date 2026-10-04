@@ -6,14 +6,18 @@ import com.tyson.digitalwallet.ddd.application.usecase.auth.LoginUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.auth.LogoutUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.auth.RefreshTokenUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.auth.RegisterUseCase;
+import com.tyson.digitalwallet.ddd.application.usecase.auth.command.RefreshTokenCommand;
 import com.tyson.digitalwallet.ddd.application.usecase.auth.response.AuthResponse;
 import com.tyson.digitalwallet.ddd.controller.common.ApiResponse;
 import com.tyson.digitalwallet.ddd.controller.dto.request.auth.LoginDto;
-import com.tyson.digitalwallet.ddd.controller.dto.request.auth.RefreshTokenRequestDto;
 import com.tyson.digitalwallet.ddd.controller.dto.request.auth.RegisterRequestDto;
 import com.tyson.digitalwallet.ddd.controller.dto.request.auth.VerifyOtpRequestDto;
 import com.tyson.digitalwallet.ddd.controller.dto.response.auth.AuthResponseDto;
+import com.tyson.digitalwallet.ddd.controller.util.AuthCookieManager;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,32 +27,39 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping({"/api/v1/auth", "/auth"})
 public class AuthController {
     private final LoginUseCase loginUseCase;
     private final RegisterUseCase registerUseCase;
     private final CheckSessionUseCase checkSessionUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
+    private final AuthCookieManager authCookieManager;
 
     public AuthController(
             LoginUseCase loginUseCase,
             RegisterUseCase registerUseCase,
             CheckSessionUseCase checkSessionUseCase,
             RefreshTokenUseCase refreshTokenUseCase,
-            LogoutUseCase logoutUseCase
+            LogoutUseCase logoutUseCase,
+            AuthCookieManager authCookieManager
     ) {
         this.loginUseCase = loginUseCase;
         this.registerUseCase = registerUseCase;
         this.checkSessionUseCase = checkSessionUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.logoutUseCase = logoutUseCase;
+        this.authCookieManager = authCookieManager;
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponseDto>> login(@Valid @RequestBody LoginDto loginDto) {
         AuthResponse response = loginUseCase.login(loginDto.toCommand());
-        return ApiResponse.ok("Login successfully!", AuthResponseDto.from(response));
+        ResponseCookie cookie = authCookieManager.createRefreshTokenCookie(response.refreshToken());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.okBody("Login successfully!", AuthResponseDto.from(response)));
     }
 
     @PostMapping("/register")
@@ -60,13 +71,24 @@ public class AuthController {
     @PostMapping("/register/verify")
     public ResponseEntity<ApiResponse<AuthResponseDto>> verifyOtp(@RequestBody VerifyOtpRequestDto requestDto) {
         AuthResponse response = registerUseCase.verifyOtp(requestDto.toCommand());
-        return ApiResponse.ok("OTP verified successfully. Account has been activated!", AuthResponseDto.from(response));
+        ResponseCookie cookie = authCookieManager.createRefreshTokenCookie(response.refreshToken());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.okBody("OTP verified successfully. Account has been activated!", AuthResponseDto.from(response)));
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponse<AuthResponseDto>> refreshToken(@Valid @RequestBody RefreshTokenRequestDto requestDto) {
-        AuthResponse response = refreshTokenUseCase.refreshToken(requestDto.toCommand());
-        return ApiResponse.ok("Token refreshed successfully!", AuthResponseDto.from(response));
+    public ResponseEntity<ApiResponse<AuthResponseDto>> refreshToken(HttpServletRequest request) {
+        String refreshToken = authCookieManager.extractRefreshToken(request)
+                .orElseThrow(() -> new InvalidCredentialsException("Refresh token cookie is missing! Please log in again."));
+
+        AuthResponse response = refreshTokenUseCase.refreshToken(new RefreshTokenCommand(refreshToken));
+        ResponseCookie cookie = authCookieManager.createRefreshTokenCookie(response.refreshToken());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.okBody("Token refreshed successfully!", AuthResponseDto.from(response)));
     }
 
     @PostMapping("/logout")
@@ -79,7 +101,11 @@ public class AuthController {
 
         String token = authHeader.substring(7);
         logoutUseCase.logout(token);
-        return ApiResponse.ok("Logged out successfully!", null);
+        ResponseCookie cleanCookie = authCookieManager.deleteRefreshTokenCookie();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cleanCookie.toString())
+                .body(ApiResponse.okBody("Logged out successfully!", null));
     }
 
     @GetMapping("/check-session")

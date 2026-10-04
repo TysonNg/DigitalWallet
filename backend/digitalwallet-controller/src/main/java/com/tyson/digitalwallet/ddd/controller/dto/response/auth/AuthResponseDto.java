@@ -5,7 +5,6 @@ import com.tyson.digitalwallet.ddd.controller.dto.response.user.UserResponseDto;
 
 public record AuthResponseDto(
         String accessToken,
-        String refreshToken,
         String tokenType,
         Long expiresIn,
         UserResponseDto user
@@ -15,7 +14,6 @@ public record AuthResponseDto(
 
         return new AuthResponseDto(
                 response.accessToken(),
-                response.refreshToken(),
                 response.tokenType(),
                 response.expiresIn(),
                 UserResponseDto.from(response.user())
