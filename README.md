@@ -40,33 +40,47 @@ DigitalWallet/
 - **Database Migration**: Flyway (Quản lý phiên bản CSDL tự động)
 - **Bộ nhớ đệm & Phiên**: Redis 7 (Quản lý Blacklist Token, Idempotency, Session Store)
 - **Bảo mật**: Spring Security, Stateless Authentication (JWT), Băm mật khẩu chuẩn **Argon2id** (OWASP #1)
-- **Đóng gói & Hạ tầng**: Docker, Docker Compose
+- **Giao diện & BFF**: Next.js 15 (App Router, React 19, TypeScript), Tailwind CSS, Iron Session (BFF Token Encryption)
+- **Đóng gói & Hạ tầng**: Docker, Docker Compose (Multi-stage build)
 
 ---
 
 ## 🚀 Hướng dẫn khởi chạy nhanh (Quick Start)
 
-### 1. Yêu cầu môi trường
-- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
-- JDK 21+ & Maven 3.9+ (nếu chạy backend cục bộ)
-
-### 2. Khởi chạy Hạ tầng (Database & Redis)
-Chạy lệnh sau tại thư mục gốc:
+### Cách 1: Khởi chạy toàn bộ hệ thống bằng Docker Compose (Khuyên dùng)
+Chỉ cần chạy **1 câu lệnh duy nhất** tại thư mục gốc của dự án:
 ```bash
-docker compose -f deploy/docker-compose.yml up -d
+docker compose -f deploy/docker-compose.yml up -d --build
 ```
-Lệnh trên sẽ khởi chạy:
-- **PostgreSQL**: `localhost:5432` (User: `admin`, Password: `admin123`, DB: `digital_wallet`)
-- **Redis**: `localhost:6379`
+Lệnh trên sẽ tự động build và khởi động toàn bộ:
+- **Frontend (Next.js BFF)**: [http://localhost:3000](http://localhost:3000)
+- **Backend API**: [http://localhost:8080/api/v1](http://localhost:8080/api/v1)
+- **pgAdmin 4**: [http://localhost:5050](http://localhost:5050)
+- **PostgreSQL 16**: `localhost:5432` (User: `admin`, Password: `admin123`, DB: `digital_wallet`)
+- **Redis 7**: `localhost:6379`
 
-### 3. Khởi chạy Ứng dụng Backend
-Di chuyển vào thư mục `backend/` và biên dịch:
+---
+
+### Cách 2: Chạy từng phần cục bộ (Dành cho Development)
+
+#### 1. Khởi chạy Database & Cache:
+```bash
+docker compose -f deploy/docker-compose.yml up -d postgres redis
+```
+
+#### 2. Khởi chạy Backend (Spring Boot):
 ```bash
 cd backend
-./mvnw clean spring-boot:run -pl digitalwallet-start
-# hoặc dùng: mvn clean spring-boot:run -pl digitalwallet-start
+mvn clean spring-boot:run -pl digitalwallet-start
 ```
-Ứng dụng sẽ chạy tại: `http://localhost:3006/api/v1`
+Backend API sẽ hoạt động tại `http://localhost:3006/api/v1`.
+
+#### 3. Khởi chạy Frontend (Next.js):
+```bash
+cd frontend
+pnpm dev
+```
+Frontend web sẽ hoạt động tại `http://localhost:3000`.
 
 ---
 

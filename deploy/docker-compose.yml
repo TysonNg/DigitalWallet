@@ -16,7 +16,7 @@ services:
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
       - TOKEN_SECRET=${TOKEN_SECRET}
-      - ACCESS_TOKEN-EXPRIRATION=${ACCESS_TOKEN_EXPIRATION}
+      - ACCESS_TOKEN_EXPIRATION=${ACCESS_TOKEN_EXPIRATION}
       - REFRESH_TOKEN_EXPIRATION=${REFRESH_TOKEN_EXPIRATION}
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
@@ -25,6 +25,23 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  frontend:
+    image: digital-wallet-frontend:latest
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: digital_wallet_frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - SPRING_BOOT_URL=${SPRING_BOOT_INTERNAL_URL:-http://backend:3006/api/v1}
+      - SESSION_SECRET=${SESSION_SECRET:-digital_wallet_secret_session_key_32_characters_minimum_length_required}
+      - NODE_ENV=production
+    depends_on:
+      backend:
+        condition: service_started
 
   pg_admin:
     image: dpage/pgadmin4
