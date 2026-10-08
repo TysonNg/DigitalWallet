@@ -21,7 +21,7 @@ export async function loginAction(input: LoginInput): Promise<ActionResponse<Use
     if (!parsed.success) {
         return {
             success: false,
-            message: "Dữ liệu không hợp lệ",
+            message: "Invalid input data",
             errors: parsed.error.flatten().fieldErrors,
         };
     }
@@ -38,7 +38,7 @@ export async function loginAction(input: LoginInput): Promise<ActionResponse<Use
         if (!response.ok || !resData.success) {
             return {
                 success: false,
-                message: resData.message || "Email hoặc mật khẩu không chính xác",
+                message: resData.message || "Invalid email or password",
             };
         }
 
@@ -70,13 +70,18 @@ export async function loginAction(input: LoginInput): Promise<ActionResponse<Use
 
         return {
             success: true,
-            message: "Đăng nhập thành công!",
+            message: "Login successful!",
             data: session.user,
         };
     } catch (error) {
+        const isFetchError = error instanceof Error && error.message.includes("fetch failed");
         return {
             success: false,
-            message: error instanceof Error ? error.message : "Lỗi kết nối tới máy chủ",
+            message: isFetchError
+                ? "Unable to connect to backend server. Please check your connection."
+                : error instanceof Error
+                  ? error.message
+                  : "Server connection error",
         };
     }
 }
@@ -89,16 +94,25 @@ export async function registerAction(input: RegisterInput): Promise<ActionRespon
     if (!parsed.success) {
         return {
             success: false,
-            message: "Dữ liệu không hợp lệ",
+            message: "Invalid input data",
             errors: parsed.error.flatten().fieldErrors,
         };
     }
 
     try {
+        const payload = {
+            fullName: parsed.data.fullName,
+            email: parsed.data.email,
+            phoneNumber: parsed.data.phoneNumber,
+            dob: parsed.data.dateOfBirth,
+            password: parsed.data.password,
+            confirmPassword: parsed.data.confirmPassword,
+        };
+
         const response = await fetch(`${env.SPRING_BOOT_URL}/auth/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(parsed.data),
+            body: JSON.stringify(payload),
         });
 
         const resData = await response.json();
@@ -106,18 +120,23 @@ export async function registerAction(input: RegisterInput): Promise<ActionRespon
         if (!response.ok || !resData.success) {
             return {
                 success: false,
-                message: resData.message || "Đăng ký thất bại. Vui lòng thử lại.",
+                message: resData.message || "Registration failed. Please try again.",
             };
         }
 
         return {
             success: true,
-            message: "Mã OTP xác thực đã được gửi tới email của bạn. Vui lòng kiểm tra hộp thư!",
+            message: "An OTP verification code has been sent to your email. Please check your inbox!",
         };
     } catch (error) {
+        const isFetchError = error instanceof Error && error.message.includes("fetch failed");
         return {
             success: false,
-            message: error instanceof Error ? error.message : "Lỗi kết nối tới máy chủ",
+            message: isFetchError
+                ? "Unable to connect to backend server. Please check your connection."
+                : error instanceof Error
+                  ? error.message
+                  : "Server connection error",
         };
     }
 }
@@ -130,7 +149,7 @@ export async function verifyOtpAction(input: VerifyOtpInput): Promise<ActionResp
     if (!parsed.success) {
         return {
             success: false,
-            message: "Mã OTP không đúng định dạng",
+            message: "Invalid OTP format",
             errors: parsed.error.flatten().fieldErrors,
         };
     }
@@ -147,7 +166,7 @@ export async function verifyOtpAction(input: VerifyOtpInput): Promise<ActionResp
         if (!response.ok || !resData.success) {
             return {
                 success: false,
-                message: resData.message || "Mã OTP không chính xác hoặc đã hết hạn",
+                message: resData.message || "Invalid or expired OTP code",
             };
         }
 
@@ -178,13 +197,18 @@ export async function verifyOtpAction(input: VerifyOtpInput): Promise<ActionResp
 
         return {
             success: true,
-            message: "Kích hoạt tài khoản thành công!",
+            message: "Account activated successfully!",
             data: session.user,
         };
     } catch (error) {
+        const isFetchError = error instanceof Error && error.message.includes("fetch failed");
         return {
             success: false,
-            message: error instanceof Error ? error.message : "Lỗi kết nối tới máy chủ",
+            message: isFetchError
+                ? "Unable to connect to backend server. Please check your connection."
+                : error instanceof Error
+                  ? error.message
+                  : "Server connection error",
         };
     }
 }
@@ -212,12 +236,12 @@ export async function logoutAction(): Promise<ActionResponse<null>> {
 
         return {
             success: true,
-            message: "Đăng xuất thành công!",
+            message: "Logged out successfully!",
         };
     } catch (error) {
         return {
             success: false,
-            message: error instanceof Error ? error.message : "Lỗi khi đăng xuất",
+            message: error instanceof Error ? error.message : "Error logging out",
         };
     }
 }

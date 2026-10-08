@@ -17,19 +17,26 @@ import com.tyson.digitalwallet.ddd.domain.service.security.PasswordHasher;
 import com.tyson.digitalwallet.ddd.domain.service.security.TokenProvider;
 import com.tyson.digitalwallet.ddd.domain.service.security.TokenStorage;
 import com.tyson.digitalwallet.ddd.domain.service.sender.MailSender;
+import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
+import com.tyson.digitalwallet.ddd.domain.model.enums.WalletStatus;
+import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class RegisterUseCaseImpl implements RegisterUseCase {
 
     private final UserRepository userRepository;
+    private final WalletRepository walletRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final PasswordHasher passwordHasher;
     private final TokenStorage tokenStorage;
@@ -40,6 +47,7 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
 
     public RegisterUseCaseImpl(
             UserRepository userRepository,
+            WalletRepository walletRepository,
             ApplicationEventPublisher eventPublisher,
             PasswordHasher passwordHasher,
             TokenStorage tokenStorage,
@@ -49,6 +57,7 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
             ObjectMapper objectMapper
     ) {
         this.userRepository = userRepository;
+        this.walletRepository = walletRepository;
         this.eventPublisher = eventPublisher;
         this.passwordHasher = passwordHasher;
         this.tokenStorage = tokenStorage;
@@ -145,6 +154,20 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
         }
 
         User savedUser = userRepository.save(user);
+
+        // Tự động khởi tạo Ví VND cho người dùng mới
+        if (!walletRepository.existsByUserId(savedUser.getId())) {
+            Wallet wallet = new Wallet(
+                    UUID.randomUUID(),
+                    savedUser.getId(),
+                    BigDecimal.ZERO,
+                    "VND",
+                    WalletStatus.ACTIVE,
+                    LocalDateTime.now(),
+                    LocalDateTime.now()
+            );
+            walletRepository.saveWallet(wallet);
+        }
 
         // Xóa OTP và dữ liệu tạm khỏi Redis sau khi đã dùng xong
         otpStorage.deleteOtp(email);

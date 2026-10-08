@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -49,7 +50,6 @@ public class UserEntity {
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private WalletEntity wallet;
-
 
     public UUID getId() {
         return id;

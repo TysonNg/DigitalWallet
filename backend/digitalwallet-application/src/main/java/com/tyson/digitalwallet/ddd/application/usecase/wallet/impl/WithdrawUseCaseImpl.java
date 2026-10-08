@@ -4,7 +4,9 @@ import com.tyson.digitalwallet.ddd.application.exception.WalletNotFoundException
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.WithdrawUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.WithdrawCommand;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
+import com.tyson.digitalwallet.ddd.domain.model.entity.Transaction;
 import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
+import com.tyson.digitalwallet.ddd.domain.repository.TransactionRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,11 +17,15 @@ import java.util.UUID;
 @Service
 public class WithdrawUseCaseImpl implements WithdrawUseCase {
 
-    WalletRepository walletRepository;
+    private final WalletRepository walletRepository;
+    private final TransactionRepository transactionRepository;
 
-
-    public WithdrawUseCaseImpl(WalletRepository walletRepository) {
+    public WithdrawUseCaseImpl(
+            WalletRepository walletRepository,
+            TransactionRepository transactionRepository
+    ) {
         this.walletRepository = walletRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     @Override
@@ -28,12 +34,18 @@ public class WithdrawUseCaseImpl implements WithdrawUseCase {
         UUID walletId = command.walletId();
         BigDecimal amount = command.amount();
 
-        Wallet wallet = walletRepository.findById(walletId).orElseThrow(() -> new WalletNotFoundException("Not found wallet with id " + walletId));
+        Wallet wallet = walletRepository.findByIdWithLock(walletId)
+                .orElseThrow(() -> new WalletNotFoundException("Not found wallet with id " + walletId));
 
+        BigDecimal balanceBefore = wallet.getBalance();
         wallet.withdraw(amount);
+        BigDecimal balanceAfter = wallet.getBalance();
 
         Wallet savedWallet = walletRepository.saveWallet(wallet);
 
+        Transaction transaction = Transaction.createWithdraw(walletId, amount, balanceBefore, balanceAfter);
+        transactionRepository.save(transaction);
+
         return WalletResponse.from(savedWallet);
-    };
+    }
 }

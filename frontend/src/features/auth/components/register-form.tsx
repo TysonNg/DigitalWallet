@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { registerSchema, RegisterInput } from "../schemas/auth.schema";
 import { registerAction } from "../actions/auth.actions";
 import { Button } from "@/components/ui/button";
@@ -26,8 +25,9 @@ export function RegisterForm() {
             fullName: "",
             email: "",
             phoneNumber: "",
-            password: "",
             dateOfBirth: "2000-01-01",
+            password: "",
+            confirmPassword: "",
         },
     });
 
@@ -40,32 +40,31 @@ export function RegisterForm() {
             return;
         }
 
-        // Chuyển sang bước 2: Xác thực mã OTP qua Email
         setPendingEmail(values.email);
         setRegistrationStep("verify");
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
             {serverError && (
-                <div className="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-700">
                     {serverError}
                 </div>
             )}
 
             <div>
                 <Label htmlFor="fullName" required>
-                    Họ và tên
+                    Full Name
                 </Label>
                 <Input
                     id="fullName"
-                    placeholder="Nguyễn Văn A"
+                    placeholder="John Doe"
                     error={errors.fullName?.message}
                     {...register("fullName")}
                 />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                     <Label htmlFor="email" required>
                         Email
@@ -73,7 +72,7 @@ export function RegisterForm() {
                     <Input
                         id="email"
                         type="email"
-                        placeholder="a@gmail.com"
+                        placeholder="john@example.com"
                         error={errors.email?.message}
                         {...register("email")}
                     />
@@ -81,7 +80,7 @@ export function RegisterForm() {
 
                 <div>
                     <Label htmlFor="phoneNumber" required>
-                        Số điện thoại
+                        Phone Number
                     </Label>
                     <Input
                         id="phoneNumber"
@@ -92,22 +91,22 @@ export function RegisterForm() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                    <Label htmlFor="dateOfBirth" required>
-                        Ngày sinh (≥18 tuổi)
-                    </Label>
-                    <Input
-                        id="dateOfBirth"
-                        type="date"
-                        error={errors.dateOfBirth?.message}
-                        {...register("dateOfBirth")}
-                    />
-                </div>
+            <div>
+                <Label htmlFor="dateOfBirth" required>
+                    Date of Birth
+                </Label>
+                <Input
+                    id="dateOfBirth"
+                    type="date"
+                    error={errors.dateOfBirth?.message}
+                    {...register("dateOfBirth")}
+                />
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                     <Label htmlFor="password" required>
-                        Mật khẩu (≥8 ký tự)
+                        Password
                     </Label>
                     <Input
                         id="password"
@@ -117,21 +116,35 @@ export function RegisterForm() {
                         {...register("password")}
                     />
                 </div>
+
+                <div>
+                    <Label htmlFor="confirmPassword" required>
+                        Confirm Password
+                    </Label>
+                    <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="••••••••"
+                        error={errors.confirmPassword?.message}
+                        {...register("confirmPassword")}
+                    />
+                </div>
             </div>
 
-            <Button type="submit" className="w-full mt-2" isLoading={isSubmitting}>
-                Tiếp tục xác thực OTP
+            <Button type="submit" variant="primary" className="w-full mt-2" isLoading={isSubmitting}>
+                Continue to OTP Verification
             </Button>
 
-            <div className="text-center pt-2">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Đã có tài khoản?{" "}
-                    <Link
-                        href="/login"
-                        className="font-medium text-zinc-900 dark:text-zinc-100 hover:underline"
+            <div className="text-center pt-1.5">
+                <p className="text-xs text-slate-500">
+                    Already have an account?{" "}
+                    <button
+                        type="button"
+                        onClick={() => useAuthStore.getState().setAuthModalTab("login")}
+                        className="font-medium text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
                     >
-                        Đăng nhập
-                    </Link>
+                        Sign In
+                    </button>
                 </p>
             </div>
         </form>

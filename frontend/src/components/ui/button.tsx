@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+    variant?: "primary" | "secondary" | "outline" | "ghost" | "dark" | "danger";
     size?: "sm" | "md" | "lg";
     isLoading?: boolean;
 }
@@ -21,23 +21,27 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref
     ) => {
         const baseStyles =
-            "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 disabled:pointer-events-none disabled:opacity-50 select-none rounded-md cursor-pointer";
+            "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer";
 
         const variants = {
             primary:
-                "bg-zinc-900 text-zinc-50 hover:bg-zinc-800 active:bg-zinc-950 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 shadow-xs",
+                "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-xs font-semibold",
             secondary:
-                "bg-zinc-100 text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-700",
+                "bg-slate-100 text-slate-800 hover:bg-slate-200 active:bg-slate-300 rounded-lg font-medium",
             outline:
-                "border border-zinc-200 bg-transparent text-zinc-900 hover:bg-zinc-100 dark:border-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-900",
-            ghost: "bg-transparent text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800",
-            danger: "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 shadow-xs",
+                "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:bg-slate-100 rounded-lg font-medium",
+            ghost:
+                "bg-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg font-medium",
+            dark:
+                "bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950 rounded-lg shadow-xs font-medium",
+            danger:
+                "bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 rounded-lg shadow-xs font-medium",
         };
 
         const sizes = {
             sm: "h-8 px-3 text-xs",
-            md: "h-10 px-4 text-sm",
-            lg: "h-11 px-6 text-base",
+            md: "h-9.5 px-4 text-xs",
+            lg: "h-10.5 px-5 text-sm",
         };
 
         return (
@@ -49,7 +53,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             >
                 {isLoading && (
                     <svg
-                        className="mr-2 h-4 w-4 animate-spin text-current"
+                        className="mr-2 h-3.5 w-3.5 animate-spin text-current"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"

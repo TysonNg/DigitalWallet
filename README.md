@@ -97,6 +97,10 @@ Frontend web sẽ hoạt động tại `http://localhost:3000`.
 | **Wallet** | `/api/v1/wallet/user/{userId}` | `GET` | Lấy thông tin ví theo User ID |
 | **Wallet** | `/api/v1/wallet/deposit` | `POST` | Nạp tiền vào ví điện tử |
 | **Wallet** | `/api/v1/wallet/withdraw` | `POST` | Rút tiền khỏi ví (Kiểm tra số dư, trạng thái ví) |
+| **Wallet** | `/api/v1/wallet/transfer` | `POST` | Chuyển tiền giữa 2 ví (Pessimistic Lock, Deadlock-free, Idempotency) |
+| **Wallet** | `/api/v1/wallet/{id}/transactions` | `GET` | Xem lịch sử giao dịch của ví |
+| **Transaction** | `/api/v1/transactions/{id}` | `GET` | Xem chi tiết giao dịch theo Transaction ID |
+| **Transaction** | `/api/v1/transactions/wallet/{walletId}` | `GET` | Lấy danh sách giao dịch theo Wallet ID |
 
 ---
 

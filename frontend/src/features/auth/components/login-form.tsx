@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { loginSchema, LoginInput } from "../schemas/auth.schema";
 import { loginAction } from "../actions/auth.actions";
 import { Button } from "@/components/ui/button";
@@ -47,34 +46,34 @@ export function LoginForm() {
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
             {serverError && (
-                <div className="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-700">
                     {serverError}
                 </div>
             )}
 
             <div>
                 <Label htmlFor="email" required>
-                    Địa chỉ Email
+                    Email Address
                 </Label>
                 <Input
                     id="email"
                     type="email"
                     autoComplete="email"
-                    placeholder="tyson@example.com"
+                    placeholder="email@example.com"
                     error={errors.email?.message}
                     {...register("email")}
                 />
             </div>
 
             <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-1">
                     <Label htmlFor="password" required className="mb-0">
-                        Mật khẩu
+                        Password
                     </Label>
-                    <span className="text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 cursor-pointer">
-                        Quên mật khẩu?
+                    <span className="text-[11px] text-slate-400 hover:text-slate-700 cursor-pointer">
+                        Forgot password?
                     </span>
                 </div>
                 <Input
@@ -87,19 +86,20 @@ export function LoginForm() {
                 />
             </div>
 
-            <Button type="submit" className="w-full" isLoading={isSubmitting}>
-                Đăng nhập
+            <Button type="submit" variant="primary" className="w-full mt-1" isLoading={isSubmitting}>
+                Sign In
             </Button>
 
             <div className="text-center pt-2">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Chưa có tài khoản ví?{" "}
-                    <Link
-                        href="/register"
-                        className="font-medium text-zinc-900 dark:text-zinc-100 hover:underline"
+                <p className="text-xs text-slate-500">
+                    Don't have a wallet account?{" "}
+                    <button
+                        type="button"
+                        onClick={() => useAuthStore.getState().setAuthModalTab("register")}
+                        className="font-medium text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
                     >
-                        Đăng ký ngay
-                    </Link>
+                        Register now
+                    </button>
                 </p>
             </div>
         </form>

@@ -70,10 +70,10 @@ export function VerifyOtpForm() {
                 <MailCheck className="w-5 h-5 text-zinc-700 dark:text-zinc-300 shrink-0" />
                 <div className="text-xs">
                     <p className="text-zinc-500 dark:text-zinc-400">
-                        Mã OTP 6 chữ số đã được gửi tới:
+                        A 6-digit verification code has been sent to:
                     </p>
                     <p className="font-semibold text-zinc-900 dark:text-zinc-100 mt-0.5">
-                        {pendingEmail || "email của bạn"}
+                        {pendingEmail || "your email"}
                     </p>
                 </div>
             </div>
@@ -87,7 +87,7 @@ export function VerifyOtpForm() {
 
                 <div>
                     <Label htmlFor="otp" required>
-                        Mã xác thực OTP (6 chữ số)
+                        OTP Verification Code (6 digits)
                     </Label>
                     <Input
                         id="otp"
@@ -100,7 +100,7 @@ export function VerifyOtpForm() {
                 </div>
 
                 <Button type="submit" className="w-full" isLoading={isSubmitting}>
-                    Kích hoạt tài khoản
+                    Activate Account
                 </Button>
             </form>
 
@@ -110,13 +110,13 @@ export function VerifyOtpForm() {
                     onClick={() => setRegistrationStep("register")}
                     className="inline-flex items-center text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
                 >
-                    <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Quay lại
+                    <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back
                 </button>
 
                 <div>
                     {countdown > 0 ? (
                         <span className="text-zinc-400 dark:text-zinc-500">
-                            Gửi lại mã sau {countdown}s
+                            Resend code in {countdown}s
                         </span>
                     ) : (
                         <button
@@ -124,7 +124,7 @@ export function VerifyOtpForm() {
                             onClick={() => setCountdown(60)}
                             className="font-medium text-zinc-900 dark:text-zinc-100 hover:underline cursor-pointer"
                         >
-                            Gửi lại mã OTP
+                            Resend OTP
                         </button>
                     )}
                 </div>

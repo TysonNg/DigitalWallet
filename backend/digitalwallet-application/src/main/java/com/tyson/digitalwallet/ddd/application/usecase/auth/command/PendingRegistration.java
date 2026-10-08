@@ -1,5 +1,7 @@
 package com.tyson.digitalwallet.ddd.application.usecase.auth.command;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.LocalDate;
 
 public record PendingRegistration(
@@ -9,6 +11,7 @@ public record PendingRegistration(
         String dob,
         String hashedPassword
 ) {
+    @JsonIgnore
     public LocalDate getLocalDateDob() {
         return dob != null ? LocalDate.parse(dob) : null;
     }

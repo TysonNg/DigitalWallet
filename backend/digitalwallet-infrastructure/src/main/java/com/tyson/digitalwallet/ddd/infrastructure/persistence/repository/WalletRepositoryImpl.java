@@ -32,6 +32,12 @@ public class WalletRepositoryImpl implements WalletRepository {
     }
 
     @Override
+    public Optional<Wallet> findByIdWithLock(UUID id) {
+        return springDataWalletRepository.findByIdWithLock(id)
+                .map(walletMapper::toDomain);
+    }
+
+    @Override
     public Optional<Wallet> findByUserId(UUID userId) {
         return springDataWalletRepository.findByUserId(userId)
                 .map(walletMapper::toDomain);

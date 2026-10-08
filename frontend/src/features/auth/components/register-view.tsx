@@ -5,19 +5,25 @@ import { RegisterForm } from "./register-form";
 import { VerifyOtpForm } from "./verify-otp-form";
 import { AuthHeader } from "./auth-header";
 
-export function RegisterView() {
+interface RegisterViewProps {
+    showHeader?: boolean;
+}
+
+export function RegisterView({ showHeader = false }: RegisterViewProps) {
     const step = useAuthStore((state) => state.registrationStep);
 
     return (
         <>
-            <AuthHeader
-                title={step === "register" ? "Mở tài khoản Ví điện tử" : "Xác thực mã OTP Email"}
-                description={
-                    step === "register"
-                        ? "Điền thông tin định danh để tạo ví bảo mật"
-                        : "Nhập mã số xác thực được gửi đến hộp thư của bạn"
-                }
-            />
+            {showHeader && (
+                <AuthHeader
+                    title={step === "register" ? "Create Digital Wallet Account" : "Verify Email OTP Code"}
+                    description={
+                        step === "register"
+                            ? "Fill in your details to create a secure wallet"
+                            : "Enter the verification code sent to your email"
+                    }
+                />
+            )}
             {step === "register" ? <RegisterForm /> : <VerifyOtpForm />}
         </>
     );
