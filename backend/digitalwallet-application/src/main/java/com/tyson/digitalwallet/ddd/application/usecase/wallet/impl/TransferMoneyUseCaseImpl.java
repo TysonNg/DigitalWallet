@@ -11,10 +11,13 @@ import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
 import com.tyson.digitalwallet.ddd.domain.repository.IdempotencyKeyRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.TransactionRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
+import com.tyson.digitalwallet.ddd.domain.event.MoneyTransferEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,15 +27,18 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
     private final IdempotencyKeyRepository idempotencyKeyRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public TransferMoneyUseCaseImpl(
             WalletRepository walletRepository,
             TransactionRepository transactionRepository,
-            IdempotencyKeyRepository idempotencyKeyRepository
+            IdempotencyKeyRepository idempotencyKeyRepository,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
         this.idempotencyKeyRepository = idempotencyKeyRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -135,6 +141,17 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
             idempotencyRecord.complete(savedTransaction.getId());
             idempotencyKeyRepository.save(idempotencyRecord);
         }
+
+        // 8. Publish MoneyTransferEvent
+        eventPublisher.publishEvent(new MoneyTransferEvent(
+                savedTransaction.getId(),
+                senderWallet.getUserId(),
+                receiverWallet.getUserId(),
+                amount,
+                senderBalanceAfter,
+                command.description(),
+                Instant.now()
+        ));
 
         return WalletResponse.from(savedSenderWallet);
     }

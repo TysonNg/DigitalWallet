@@ -8,10 +8,13 @@ import com.tyson.digitalwallet.ddd.domain.model.entity.Transaction;
 import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
 import com.tyson.digitalwallet.ddd.domain.repository.TransactionRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
+import com.tyson.digitalwallet.ddd.domain.event.MoneyDepositEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -19,13 +22,16 @@ public class DepositMoneyUseCaseImpl implements DepositMoneyUseCase {
 
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public DepositMoneyUseCaseImpl(
             WalletRepository walletRepository,
-            TransactionRepository transactionRepository
+            TransactionRepository transactionRepository,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -44,7 +50,15 @@ public class DepositMoneyUseCaseImpl implements DepositMoneyUseCase {
         Wallet savedWallet = walletRepository.saveWallet(wallet);
 
         Transaction transaction = Transaction.createDeposit(walletId, amount, balanceBefore, balanceAfter);
-        transactionRepository.save(transaction);
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        eventPublisher.publishEvent(new MoneyDepositEvent(
+                savedTransaction.getId(),
+                wallet.getUserId(),
+                amount,
+                balanceAfter,
+                Instant.now()
+        ));
 
         return WalletResponse.from(savedWallet);
     }
