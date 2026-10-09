@@ -256,3 +256,15 @@ export async function getCurrentUserAction(): Promise<User | null> {
     }
     return session.user;
 }
+
+/**
+ * Lấy Access Token từ BFF Session phục vụ kết nối WebSocket
+ */
+export async function getAccessTokenAction(): Promise<string | null> {
+    const session = await getSession();
+    if (!session.isLoggedIn || !session.accessToken) {
+        return null;
+    }
+    return session.accessToken;
+}
+

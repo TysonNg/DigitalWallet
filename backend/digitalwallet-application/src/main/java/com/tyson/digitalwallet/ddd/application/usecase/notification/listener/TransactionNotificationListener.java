@@ -6,6 +6,7 @@ import com.tyson.digitalwallet.ddd.domain.event.MoneyWithdrawnEvent;
 import com.tyson.digitalwallet.ddd.domain.model.entity.Notification;
 import com.tyson.digitalwallet.ddd.domain.model.enums.NotificationType;
 import com.tyson.digitalwallet.ddd.domain.repository.NotificationRepository;
+import com.tyson.digitalwallet.ddd.domain.service.sender.NotificationSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -15,8 +16,10 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class TransactionNotificationListener {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationSender notificationSender;
 
-    public TransactionNotificationListener(NotificationRepository notificationRepository) {
+    public TransactionNotificationListener(NotificationRepository notificationRepository, NotificationSender notificationSender) {
+        this.notificationSender = notificationSender;
         this.notificationRepository = notificationRepository;
     }
 
@@ -32,7 +35,8 @@ public class TransactionNotificationListener {
                 event.transactionId(),
                 NotificationType.TRANSFER
         );
-        notificationRepository.save(senderNotification);
+        Notification savedSender = notificationRepository.save(senderNotification);
+        notificationSender.sendNotification(savedSender);
 
         // Notification for receiver
         String description = (event.description() != null && !event.description().isBlank())
@@ -46,7 +50,8 @@ public class TransactionNotificationListener {
                 event.transactionId(),
                 NotificationType.TRANSFER
         );
-        notificationRepository.save(receiverNotification);
+        Notification savedReceiver = notificationRepository.save(receiverNotification);
+        notificationSender.sendNotification(savedReceiver);
     }
 
     @Async
@@ -60,7 +65,8 @@ public class TransactionNotificationListener {
                 event.transactionId(),
                 NotificationType.DEPOSIT
         );
-        notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        notificationSender.sendNotification(saved);
     }
 
     @Async
@@ -74,6 +80,7 @@ public class TransactionNotificationListener {
                 event.transactionId(),
                 NotificationType.WITHDRAW
         );
-        notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        notificationSender.sendNotification(saved);
     }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User } from "@/features/auth/types/auth.types";
 import { WalletDto, TransactionDto } from "@/features/wallet/types/wallet.types";
 import { Sidebar } from "./components/sidebar";
@@ -15,6 +15,9 @@ import { WithdrawModal } from "@/features/wallet/components/withdraw-modal";
 import { TransferModal } from "@/features/wallet/components/transfer-modal";
 import { SettingsModal } from "./components/settings-modal";
 import { getMyWalletAction, getWalletTransactionsAction } from "@/features/wallet/actions/wallet.actions";
+import { getNotificationsAction, markAllNotificationsReadAction } from "./actions/notification.actions";
+import { useNotificationSocket } from "./hooks/use-notification-socket";
+import { NotificationItem } from "./types/notification.types";
 import { Menu, X } from "lucide-react";
 
 interface DashboardViewProps {
@@ -33,6 +36,10 @@ export function DashboardView({
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [activeTab, setActiveTab] = useState<"overview" | "transfer" | "deposit-withdraw" | "history" | "settings">("overview");
 
+    // Notifications state
+    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+    const [hasUnread, setHasUnread] = useState(false);
+
     // Modal states
     const [isDepositOpen, setIsDepositOpen] = useState(false);
     const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
@@ -43,7 +50,7 @@ export function DashboardView({
     const mainBalance = wallet ? wallet.balance : 12450000;
     const walletId = wallet ? wallet.id : "wallet-default-main";
 
-    // Refresh wallet and transaction data after actions
+    // Refresh wallet and transaction data after actions or on realtime event
     const refreshData = async () => {
         try {
             const walletRes = await getMyWalletAction();
@@ -56,6 +63,36 @@ export function DashboardView({
             }
         } catch {
             // keep current state
+        }
+    };
+
+    // Load initial notifications from backend
+    useEffect(() => {
+        async function loadNotifications() {
+            const res = await getNotificationsAction();
+            if (res.success && res.data) {
+                setNotifications(res.data);
+                const unreadExists = res.data.some((n) => !n.isRead);
+                setHasUnread(unreadExists);
+            }
+        }
+        loadNotifications();
+    }, []);
+
+    // Lắng nghe thông báo realtime qua WebSocket STOMP
+    useNotificationSocket({
+        onNotificationReceived: (notification) => {
+            setNotifications((prev) => [notification, ...prev]);
+            setHasUnread(true);
+            refreshData(); // Tự động cập nhật số dư ví và bảng lịch sử giao dịch!
+        },
+    });
+
+    const handleOpenNotifications = async () => {
+        if (hasUnread) {
+            setHasUnread(false);
+            setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+            await markAllNotificationsReadAction();
         }
     };
 
@@ -134,6 +171,9 @@ export function DashboardView({
                     walletId={wallet?.id}
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
+                    notifications={notifications}
+                    hasUnread={hasUnread}
+                    onOpenNotifications={handleOpenNotifications}
                 />
 
                 {/* Dashboard Main Content Body */}

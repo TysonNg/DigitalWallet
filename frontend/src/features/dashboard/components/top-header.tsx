@@ -14,11 +14,16 @@ import { User } from "@/features/auth/types/auth.types";
 import { logoutAction } from "@/features/auth/actions/auth.actions";
 import { toast } from "sonner";
 
+import { NotificationItem } from "../types/notification.types";
+
 interface TopHeaderProps {
     user: User;
     walletId?: string;
     searchQuery: string;
     onSearchChange: (query: string) => void;
+    notifications?: NotificationItem[];
+    hasUnread?: boolean;
+    onOpenNotifications?: () => void;
 }
 
 export function TopHeader({
@@ -26,10 +31,12 @@ export function TopHeader({
     walletId,
     searchQuery,
     onSearchChange,
+    notifications = [],
+    hasUnread = false,
+    onOpenNotifications,
 }: TopHeaderProps) {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
-    const [hasUnread, setHasUnread] = useState(true);
     const [copied, setCopied] = useState(false);
 
     const profileRef = useRef<HTMLDivElement>(null);
@@ -59,6 +66,26 @@ export function TopHeader({
     const handleLogout = async () => {
         await logoutAction();
         window.location.href = "/";
+    };
+
+    const handleToggleNotifications = () => {
+        const nextState = !isNotifOpen;
+        setIsNotifOpen(nextState);
+        if (nextState && onOpenNotifications) {
+            onOpenNotifications();
+        }
+    };
+
+    const formatNotificationTime = (dateStr: string) => {
+        try {
+            const date = new Date(dateStr);
+            return date.toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+        } catch {
+            return "";
+        }
     };
 
     return (
@@ -92,16 +119,13 @@ export function TopHeader({
                 <div className="relative" ref={notifRef}>
                     <button
                         type="button"
-                        onClick={() => {
-                            setIsNotifOpen(!isNotifOpen);
-                            setHasUnread(false);
-                        }}
+                        onClick={handleToggleNotifications}
                         className="relative p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer"
                         aria-label="Thông báo"
                     >
                         <Bell className="w-4 h-4 stroke-[1.75]" />
                         {hasUnread && (
-                            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500 ring-2 ring-white" />
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white animate-pulse" />
                         )}
                     </button>
 
@@ -113,34 +137,39 @@ export function TopHeader({
                                     Thông báo giao dịch
                                 </span>
                                 <span className="text-[10px] font-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
-                                    Mới nhất
+                                    {notifications.length > 0 ? `${notifications.length} tin` : "Mới nhất"}
                                 </span>
                             </div>
 
                             <div className="space-y-1.5 max-h-64 overflow-y-auto">
-                                <div className="p-2 rounded-lg bg-slate-50/70 hover:bg-slate-100/60 transition-colors text-xs">
-                                    <div className="flex justify-between items-center mb-0.5">
-                                        <p className="font-semibold text-slate-800 text-[11px]">
-                                            Nhận tiền ví
-                                        </p>
-                                        <span className="text-[10px] text-slate-400">14:32</span>
+                                {notifications.length === 0 ? (
+                                    <div className="py-6 text-center text-slate-400 text-xs">
+                                        Chưa có thông báo nào
                                     </div>
-                                    <p className="text-slate-500 text-[11px]">
-                                        Tài khoản nhận +500.000 đ từ Trần Văn Nam.
-                                    </p>
-                                </div>
-
-                                <div className="p-2 rounded-lg bg-slate-50/70 hover:bg-slate-100/60 transition-colors text-xs">
-                                    <div className="flex justify-between items-center mb-0.5">
-                                        <p className="font-semibold text-slate-800 text-[11px]">
-                                            Chuyển sang ví tiết kiệm
-                                        </p>
-                                        <span className="text-[10px] text-slate-400">10:15</span>
-                                    </div>
-                                    <p className="text-slate-500 text-[11px]">
-                                        Trừ -2.000.000 đ tích lũy lãi 3,5%/năm.
-                                    </p>
-                                </div>
+                                ) : (
+                                    notifications.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className={`p-2 rounded-lg transition-colors text-xs ${
+                                                !item.isRead
+                                                    ? "bg-blue-50/60 hover:bg-blue-50/90 border border-blue-100/60"
+                                                    : "bg-slate-50/70 hover:bg-slate-100/60"
+                                            }`}
+                                        >
+                                            <div className="flex justify-between items-center mb-0.5">
+                                                <p className="font-semibold text-slate-800 text-[11px] truncate">
+                                                    {item.title}
+                                                </p>
+                                                <span className="text-[10px] text-slate-400 ml-2 whitespace-nowrap">
+                                                    {formatNotificationTime(item.createdAt)}
+                                                </span>
+                                            </div>
+                                            <p className="text-slate-500 text-[11px] leading-relaxed">
+                                                {item.content}
+                                            </p>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     )}
