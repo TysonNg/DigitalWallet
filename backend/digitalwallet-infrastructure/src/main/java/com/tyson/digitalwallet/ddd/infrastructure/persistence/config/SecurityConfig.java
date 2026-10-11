@@ -41,7 +41,9 @@ public class SecurityConfig {
                                 "/api/v1/auth/**",
                                 "/auth/**",
                                 "/api/v1/ws/**",
-                                "/ws/**"
+                                "/ws/**",
+                                "/api/v1/payments/webhook/**",
+                                "/payments/webhook/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

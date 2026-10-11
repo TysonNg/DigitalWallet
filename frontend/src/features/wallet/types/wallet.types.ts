@@ -21,3 +21,21 @@ export interface TransactionDto {
     createdAt: string;
     idempotencyKey?: string | null;
 }
+
+export type PaymentGatewayType = "PAYOS" | "STRIPE";
+export type PaymentOrderStatus = "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED" | "EXPIRED";
+
+export interface PaymentOrderDto {
+    id: string;
+    walletId: string;
+    userId: string;
+    transactionId?: string | null;
+    amount: number;
+    gateway: PaymentGatewayType;
+    gatewayOrderId?: string | null;
+    status: PaymentOrderStatus;
+    checkoutUrl?: string | null;
+    createdAt: string;
+    completedAt?: string | null;
+}
+

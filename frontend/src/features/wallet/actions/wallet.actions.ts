@@ -2,7 +2,7 @@
 
 import { backendFetch, BackendError } from "@/server/backend-client";
 import { getSession } from "@/server/session";
-import { WalletDto, TransactionDto } from "../types/wallet.types";
+import { WalletDto, TransactionDto, PaymentGatewayType, PaymentOrderDto } from "../types/wallet.types";
 import { revalidatePath } from "next/cache";
 
 export interface ActionResult<T> {
@@ -165,3 +165,45 @@ export async function transferMoneyAction(
         return { success: false, message: "Transfer failed" };
     }
 }
+
+/**
+ * Tạo đơn nạp tiền qua cổng thanh toán (PayOS hoặc Stripe).
+ */
+export async function createPaymentOrderAction(params: {
+    walletId: string;
+    amount: number;
+    gateway: PaymentGatewayType;
+}): Promise<ActionResult<PaymentOrderDto>> {
+    try {
+        const session = await getSession();
+        if (!session.isLoggedIn || !session.user) {
+            return { success: false, message: "Phiên đăng nhập đã hết hạn" };
+        }
+
+        if (params.amount < 1000) {
+            return { success: false, message: "Số tiền nạp tối thiểu là 1.000 đ" };
+        }
+
+        const res = await backendFetch<PaymentOrderDto>("/payments/create-order", {
+            method: "POST",
+            body: JSON.stringify({
+                walletId: params.walletId,
+                userId: session.user.id,
+                amount: params.amount,
+                gateway: params.gateway,
+            }),
+        });
+
+        return {
+            success: true,
+            message: "Tạo link thanh toán thành công!",
+            data: res.data,
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            return { success: false, message: error.message };
+        }
+        return { success: false, message: "Không thể kết nối đến cổng thanh toán" };
+    }
+}
+

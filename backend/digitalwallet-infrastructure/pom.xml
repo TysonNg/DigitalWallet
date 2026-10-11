@@ -148,5 +148,21 @@
             <version>4.1.1</version>
             <scope>compile</scope>
         </dependency>
+
+        <!-- PayOS Java SDK for VietQR payments -->
+        <dependency>
+            <groupId>vn.payos</groupId>
+            <artifactId>payos-java</artifactId>
+            <version>2.0.1</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Stripe Java SDK for international card payments -->
+        <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>28.3.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 </project>

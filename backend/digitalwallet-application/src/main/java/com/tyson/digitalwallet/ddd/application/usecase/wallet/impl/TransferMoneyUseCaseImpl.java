@@ -5,13 +5,13 @@ import com.tyson.digitalwallet.ddd.application.usecase.wallet.TransferMoneyUseCa
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.TransferMoneyCommand;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
 import com.tyson.digitalwallet.ddd.application.util.RequestHashUtil;
+import com.tyson.digitalwallet.ddd.domain.event.MoneyTransferEvent;
 import com.tyson.digitalwallet.ddd.domain.model.entity.IdempotencyKey;
-import com.tyson.digitalwallet.ddd.domain.model.entity.Transaction;
 import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
 import com.tyson.digitalwallet.ddd.domain.repository.IdempotencyKeyRepository;
-import com.tyson.digitalwallet.ddd.domain.repository.TransactionRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
-import com.tyson.digitalwallet.ddd.domain.event.MoneyTransferEvent;
+import com.tyson.digitalwallet.ddd.domain.service.wallet.result.TransferResult;
+import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,19 +24,19 @@ import java.util.UUID;
 @Service
 public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
 
+    private final WalletService walletService;
     private final WalletRepository walletRepository;
-    private final TransactionRepository transactionRepository;
     private final IdempotencyKeyRepository idempotencyKeyRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public TransferMoneyUseCaseImpl(
+            WalletService walletService,
             WalletRepository walletRepository,
-            TransactionRepository transactionRepository,
             IdempotencyKeyRepository idempotencyKeyRepository,
             ApplicationEventPublisher eventPublisher
     ) {
+        this.walletService = walletService;
         this.walletRepository = walletRepository;
-        this.transactionRepository = transactionRepository;
         this.idempotencyKeyRepository = idempotencyKeyRepository;
         this.eventPublisher = eventPublisher;
     }
@@ -68,20 +68,11 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
                 command.description()
         );
 
-        // 2. Deadlock-free Pessimistic Locking
-        // Sort wallet IDs deterministically to prevent deadlocks across concurrent transfers
-        UUID firstLockId = senderWalletId.compareTo(receiverWalletId) < 0 ? senderWalletId : receiverWalletId;
-        UUID secondLockId = senderWalletId.compareTo(receiverWalletId) < 0 ? receiverWalletId : senderWalletId;
+        // 2. Kiểm tra sender wallet để lấy userId cho IdempotencyKey
+        Wallet senderWallet = walletRepository.findById(senderWalletId)
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found with id: " + senderWalletId));
 
-        Wallet firstWallet = walletRepository.findByIdWithLock(firstLockId)
-                .orElseThrow(() -> new WalletNotFoundException("Wallet not found with id: " + firstLockId));
-        Wallet secondWallet = walletRepository.findByIdWithLock(secondLockId)
-                .orElseThrow(() -> new WalletNotFoundException("Wallet not found with id: " + secondLockId));
-
-        Wallet senderWallet = senderWalletId.equals(firstWallet.getId()) ? firstWallet : secondWallet;
-        Wallet receiverWallet = receiverWalletId.equals(firstWallet.getId()) ? firstWallet : secondWallet;
-
-        // 3. Handle Idempotency Key (if provided by client)
+        // 3. Handle Idempotency Key (nếu có từ client)
         IdempotencyKey idempotencyRecord = null;
         if (command.idempotencyKey() != null && !command.idempotencyKey().isBlank()) {
             UUID userId = senderWallet.getUserId();
@@ -90,13 +81,11 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
             if (existingKeyOpt.isPresent()) {
                 IdempotencyKey existingKey = existingKeyOpt.get();
 
-                // Check for payload mismatch (Key reuse with different parameters)
                 if (!existingKey.getRequestHash().equals(requestHash)) {
                     throw new IllegalStateException("Idempotency key has already been used with different transfer parameters!");
                 }
 
                 if (existingKey.isCompleted()) {
-                    // Return the existing result without re-executing
                     return WalletResponse.from(senderWallet);
                 }
 
@@ -109,50 +98,35 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
                 }
             }
 
-            // Start new processing state
             idempotencyRecord = IdempotencyKey.startProcessing(userId, command.idempotencyKey(), requestHash);
             idempotencyRecord = idempotencyKeyRepository.save(idempotencyRecord);
         }
 
-        // 4. Execute Balance Changes (Rich Domain Entity logic)
-        BigDecimal senderBalanceBefore = senderWallet.getBalance();
-        senderWallet.withdraw(amount);
-        BigDecimal senderBalanceAfter = senderWallet.getBalance();
-
-        receiverWallet.deposit(amount);
-
-        // 5. Persist Wallets
-        Wallet savedSenderWallet = walletRepository.saveWallet(senderWallet);
-        walletRepository.saveWallet(receiverWallet);
-
-        // 6. Record Transaction Ledger
-        Transaction transaction = Transaction.createTransfer(
+        // 4. Ủy thác toàn bộ nghiệp vụ chuyển tiền đa thực thể cho WalletService (Domain Layer)
+        TransferResult result = walletService.transfer(
                 senderWalletId,
                 receiverWalletId,
                 amount,
-                senderBalanceBefore,
-                senderBalanceAfter,
                 command.description()
         );
-        Transaction savedTransaction = transactionRepository.save(transaction);
 
-        // 7. Complete Idempotency Record
+        // 5. Cập nhật Idempotency record
         if (idempotencyRecord != null) {
-            idempotencyRecord.complete(savedTransaction.getId());
+            idempotencyRecord.complete(result.transaction().getId());
             idempotencyKeyRepository.save(idempotencyRecord);
         }
 
-        // 8. Publish MoneyTransferEvent
+        // 6. Publish MoneyTransferEvent (WebSocket STOMP sẽ tự động đẩy thông báo)
         eventPublisher.publishEvent(new MoneyTransferEvent(
-                savedTransaction.getId(),
-                senderWallet.getUserId(),
-                receiverWallet.getUserId(),
+                result.transaction().getId(),
+                result.senderWallet().getUserId(),
+                result.receiverWallet().getUserId(),
                 amount,
-                senderBalanceAfter,
+                result.senderWallet().getBalance(),
                 command.description(),
                 Instant.now()
         ));
 
-        return WalletResponse.from(savedSenderWallet);
+        return WalletResponse.from(result.senderWallet());
     }
 }

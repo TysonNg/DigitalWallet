@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatVND } from "@/lib/utils";
-import { withdrawMoneyAction } from "../actions/wallet.actions";
+import { useWithdrawMutation } from "../hooks/use-wallet";
 import { toast } from "sonner";
 
 interface WithdrawModalProps {
@@ -26,8 +26,9 @@ export function WithdrawModal({
 }: WithdrawModalProps) {
     const [amount, setAmount] = useState<number>(500000);
     const [bankNumber, setBankNumber] = useState<string>("1029384756");
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+
+    const withdrawMutation = useWithdrawMutation();
 
     if (!isOpen) return null;
 
@@ -45,22 +46,15 @@ export function WithdrawModal({
             return;
         }
 
-        setIsLoading(true);
         try {
-            const res = await withdrawMoneyAction(walletId, amount);
-            if (res.success) {
-                toast.success(`Rút thành công ${formatVND(amount)} về tài khoản ngân hàng!`);
-                onSuccess?.();
-                onClose();
-            } else {
-                setError(res.message);
-                toast.error(res.message);
-            }
-        } catch {
-            setError("Có lỗi xảy ra khi rút tiền");
-            toast.error("Có lỗi xảy ra khi rút tiền");
-        } finally {
-            setIsLoading(false);
+            await withdrawMutation.mutateAsync({ walletId, amount });
+            toast.success(`Rút thành công ${formatVND(amount)} về tài khoản ngân hàng!`);
+            onSuccess?.();
+            onClose();
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : "Có lỗi xảy ra khi rút tiền";
+            setError(msg);
+            toast.error(msg);
         }
     };
 
@@ -161,7 +155,7 @@ export function WithdrawModal({
                         type="submit"
                         variant="primary"
                         className="w-full mt-2"
-                        isLoading={isLoading}
+                        isLoading={withdrawMutation.isPending}
                         disabled={currentBalance <= 0}
                     >
                         Xác nhận rút {amount > 0 ? formatVND(amount) : ""}

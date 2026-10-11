@@ -1,11 +1,15 @@
 import { getSession } from "@/server/session";
 import { redirect } from "next/navigation";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { getQueryClient } from "@/lib/get-query-client";
+import { queryKeys } from "@/lib/query-keys";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
 import {
     getMyWalletAction,
     getWalletTransactionsAction,
 } from "@/features/wallet/actions/wallet.actions";
-import { WalletDto, TransactionDto } from "@/features/wallet/types/wallet.types";
+import { getNotificationsAction } from "@/features/dashboard/actions/notification.actions";
+import { WalletDto } from "@/features/wallet/types/wallet.types";
 
 export const metadata = {
     title: "Tổng quan ví | Digital Wallet",
@@ -20,25 +24,42 @@ export default async function DashboardPage() {
     }
 
     const user = session.user;
+    const queryClient = getQueryClient();
 
-    // Fetch real wallet and transactions from backend BFF
-    let wallet: WalletDto | null = null;
-    let transactions: TransactionDto[] = [];
+    // 1. Prefetch Wallet
+    await queryClient.prefetchQuery({
+        queryKey: queryKeys.wallet.me,
+        queryFn: async () => {
+            const res = await getMyWalletAction();
+            return res.data ?? null;
+        },
+    });
 
-    const walletResult = await getMyWalletAction();
-    if (walletResult.success && walletResult.data) {
-        wallet = walletResult.data;
-        const txResult = await getWalletTransactionsAction(wallet.id);
-        if (txResult.success && txResult.data) {
-            transactions = txResult.data;
-        }
+    const wallet = queryClient.getQueryData<WalletDto | null>(queryKeys.wallet.me);
+
+    // 2. Prefetch Transactions
+    if (wallet?.id) {
+        await queryClient.prefetchQuery({
+            queryKey: queryKeys.wallet.transactions(wallet.id),
+            queryFn: async () => {
+                const res = await getWalletTransactionsAction(wallet.id);
+                return res.data ?? [];
+            },
+        });
     }
 
+    // 3. Prefetch Notifications
+    await queryClient.prefetchQuery({
+        queryKey: queryKeys.notifications.all,
+        queryFn: async () => {
+            const res = await getNotificationsAction();
+            return res.data ?? [];
+        },
+    });
+
     return (
-        <DashboardView
-            user={user}
-            initialWallet={wallet}
-            initialTransactions={transactions}
-        />
+        <HydrationBoundary state={dehydrate(queryClient)}>
+            <DashboardView user={user} />
+        </HydrationBoundary>
     );
 }

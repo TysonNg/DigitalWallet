@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { User } from "@/features/auth/types/auth.types";
 import { WalletDto, TransactionDto } from "@/features/wallet/types/wallet.types";
+import { queryKeys } from "@/lib/query-keys";
+import { useMyWalletQuery, useTransactionsQuery } from "@/features/wallet/hooks/use-wallet";
 import { Sidebar } from "./components/sidebar";
 import { TopHeader } from "./components/top-header";
 import { WalletCards } from "./components/wallet-cards";
@@ -14,31 +17,26 @@ import { DepositModal } from "@/features/wallet/components/deposit-modal";
 import { WithdrawModal } from "@/features/wallet/components/withdraw-modal";
 import { TransferModal } from "@/features/wallet/components/transfer-modal";
 import { SettingsModal } from "./components/settings-modal";
-import { getMyWalletAction, getWalletTransactionsAction } from "@/features/wallet/actions/wallet.actions";
-import { getNotificationsAction, markAllNotificationsReadAction } from "./actions/notification.actions";
 import { useNotificationSocket } from "./hooks/use-notification-socket";
-import { NotificationItem } from "./types/notification.types";
 import { Menu, X } from "lucide-react";
 
 interface DashboardViewProps {
     user: User;
-    initialWallet: WalletDto | null;
-    initialTransactions: TransactionDto[];
+    initialWallet?: WalletDto | null;
+    initialTransactions?: TransactionDto[];
 }
 
 export function DashboardView({
     user,
-    initialWallet,
-    initialTransactions,
 }: DashboardViewProps) {
-    const [wallet, setWallet] = useState<WalletDto | null>(initialWallet);
-    const [transactions, setTransactions] = useState<TransactionDto[]>(initialTransactions);
+    const queryClient = useQueryClient();
+
+    // Queries từ React Query (Đã được hydrate dữ liệu từ SSR Server Component)
+    const { data: wallet = null } = useMyWalletQuery();
+    const { data: transactions = [] } = useTransactionsQuery(wallet?.id);
+
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [activeTab, setActiveTab] = useState<"overview" | "transfer" | "deposit-withdraw" | "history" | "settings">("overview");
-
-    // Notifications state
-    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-    const [hasUnread, setHasUnread] = useState(false);
 
     // Modal states
     const [isDepositOpen, setIsDepositOpen] = useState(false);
@@ -47,54 +45,17 @@ export function DashboardView({
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const mainBalance = wallet ? wallet.balance : 12450000;
-    const walletId = wallet ? wallet.id : "wallet-default-main";
-
-    // Refresh wallet and transaction data after actions or on realtime event
-    const refreshData = async () => {
-        try {
-            const walletRes = await getMyWalletAction();
-            if (walletRes.success && walletRes.data) {
-                setWallet(walletRes.data);
-                const txRes = await getWalletTransactionsAction(walletRes.data.id);
-                if (txRes.success && txRes.data) {
-                    setTransactions(txRes.data);
-                }
-            }
-        } catch {
-            // keep current state
-        }
-    };
-
-    // Load initial notifications from backend
-    useEffect(() => {
-        async function loadNotifications() {
-            const res = await getNotificationsAction();
-            if (res.success && res.data) {
-                setNotifications(res.data);
-                const unreadExists = res.data.some((n) => !n.isRead);
-                setHasUnread(unreadExists);
-            }
-        }
-        loadNotifications();
-    }, []);
+    const mainBalance = wallet ? wallet.balance : 0;
+    const walletId = wallet ? wallet.id : "";
 
     // Lắng nghe thông báo realtime qua WebSocket STOMP
     useNotificationSocket({
-        onNotificationReceived: (notification) => {
-            setNotifications((prev) => [notification, ...prev]);
-            setHasUnread(true);
-            refreshData(); // Tự động cập nhật số dư ví và bảng lịch sử giao dịch!
+        onNotificationReceived: () => {
+            // Tự động invalidate và làm mới dữ liệu ví, giao dịch và thông báo ngầm
+            queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+            queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
         },
     });
-
-    const handleOpenNotifications = async () => {
-        if (hasUnread) {
-            setHasUnread(false);
-            setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-            await markAllNotificationsReadAction();
-        }
-    };
 
     const handleTabSelect = (tab: "overview" | "transfer" | "deposit-withdraw" | "history" | "settings") => {
         setActiveTab(tab);
@@ -171,9 +132,6 @@ export function DashboardView({
                     walletId={wallet?.id}
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
-                    notifications={notifications}
-                    hasUnread={hasUnread}
-                    onOpenNotifications={handleOpenNotifications}
                 />
 
                 {/* Dashboard Main Content Body */}
@@ -227,7 +185,6 @@ export function DashboardView({
                 isOpen={isDepositOpen}
                 onClose={() => setIsDepositOpen(false)}
                 walletId={walletId}
-                onSuccess={refreshData}
             />
 
             <WithdrawModal
@@ -235,7 +192,6 @@ export function DashboardView({
                 onClose={() => setIsWithdrawOpen(false)}
                 walletId={walletId}
                 currentBalance={mainBalance}
-                onSuccess={refreshData}
             />
 
             <TransferModal
@@ -243,7 +199,6 @@ export function DashboardView({
                 onClose={() => setIsTransferOpen(false)}
                 senderWalletId={walletId}
                 currentBalance={mainBalance}
-                onSuccess={refreshData}
             />
 
             <SettingsModal

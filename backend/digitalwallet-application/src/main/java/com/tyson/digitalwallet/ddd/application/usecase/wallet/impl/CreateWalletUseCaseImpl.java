@@ -5,13 +5,10 @@ import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.CreateWall
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
 import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
-import com.tyson.digitalwallet.ddd.domain.model.enums.WalletStatus;
 import com.tyson.digitalwallet.ddd.domain.repository.UserRepository;
-import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
+import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -19,11 +16,11 @@ import java.util.UUID;
 public class CreateWalletUseCaseImpl implements CreateWalletUseCase {
 
     private final UserRepository userRepository;
-    private final WalletRepository walletRepository;
+    private final WalletService walletService;
 
-    public CreateWalletUseCaseImpl(UserRepository userRepository, WalletRepository walletRepository) {
+    public CreateWalletUseCaseImpl(UserRepository userRepository, WalletService walletService) {
         this.userRepository = userRepository;
-        this.walletRepository = walletRepository;
+        this.walletService = walletService;
     }
 
     @Override
@@ -38,21 +35,7 @@ public class CreateWalletUseCaseImpl implements CreateWalletUseCase {
             throw new IllegalArgumentException("User must be at least 18 years old to create a wallet");
         }
 
-        if (walletRepository.existsByUserId(userId)) {
-            throw new IllegalStateException("User already has a wallet: " + userId);
-        }
-
-        Wallet wallet = new Wallet(
-                UUID.randomUUID(),
-                userId,
-                BigDecimal.ZERO,
-                currency != null && !currency.isBlank() ? currency : "VND",
-                WalletStatus.ACTIVE,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-
-        Wallet savedWallet = walletRepository.saveWallet(wallet);
+        Wallet savedWallet = walletService.createWallet(userId, currency);
         return WalletResponse.from(savedWallet);
     }
 }

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { X, ArrowDownLeft, Check } from "lucide-react";
+import { X, ArrowDownLeft, Check, QrCode, CreditCard, Building2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatVND } from "@/lib/utils";
-import { depositMoneyAction } from "../actions/wallet.actions";
+import { useDepositMutation, useCreatePaymentOrderMutation } from "../hooks/use-wallet";
 import { toast } from "sonner";
+import { PaymentGatewayType } from "../types/wallet.types";
 
 interface DepositModalProps {
     isOpen: boolean;
@@ -18,38 +19,55 @@ interface DepositModalProps {
 
 const PRESET_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000, 5000000];
 
+type PaymentMethodType = "PAYOS" | "STRIPE" | "MOCK";
+
 export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositModalProps) {
     const [amount, setAmount] = useState<number>(500000);
-    const [source, setSource] = useState<string>("vcb");
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [method, setMethod] = useState<PaymentMethodType>("PAYOS");
     const [error, setError] = useState<string | null>(null);
 
+    const depositMutation = useDepositMutation();
+    const createOrderMutation = useCreatePaymentOrderMutation();
+
     if (!isOpen) return null;
+
+    const isLoading = depositMutation.isPending || createOrderMutation.isPending;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        if (amount <= 0) {
+        if (amount < 10000) {
             setError("Số tiền nạp tối thiểu là 10.000 đ");
             return;
         }
 
-        setIsLoading(true);
         try {
-            const res = await depositMoneyAction(walletId, amount);
-            if (res.success) {
+            if (method === "MOCK") {
+                // Phương thức nạp mô phỏng trực tiếp
+                await depositMutation.mutateAsync({ walletId, amount });
                 toast.success(`Nạp thành công ${formatVND(amount)} vào Ví chính!`);
                 onSuccess?.();
                 onClose();
             } else {
-                setError(res.message);
-                toast.error(res.message);
+                // Nạp qua cổng thanh toán thực tế (PayOS hoặc Stripe)
+                const gateway: PaymentGatewayType = method;
+                const order = await createOrderMutation.mutateAsync({
+                    walletId,
+                    amount,
+                    gateway,
+                });
+
+                if (order.checkoutUrl) {
+                    toast.info(`Đang chuyển hướng sang cổng thanh toán ${gateway}...`);
+                    window.location.href = order.checkoutUrl;
+                } else {
+                    throw new Error("Không nhận được đường dẫn thanh toán từ cổng.");
+                }
             }
-        } catch {
-            setError("Có lỗi xảy ra khi nạp tiền");
-            toast.error("Có lỗi xảy ra khi nạp tiền");
-        } finally {
-            setIsLoading(false);
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : "Có lỗi xảy ra khi xử lý nạp tiền";
+            setError(msg);
+            toast.error(msg);
         }
     };
 
@@ -74,7 +92,7 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                     </div>
                     <div>
                         <h3 className="text-base font-bold text-slate-900 tracking-tight">Nạp tiền vào ví</h3>
-                        <p className="text-xs text-slate-500">Miễn phí giao dịch nạp tiền 100%</p>
+                        <p className="text-xs text-slate-500">Hỗ trợ VietQR ngân hàng, Thẻ quốc tế & Mô phỏng</p>
                     </div>
                 </div>
 
@@ -128,36 +146,79 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                     </div>
 
                     <div>
-                        <Label>Nguồn thanh toán</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-1">
+                        <Label>Chọn phương thức thanh toán</Label>
+                        <div className="space-y-2 mt-1.5">
+                            {/* Option 1: PayOS (VietQR) */}
                             <div
-                                onClick={() => setSource("vcb")}
-                                className={`flex items-center justify-between p-2.5 rounded-lg border cursor-pointer transition-all ${
-                                    source === "vcb"
-                                        ? "border-blue-600 bg-blue-50/50 text-blue-900"
+                                onClick={() => setMethod("PAYOS")}
+                                className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                                    method === "PAYOS"
+                                        ? "border-blue-600 bg-blue-50/50 text-blue-900 shadow-2xs"
                                         : "border-slate-200 hover:bg-slate-50 text-slate-700"
                                 }`}
                             >
-                                <div className="text-xs">
-                                    <p className="font-semibold text-slate-800">Vietcombank</p>
-                                    <p className="text-[10px] text-slate-400">•••• 8923</p>
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                        <QrCode className="w-4 h-4 stroke-[2]" />
+                                    </div>
+                                    <div className="text-xs">
+                                        <div className="flex items-center space-x-1.5">
+                                            <p className="font-semibold text-slate-900">VietQR Ngân hàng (PayOS)</p>
+                                            <span className="px-1.5 py-0.2 bg-emerald-100 text-emerald-700 text-[10px] font-medium rounded">
+                                                Phổ biến
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-500">Quét mã bằng mọi app ngân hàng tại VN</p>
+                                    </div>
                                 </div>
-                                {source === "vcb" && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                                {method === "PAYOS" && <Check className="w-4 h-4 text-blue-600" />}
                             </div>
 
+                            {/* Option 2: Stripe (International Card) */}
                             <div
-                                onClick={() => setSource("mbb")}
-                                className={`flex items-center justify-between p-2.5 rounded-lg border cursor-pointer transition-all ${
-                                    source === "mbb"
-                                        ? "border-blue-600 bg-blue-50/50 text-blue-900"
+                                onClick={() => setMethod("STRIPE")}
+                                className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                                    method === "STRIPE"
+                                        ? "border-blue-600 bg-blue-50/50 text-blue-900 shadow-2xs"
                                         : "border-slate-200 hover:bg-slate-50 text-slate-700"
                                 }`}
                             >
-                                <div className="text-xs">
-                                    <p className="font-semibold text-slate-800">MB Bank</p>
-                                    <p className="text-[10px] text-slate-400">•••• 6678</p>
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                                        <CreditCard className="w-4 h-4 stroke-[2]" />
+                                    </div>
+                                    <div className="text-xs">
+                                        <div className="flex items-center space-x-1.5">
+                                            <p className="font-semibold text-slate-900">Thẻ Quốc Tế (Stripe)</p>
+                                            <span className="px-1.5 py-0.2 bg-indigo-100 text-indigo-700 text-[10px] font-medium rounded">
+                                                Visa / Master
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-500">Thanh toán qua thẻ Visa, Mastercard, JCB</p>
+                                    </div>
                                 </div>
-                                {source === "mbb" && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                                {method === "STRIPE" && <Check className="w-4 h-4 text-blue-600" />}
+                            </div>
+
+                            {/* Option 3: Mock Direct Deposit */}
+                            <div
+                                onClick={() => setMethod("MOCK")}
+                                className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                                    method === "MOCK"
+                                        ? "border-blue-600 bg-blue-50/50 text-blue-900 shadow-2xs"
+                                        : "border-slate-200 hover:bg-slate-50 text-slate-700"
+                                }`}
+                            >
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+                                        <Building2 className="w-4 h-4 stroke-[2]" />
+                                    </div>
+                                    <div className="text-xs">
+                                        <p className="font-semibold text-slate-900">Nạp nhanh tài khoản liên kết (Mô phỏng)</p>
+                                        <p className="text-[11px] text-slate-500">Cộng tiền trực tiếp không qua cổng thật</p>
+                                    </div>
+                                </div>
+                                {method === "MOCK" && <Check className="w-4 h-4 text-blue-600" />}
                             </div>
                         </div>
                     </div>
@@ -168,7 +229,14 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                         className="w-full mt-2"
                         isLoading={isLoading}
                     >
-                        Xác nhận nạp {amount > 0 ? formatVND(amount) : ""}
+                        {method === "MOCK" ? (
+                            `Xác nhận nạp ${amount > 0 ? formatVND(amount) : ""}`
+                        ) : (
+                            <span className="flex items-center justify-center space-x-1.5">
+                                <span>Thanh toán {amount > 0 ? formatVND(amount) : ""}</span>
+                                <ExternalLink className="w-3.5 h-3.5 ml-1" />
+                            </span>
+                        )}
                     </Button>
                 </form>
             </div>

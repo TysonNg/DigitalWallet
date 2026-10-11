@@ -37,5 +37,13 @@ jwt:
   refresh-token-expiration: ${REFRESH_TOKEN_EXPIRATION:604800000}
   cookie:
     secure: ${JWT_COOKIE_SECURE:false}
+payment:
+  payos:
+    client-id: ${PAYOS_CLIENT_ID:}
+    api-key: ${PAYOS_API_KEY:}
+    checksum-key: ${PAYOS_CHECKSUM_KEY:}
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY:}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
 server:
   port: 3006

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatVND } from "@/lib/utils";
-import { transferMoneyAction } from "../actions/wallet.actions";
+import { useTransferMutation } from "../hooks/use-wallet";
 import { toast } from "sonner";
 
 interface TransferModalProps {
@@ -27,8 +27,9 @@ export function TransferModal({
     const [receiverWalletId, setReceiverWalletId] = useState<string>("");
     const [amount, setAmount] = useState<number>(200000);
     const [description, setDescription] = useState<string>("Chuyển tiền ví điện tử");
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+
+    const transferMutation = useTransferMutation();
 
     if (!isOpen) return null;
 
@@ -56,27 +57,20 @@ export function TransferModal({
             return;
         }
 
-        setIsLoading(true);
         try {
-            const res = await transferMoneyAction(
+            await transferMutation.mutateAsync({
                 senderWalletId,
-                receiverWalletId.trim(),
+                receiverWalletId: receiverWalletId.trim(),
                 amount,
-                description
-            );
-            if (res.success) {
-                toast.success(`Chuyển ${formatVND(amount)} thành công!`);
-                onSuccess?.();
-                onClose();
-            } else {
-                setError(res.message);
-                toast.error(res.message);
-            }
-        } catch {
-            setError("Có lỗi xảy ra khi chuyển tiền");
-            toast.error("Có lỗi xảy ra khi chuyển tiền");
-        } finally {
-            setIsLoading(false);
+                description: description.trim() || "Chuyển tiền ví điện tử",
+            });
+            toast.success(`Chuyển ${formatVND(amount)} thành công!`);
+            onSuccess?.();
+            onClose();
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : "Có lỗi xảy ra khi chuyển tiền";
+            setError(msg);
+            toast.error(msg);
         }
     };
 
@@ -176,7 +170,7 @@ export function TransferModal({
                         type="submit"
                         variant="primary"
                         className="w-full mt-2"
-                        isLoading={isLoading}
+                        isLoading={transferMutation.isPending}
                         disabled={currentBalance <= 0}
                     >
                         Chuyển ngay {amount > 0 ? formatVND(amount) : ""}

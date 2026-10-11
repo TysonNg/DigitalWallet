@@ -14,16 +14,13 @@ import { User } from "@/features/auth/types/auth.types";
 import { logoutAction } from "@/features/auth/actions/auth.actions";
 import { toast } from "sonner";
 
-import { NotificationItem } from "../types/notification.types";
+import { useNotificationsQuery, useMarkAllReadMutation } from "../hooks/use-notifications-query";
 
 interface TopHeaderProps {
     user: User;
     walletId?: string;
     searchQuery: string;
     onSearchChange: (query: string) => void;
-    notifications?: NotificationItem[];
-    hasUnread?: boolean;
-    onOpenNotifications?: () => void;
 }
 
 export function TopHeader({
@@ -31,13 +28,14 @@ export function TopHeader({
     walletId,
     searchQuery,
     onSearchChange,
-    notifications = [],
-    hasUnread = false,
-    onOpenNotifications,
 }: TopHeaderProps) {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [copied, setCopied] = useState(false);
+
+    const { data: notifications = [] } = useNotificationsQuery();
+    const markAllReadMutation = useMarkAllReadMutation();
+    const hasUnread = notifications.some((n) => !n.isRead);
 
     const profileRef = useRef<HTMLDivElement>(null);
     const notifRef = useRef<HTMLDivElement>(null);
@@ -71,8 +69,8 @@ export function TopHeader({
     const handleToggleNotifications = () => {
         const nextState = !isNotifOpen;
         setIsNotifOpen(nextState);
-        if (nextState && onOpenNotifications) {
-            onOpenNotifications();
+        if (nextState && hasUnread) {
+            markAllReadMutation.mutate();
         }
     };
 
