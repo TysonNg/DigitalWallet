@@ -21,7 +21,7 @@ public class NotificationController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<List<NotificationResponseDto>>> getNotificationsByUserId(
-            @PathVariable UUID userId
+            @PathVariable("userId") UUID userId
     ) {
         List<NotificationResponseDto> notifications = notificationUseCase.getNotificationsByUserId(userId).stream()
                 .map(NotificationResponseDto::from)
@@ -31,7 +31,7 @@ public class NotificationController {
 
     @GetMapping("/user/{userId}/unread-count")
     public ResponseEntity<ApiResponse<Long>> getUnreadCount(
-            @PathVariable UUID userId
+            @PathVariable("userId") UUID userId
     ) {
         long count = notificationUseCase.countUnreadByUserId(userId);
         return ApiResponse.ok("Get unread notifications count successfully", count);
@@ -39,8 +39,8 @@ public class NotificationController {
 
     @PatchMapping("/{id}/read")
     public ResponseEntity<ApiResponse<Void>> markAsRead(
-            @PathVariable UUID id,
-            @RequestParam UUID userId
+            @PathVariable("id") UUID id,
+            @RequestParam("userId") UUID userId
     ) {
         notificationUseCase.markAsRead(id, userId);
         return ApiResponse.ok("Notification marked as read successfully", null);
@@ -48,7 +48,7 @@ public class NotificationController {
 
     @PatchMapping("/user/{userId}/read-all")
     public ResponseEntity<ApiResponse<Void>> markAllAsRead(
-            @PathVariable UUID userId
+            @PathVariable("userId") UUID userId
     ) {
         notificationUseCase.markAllAsRead(userId);
         return ApiResponse.ok("All notifications marked as read successfully", null);

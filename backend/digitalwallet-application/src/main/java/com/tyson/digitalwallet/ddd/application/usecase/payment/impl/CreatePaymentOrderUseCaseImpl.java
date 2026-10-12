@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Service
 public class CreatePaymentOrderUseCaseImpl implements CreatePaymentOrderUseCase {
@@ -41,16 +42,24 @@ public class CreatePaymentOrderUseCaseImpl implements CreatePaymentOrderUseCase 
             throw new IllegalArgumentException("Amount must be greater than 0");
         }
 
-        Wallet wallet = walletRepository.findById(command.walletId())
-                .orElseThrow(() -> new WalletNotFoundException("Wallet not found with id: " + command.walletId()));
+        Wallet wallet;
+        if (command.walletId() != null) {
+            wallet = walletRepository.findById(command.walletId())
+                    .orElseThrow(() -> new WalletNotFoundException("Wallet not found with id: " + command.walletId()));
+        } else {
+            wallet = walletRepository.findByUserId(command.userId())
+                    .orElseThrow(() -> new WalletNotFoundException("Wallet not found for user: " + command.userId()));
+        }
 
         if (!wallet.getUserId().equals(command.userId())) {
             throw new IllegalArgumentException("Wallet does not belong to the authenticated user");
         }
 
+        UUID effectiveWalletId = wallet.getId();
+
         // 1. Ủy thác khởi tạo đơn hàng PENDING cho PaymentService (Domain)
         PaymentOrder savedOrder = paymentService.initializeOrder(
-                command.walletId(),
+                effectiveWalletId,
                 command.userId(),
                 command.amount(),
                 command.gateway()

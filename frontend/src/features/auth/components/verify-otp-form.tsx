@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "../store/auth.store";
 import { ArrowLeft, MailCheck } from "lucide-react";
+import { toast } from "sonner";
 
 export function VerifyOtpForm() {
     const router = useRouter();
@@ -52,6 +53,7 @@ export function VerifyOtpForm() {
 
         if (!result.success) {
             setServerError(result.message);
+            toast.error(result.message || "Xác thực OTP thất bại!");
             return;
         }
 
@@ -59,7 +61,9 @@ export function VerifyOtpForm() {
             setCurrentUser(result.data);
         }
 
+        toast.success("Xác thực OTP và đăng nhập thành công!");
         resetRegistration();
+        useAuthStore.getState().closeAuthModal();
         router.push("/dashboard");
         router.refresh();
     };

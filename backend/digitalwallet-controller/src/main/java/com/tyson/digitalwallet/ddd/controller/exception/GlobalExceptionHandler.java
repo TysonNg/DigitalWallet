@@ -16,6 +16,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ApiResponse<Void>> handleForbidden(SecurityException ex) {
+        return ApiResponse.error(ErrorStatus.FORBIDDEN, ex.getMessage());
+    }
+
     @ExceptionHandler(WalletNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleWalletNotFound(WalletNotFoundException ex) {
         return ApiResponse.error(

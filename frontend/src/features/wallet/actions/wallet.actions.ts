@@ -66,9 +66,20 @@ export async function depositMoneyAction(
             return { success: false, message: "Deposit amount must be greater than 0" };
         }
 
+        let targetWalletId = walletId;
+        if (!targetWalletId || targetWalletId.trim() === "") {
+            const session = await getSession();
+            if (session.isLoggedIn && session.user) {
+                const walletRes = await backendFetch<WalletDto>(`/wallet/user/${session.user.id}`);
+                if (walletRes.data?.id) {
+                    targetWalletId = walletRes.data.id;
+                }
+            }
+        }
+
         const res = await backendFetch<WalletDto>("/wallet/deposit", {
             method: "POST",
-            body: JSON.stringify({ walletId, amount }),
+            body: JSON.stringify({ walletId: targetWalletId, amount }),
         });
 
         revalidatePath("/dashboard");
@@ -184,10 +195,18 @@ export async function createPaymentOrderAction(params: {
             return { success: false, message: "Số tiền nạp tối thiểu là 1.000 đ" };
         }
 
+        let walletId = params.walletId;
+        if (!walletId || walletId.trim() === "") {
+            const walletRes = await backendFetch<WalletDto>(`/wallet/user/${session.user.id}`);
+            if (walletRes.data?.id) {
+                walletId = walletRes.data.id;
+            }
+        }
+
         const res = await backendFetch<PaymentOrderDto>("/payments/create-order", {
             method: "POST",
             body: JSON.stringify({
-                walletId: params.walletId,
+                walletId: walletId || undefined,
                 userId: session.user.id,
                 amount: params.amount,
                 gateway: params.gateway,

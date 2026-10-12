@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { loginSchema, LoginInput } from "../schemas/auth.schema";
 import { loginAction } from "../actions/auth.actions";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ export function LoginForm() {
     const router = useRouter();
     const [serverError, setServerError] = useState<string | null>(null);
     const setCurrentUser = useAuthStore((state) => state.setCurrentUser);
+    const closeAuthModal = useAuthStore((state) => state.closeAuthModal);
 
     const {
         register,
@@ -34,6 +36,7 @@ export function LoginForm() {
 
         if (!result.success) {
             setServerError(result.message);
+            toast.error(result.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản!");
             return;
         }
 
@@ -41,6 +44,8 @@ export function LoginForm() {
             setCurrentUser(result.data);
         }
 
+        toast.success(`Đăng nhập thành công! Chào mừng ${result.data?.fullName || "bạn quay trở lại"}`);
+        closeAuthModal();
         router.push("/dashboard");
         router.refresh();
     };

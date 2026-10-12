@@ -23,9 +23,9 @@ export const sessionOptions: SessionOptions = {
     password: env.SESSION_SECRET,
     cookieName: "wallet_session",
     cookieOptions: {
-        secure: env.NODE_ENV === "production",
+        secure: process.env.COOKIE_SECURE === "true",
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "lax",
         path: "/",
         maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
     },

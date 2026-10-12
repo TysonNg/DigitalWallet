@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { User } from "@/features/auth/types/auth.types";
 import { WalletDto, TransactionDto } from "@/features/wallet/types/wallet.types";
 import { queryKeys } from "@/lib/query-keys";
@@ -26,14 +28,37 @@ interface DashboardViewProps {
     initialTransactions?: TransactionDto[];
 }
 
+function PaymentFeedbackListener() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const queryClient = useQueryClient();
+
+    useEffect(() => {
+        const payment = searchParams.get("payment");
+        if (payment === "success") {
+            toast.success("Thanh toán thành công! Tiền đã được nạp vào ví của bạn.");
+            queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+            router.replace("/dashboard", { scroll: false });
+        } else if (payment === "cancelled") {
+            toast.info("Giao dịch nạp tiền đã bị hủy.");
+            router.replace("/dashboard", { scroll: false });
+        }
+    }, [searchParams, queryClient, router]);
+
+    return null;
+}
+
 export function DashboardView({
     user,
+    initialWallet,
+    initialTransactions,
 }: DashboardViewProps) {
     const queryClient = useQueryClient();
 
     // Queries từ React Query (Đã được hydrate dữ liệu từ SSR Server Component)
-    const { data: wallet = null } = useMyWalletQuery();
-    const { data: transactions = [] } = useTransactionsQuery(wallet?.id);
+    const { data: wallet = initialWallet ?? null } = useMyWalletQuery();
+    const currentWallet = wallet || initialWallet;
+    const { data: transactions = initialTransactions ?? [] } = useTransactionsQuery(currentWallet?.id);
 
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [activeTab, setActiveTab] = useState<"overview" | "transfer" | "deposit-withdraw" | "history" | "settings">("overview");
@@ -45,8 +70,8 @@ export function DashboardView({
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const mainBalance = wallet ? wallet.balance : 0;
-    const walletId = wallet ? wallet.id : "";
+    const mainBalance = currentWallet ? currentWallet.balance : 0;
+    const walletId = currentWallet ? currentWallet.id : "";
 
     // Lắng nghe thông báo realtime qua WebSocket STOMP
     useNotificationSocket({
@@ -86,6 +111,9 @@ export function DashboardView({
 
     return (
         <div className="min-h-screen bg-slate-50 flex text-slate-900">
+            <Suspense fallback={null}>
+                <PaymentFeedbackListener />
+            </Suspense>
             {/* Desktop Sidebar */}
             <div className="hidden lg:block">
                 <Sidebar activeTab={activeTab} onTabSelect={handleTabSelect} />

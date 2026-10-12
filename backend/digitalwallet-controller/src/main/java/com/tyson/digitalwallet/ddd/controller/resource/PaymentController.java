@@ -3,6 +3,8 @@ package com.tyson.digitalwallet.ddd.controller.resource;
 import com.tyson.digitalwallet.ddd.application.usecase.payment.CreatePaymentOrderUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.payment.ProcessPaymentWebhookUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.payment.command.ProcessPaymentWebhookCommand;
+import com.tyson.digitalwallet.ddd.application.usecase.payment.command.CreatePaymentOrderCommand;
+import com.tyson.digitalwallet.ddd.controller.security.WalletAccess;
 import com.tyson.digitalwallet.ddd.application.usecase.payment.response.PaymentOrderResponse;
 import com.tyson.digitalwallet.ddd.controller.common.ApiResponse;
 import com.tyson.digitalwallet.ddd.controller.dto.request.payment.CreatePaymentOrderRequestDto;
@@ -15,7 +17,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/payments")
@@ -39,13 +43,16 @@ public class PaymentController {
 
     @PostMapping("/create-order")
     public ResponseEntity<ApiResponse<PaymentOrderResponseDto>> createOrder(
-            @RequestBody @Valid CreatePaymentOrderRequestDto requestDto
+            @RequestBody @Valid CreatePaymentOrderRequestDto requestDto, Principal principal
     ) {
         String defaultReturnUrl = frontendUrl + "/dashboard?payment=success";
         String defaultCancelUrl = frontendUrl + "/dashboard?payment=cancelled";
 
+        UUID userId = WalletAccess.currentUser(principal);
+        var requested = requestDto.toCommand(defaultReturnUrl, defaultCancelUrl);
         PaymentOrderResponse response = createPaymentOrderUseCase.createPaymentOrder(
-                requestDto.toCommand(defaultReturnUrl, defaultCancelUrl)
+                new CreatePaymentOrderCommand(requested.walletId(), userId, requested.amount(),
+                        requested.gateway(), requested.returnUrl(), requested.cancelUrl())
         );
 
         return ApiResponse.ok("Tạo đơn nạp tiền thành công", PaymentOrderResponseDto.from(response));

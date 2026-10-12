@@ -37,6 +37,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .authorizeHttpRequests(req -> req
+                        .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                "/api/v1/wallet/deposit", "/wallet/deposit").denyAll()
                         .requestMatchers(
                                 "/api/v1/auth/**",
                                 "/auth/**",

@@ -119,16 +119,50 @@ public class StripePaymentAdapter implements PaymentGatewayPort {
             Event event = Webhook.constructEvent(rawPayload, sigHeader, webhookSecret);
 
             if ("checkout.session.completed".equals(event.getType())) {
-                Session session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
-                if (session == null) {
+                String sessionId = null;
+                BigDecimal amount = BigDecimal.ZERO;
+
+                var deserializer = event.getDataObjectDeserializer();
+                Session session = null;
+                if (deserializer.getObject().isPresent() && deserializer.getObject().get() instanceof Session s) {
+                    session = s;
+                } else {
+                    try {
+                        var unsafeObj = deserializer.deserializeUnsafe();
+                        if (unsafeObj instanceof Session s) {
+                            session = s;
+                        }
+                    } catch (Exception ex) {
+                        log.warn("Stripe deserializeUnsafe failed: {}", ex.getMessage());
+                    }
+                }
+
+                if (session != null) {
+                    sessionId = session.getId();
+                    if (session.getAmountTotal() != null) {
+                        amount = BigDecimal.valueOf(session.getAmountTotal());
+                    }
+                }
+
+                // Fallback: Parse raw JSON directly using Jackson if session or sessionId is null
+                if (sessionId == null || sessionId.isBlank()) {
+                    try {
+                        com.fasterxml.jackson.databind.JsonNode rootNode = new com.fasterxml.jackson.databind.ObjectMapper().readTree(rawPayload);
+                        com.fasterxml.jackson.databind.JsonNode objNode = rootNode.path("data").path("object");
+                        sessionId = objNode.path("id").asText(null);
+                        long amountTotal = objNode.path("amount_total").asLong(0L);
+                        amount = BigDecimal.valueOf(amountTotal);
+                    } catch (Exception jsonEx) {
+                        log.error("Failed to parse raw JSON for Stripe checkout session: {}", jsonEx.getMessage());
+                    }
+                }
+
+                if (sessionId == null || sessionId.isBlank()) {
                     return PaymentWebhookResult.invalid("Unable to deserialize Stripe checkout session");
                 }
 
-                BigDecimal amount = session.getAmountTotal() != null
-                        ? BigDecimal.valueOf(session.getAmountTotal())
-                        : BigDecimal.ZERO;
-
-                return PaymentWebhookResult.success(session.getId(), amount);
+                log.info("Successfully extracted Stripe checkout session: {}, amount: {}", sessionId, amount);
+                return PaymentWebhookResult.success(sessionId, amount);
             }
 
             return PaymentWebhookResult.failed(null, "Ignored unhandled Stripe event type: " + event.getType());

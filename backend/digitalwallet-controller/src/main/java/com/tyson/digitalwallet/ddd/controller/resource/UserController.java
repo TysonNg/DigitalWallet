@@ -28,7 +28,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<UserResponseDto>> getUserById(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<UserResponseDto>> getUserById(@PathVariable("id") UUID id) {
         UserResponse response = getUserUseCase.getUserById(id);
         return ApiResponse.ok("Get user successfully!",UserResponseDto.from(response));
     }

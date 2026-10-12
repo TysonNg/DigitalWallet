@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatVND } from "@/lib/utils";
-import { useDepositMutation, useCreatePaymentOrderMutation } from "../hooks/use-wallet";
+import { useDepositMutation, useCreatePaymentOrderMutation, useMyWalletQuery } from "../hooks/use-wallet";
 import { toast } from "sonner";
 import { PaymentGatewayType } from "../types/wallet.types";
 
@@ -26,6 +26,9 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
     const [method, setMethod] = useState<PaymentMethodType>("PAYOS");
     const [error, setError] = useState<string | null>(null);
 
+    const { data: myWallet } = useMyWalletQuery();
+    const effectiveWalletId = walletId || myWallet?.id || "";
+
     const depositMutation = useDepositMutation();
     const createOrderMutation = useCreatePaymentOrderMutation();
 
@@ -44,7 +47,7 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
         try {
             if (method === "MOCK") {
                 // Phương thức nạp mô phỏng trực tiếp
-                await depositMutation.mutateAsync({ walletId, amount });
+                await depositMutation.mutateAsync({ walletId: effectiveWalletId, amount });
                 toast.success(`Nạp thành công ${formatVND(amount)} vào Ví chính!`);
                 onSuccess?.();
                 onClose();
@@ -52,7 +55,7 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                 // Nạp qua cổng thanh toán thực tế (PayOS hoặc Stripe)
                 const gateway: PaymentGatewayType = method;
                 const order = await createOrderMutation.mutateAsync({
-                    walletId,
+                    walletId: effectiveWalletId,
                     amount,
                     gateway,
                 });

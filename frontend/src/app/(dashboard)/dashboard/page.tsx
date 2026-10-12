@@ -59,7 +59,7 @@ export default async function DashboardPage() {
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>
-            <DashboardView user={user} />
+            <DashboardView user={user} initialWallet={wallet} />
         </HydrationBoundary>
     );
 }

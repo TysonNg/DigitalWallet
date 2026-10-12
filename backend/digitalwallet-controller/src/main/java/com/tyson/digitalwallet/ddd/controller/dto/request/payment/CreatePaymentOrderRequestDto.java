@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record CreatePaymentOrderRequestDto(
-        @NotNull(message = "Wallet ID is required")
         UUID walletId,
 
         @NotNull(message = "User ID is required")
