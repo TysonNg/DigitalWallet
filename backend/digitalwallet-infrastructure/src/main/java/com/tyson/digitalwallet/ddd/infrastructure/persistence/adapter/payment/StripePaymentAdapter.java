@@ -60,7 +60,7 @@ public class StripePaymentAdapter implements PaymentGatewayPort {
             }
 
             // VND trong Stripe là zero-decimal currency (1 VND = 1 đơn vị)
-            long amountLong = command.amount().longValue();
+            long amountLong = command.amount().longValueExact();
 
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.PAYMENT)
@@ -118,53 +118,33 @@ public class StripePaymentAdapter implements PaymentGatewayPort {
 
             Event event = Webhook.constructEvent(rawPayload, sigHeader, webhookSecret);
 
-            if ("checkout.session.completed".equals(event.getType())) {
-                String sessionId = null;
-                BigDecimal amount = BigDecimal.ZERO;
-
-                var deserializer = event.getDataObjectDeserializer();
-                Session session = null;
-                if (deserializer.getObject().isPresent() && deserializer.getObject().get() instanceof Session s) {
-                    session = s;
-                } else {
-                    try {
-                        var unsafeObj = deserializer.deserializeUnsafe();
-                        if (unsafeObj instanceof Session s) {
-                            session = s;
-                        }
-                    } catch (Exception ex) {
-                        log.warn("Stripe deserializeUnsafe failed: {}", ex.getMessage());
-                    }
+            if ("checkout.session.completed".equals(event.getType())
+                    || "checkout.session.async_payment_succeeded".equals(event.getType())) {
+                // Parse only after signature verification. This also handles SDK/API version differences.
+                var session = new com.fasterxml.jackson.databind.ObjectMapper().readTree(rawPayload)
+                        .path("data").path("object");
+                var id = session.path("id");
+                var total = session.path("amount_total");
+                var currencyNode = session.path("currency");
+                var paymentStatus = session.path("payment_status");
+                if (!"checkout.session".equals(session.path("object").asText())
+                        || !id.isTextual() || id.asText().isBlank()
+                        || !total.isIntegralNumber() || !total.canConvertToLong() || total.longValue() <= 0
+                        || !currencyNode.isTextual() || currencyNode.asText().isBlank()) {
+                    return PaymentWebhookResult.invalid("Stripe checkout session is missing valid id, amount or currency");
                 }
-
-                if (session != null) {
-                    sessionId = session.getId();
-                    if (session.getAmountTotal() != null) {
-                        amount = BigDecimal.valueOf(session.getAmountTotal());
-                    }
+                String sessionId = id.asText();
+                BigDecimal amount = BigDecimal.valueOf(total.longValue());
+                String currency = currencyNode.asText();
+                if ("unpaid".equals(paymentStatus.asText())) {
+                    return PaymentWebhookResult.pending(sessionId, amount, currency);
                 }
-
-                // Fallback: Parse raw JSON directly using Jackson if session or sessionId is null
-                if (sessionId == null || sessionId.isBlank()) {
-                    try {
-                        com.fasterxml.jackson.databind.JsonNode rootNode = new com.fasterxml.jackson.databind.ObjectMapper().readTree(rawPayload);
-                        com.fasterxml.jackson.databind.JsonNode objNode = rootNode.path("data").path("object");
-                        sessionId = objNode.path("id").asText(null);
-                        long amountTotal = objNode.path("amount_total").asLong(0L);
-                        amount = BigDecimal.valueOf(amountTotal);
-                    } catch (Exception jsonEx) {
-                        log.error("Failed to parse raw JSON for Stripe checkout session: {}", jsonEx.getMessage());
-                    }
+                if (!"paid".equals(paymentStatus.asText())) {
+                    return PaymentWebhookResult.invalid("Stripe checkout payment_status must be paid to fund a wallet");
                 }
-
-                if (sessionId == null || sessionId.isBlank()) {
-                    return PaymentWebhookResult.invalid("Unable to deserialize Stripe checkout session");
-                }
-
-                log.info("Successfully extracted Stripe checkout session: {}, amount: {}", sessionId, amount);
-                return PaymentWebhookResult.success(sessionId, amount);
+                log.info("Verified paid Stripe checkout session: {}, amount: {}, currency: {}", sessionId, amount, currency);
+                return PaymentWebhookResult.success(sessionId, amount, currency);
             }
-
             return PaymentWebhookResult.failed(null, "Ignored unhandled Stripe event type: " + event.getType());
         } catch (Exception e) {
             log.error("Failed to verify Stripe webhook: {}", e.getMessage(), e);

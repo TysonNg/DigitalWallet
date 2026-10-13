@@ -7,6 +7,7 @@ import com.tyson.digitalwallet.ddd.domain.event.MoneyDepositEvent;
 import com.tyson.digitalwallet.ddd.domain.model.entity.PaymentOrder;
 import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentOrderStatus;
 import com.tyson.digitalwallet.ddd.domain.repository.PaymentOrderRepository;
+import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
 import com.tyson.digitalwallet.ddd.domain.service.payment.PaymentService;
 import com.tyson.digitalwallet.ddd.domain.service.payment.port.PaymentGatewayPort;
 import com.tyson.digitalwallet.ddd.domain.service.payment.result.PaymentWebhookResult;
@@ -29,6 +30,7 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
     private final PaymentOrderRepository paymentOrderRepository;
     private final PaymentService paymentService;
     private final WalletService walletService;
+    private final WalletRepository walletRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public ProcessPaymentWebhookUseCaseImpl(
@@ -36,12 +38,14 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
         PaymentOrderRepository paymentOrderRepository,
         PaymentService paymentService,
         WalletService walletService,
+        WalletRepository walletRepository,
         ApplicationEventPublisher eventPublisher
     ) {
         this.gatewayResolver = gatewayResolver;
         this.paymentOrderRepository = paymentOrderRepository;
         this.paymentService = paymentService;
         this.walletService = walletService;
+        this.walletRepository = walletRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -71,6 +75,11 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
             return;
         }
 
+        if (order.getGateway() != command.gateway()) {
+            log.warn("Payment gateway mismatch for order {}", order.getId());
+            return;
+        }
+
         // Idempotency: Nếu đơn không còn ở trạng thái PENDING thì bỏ qua ngay lập tức
         if (!order.isPending()) {
             log.info("Payment order {} is already processed (current status={}). Skipping webhook.", order.getId(), order.getStatus());
@@ -78,6 +87,21 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
         }
 
         if (result.status() == PaymentOrderStatus.SUCCESS) {
+            if (result.amount() == null || result.amount().signum() <= 0
+                    || result.amount().compareTo(order.getAmount()) != 0) {
+                log.warn("Payment amount mismatch for order {}: expected {}, received {}",
+                        order.getId(), order.getAmount(), result.amount());
+                return;
+            }
+            var wallet = walletRepository.findById(order.getWalletId())
+                    .orElseThrow(() -> new IllegalStateException("Payment wallet not found: " + order.getWalletId()));
+            // Both checkout integrations create VND payments; never credit another currency without conversion.
+            if (!"VND".equalsIgnoreCase(result.currency())
+                    || !"VND".equalsIgnoreCase(wallet.getCurrency())) {
+                log.warn("Payment currency mismatch for order {}: wallet {}, received {}",
+                        order.getId(), wallet.getCurrency(), result.currency());
+                return;
+            }
             log.info("Processing successful payment for order {}, amount: {}", order.getId(), order.getAmount());
 
             // 1. Ủy thác nạp tiền vào ví cho WalletService (Domain)

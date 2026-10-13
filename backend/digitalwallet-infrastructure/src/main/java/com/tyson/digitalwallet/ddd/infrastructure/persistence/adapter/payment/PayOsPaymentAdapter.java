@@ -64,7 +64,7 @@ public class PayOsPaymentAdapter implements PaymentGatewayPort {
             // Sinh orderCode từ timestamp + 4 chữ số ngẫu nhiên
             long orderCode = System.currentTimeMillis() % 1000000000000L + (long) (Math.random() * 1000);
 
-            long amountLong = command.amount().longValue();
+            long amountLong = command.amount().longValueExact();
             String desc = command.description();
             if (desc == null || desc.isBlank()) {
                 desc = "Nap tien vi " + orderCode;
@@ -113,7 +113,7 @@ public class PayOsPaymentAdapter implements PaymentGatewayPort {
 
             // Mã "00" thể hiện giao dịch thanh toán thành công
             if ("00".equals(data.getCode())) {
-                return PaymentWebhookResult.success(orderCode, amount);
+                return PaymentWebhookResult.success(orderCode, amount, data.getCurrency());
             } else {
                 return PaymentWebhookResult.failed(orderCode, "PayOS returned code: " + data.getCode() + " (" + data.getDesc() + ")");
             }
