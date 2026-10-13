@@ -13,27 +13,36 @@ public record ApiResponse<T>(
         boolean success,
         int statusCode,
         String message,
+        String errorCode,
         T data,
         Instant timestamp
 ) {
+
+    public ApiResponse(boolean success, int statusCode, String message, T data, Instant timestamp) {
+        this(success, statusCode, message, null, data, timestamp);
+    }
 
     public static <T> ResponseEntity<ApiResponse<T>> ok(String message, T data) {
         return ResponseEntity.ok(okBody(message, data));
     }
 
     public static <T> ApiResponse<T> okBody(String message, T data) {
-        return new ApiResponse<>(true, SuccessStatus.SUCCESS.getCode(), message, data, Instant.now());
+        return new ApiResponse<>(true, SuccessStatus.SUCCESS.getCode(), message, null, data, Instant.now());
     }
 
     public static <T> ResponseEntity<ApiResponse<T>> created(String message, T data) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                new ApiResponse<>(true, SuccessStatus.CREATED.getCode(), message, data, Instant.now())
+                new ApiResponse<>(true, SuccessStatus.CREATED.getCode(), message, null, data, Instant.now())
         );
     }
 
     public static ResponseEntity<ApiResponse<Void>> error(ErrorStatus status, String message) {
+        return error(status, message, status.name());
+    }
+
+    public static ResponseEntity<ApiResponse<Void>> error(ErrorStatus status, String message, String errorCode) {
         return ResponseEntity.status(status.getCode()).body(
-                new ApiResponse<>(false, status.getCode(), message, null, Instant.now())
+                new ApiResponse<>(false, status.getCode(), message, errorCode, null, Instant.now())
         );
     }
 }

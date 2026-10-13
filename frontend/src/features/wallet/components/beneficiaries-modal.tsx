@@ -26,6 +26,7 @@ import {
     useAddBeneficiaryMutation,
     useUpdateBeneficiaryMutation,
     useDeleteBeneficiaryMutation,
+    ActionError,
 } from "../hooks/use-wallet";
 import { lookupRecipientAction } from "../actions/wallet.actions";
 import { BeneficiaryDto, RecipientLookupDto } from "../types/wallet.types";
@@ -42,6 +43,7 @@ export function BeneficiariesModal({
     onSelectBeneficiary,
 }: BeneficiariesModalProps) {
     const t = useTranslations("wallet");
+    const apiErr = useTranslations("apiErrors");
     const common = useTranslations("common");
 
     const { data: beneficiaries = [], isLoading, refetch } = useBeneficiariesQuery();
@@ -77,6 +79,16 @@ export function BeneficiariesModal({
         );
     });
 
+    const resolveErrorMessage = (err: unknown, defaultMessage: string): string => {
+        if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
+            return apiErr(err.errorCode as any);
+        }
+        if (err instanceof Error && err.message) {
+            return err.message;
+        }
+        return defaultMessage;
+    };
+
     const handleLookup = async () => {
         if (!addIdentifier.trim()) return;
         setIsLookingUp(true);
@@ -88,10 +100,14 @@ export function BeneficiariesModal({
             if (res.success && res.data) {
                 setLookupResult(res.data);
             } else {
-                setLookupError(res.message || t("recipientNotFound"));
+                const message =
+                    res.errorCode && apiErr.has(res.errorCode as any)
+                        ? apiErr(res.errorCode as any)
+                        : res.message || t("recipientNotFound");
+                setLookupError(message);
             }
-        } catch {
-            setLookupError(t("recipientNotFound"));
+        } catch (err: unknown) {
+            setLookupError(resolveErrorMessage(err, t("recipientNotFound")));
         } finally {
             setIsLookingUp(false);
         }
@@ -117,8 +133,7 @@ export function BeneficiariesModal({
             setLookupResult(null);
             refetch();
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : t("anErrorOccurredWhileTransferringMoney");
-            toast.error(msg);
+            toast.error(resolveErrorMessage(err, t("anErrorOccurredWhileTransferringMoney")));
         }
     };
 
@@ -133,24 +148,22 @@ export function BeneficiariesModal({
                 beneficiaryId,
                 nickname: editNicknameValue.trim() || undefined,
             });
-            toast.success("Đã cập nhật tên gợi nhớ thành công");
+            toast.success(t("beneficiarySaved"));
             setEditingId(null);
             refetch();
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : "Cập nhật thất bại";
-            toast.error(msg);
+            toast.error(resolveErrorMessage(err, t("walletErrors.unableToConnectToTheServer")));
         }
     };
 
     const handleDelete = async (beneficiaryId: string) => {
         try {
             await deleteMutation.mutateAsync(beneficiaryId);
-            toast.success("Đã xoá người thụ hưởng khỏi danh bạ");
+            toast.success(t("beneficiaryDeleted"));
             setDeletingId(null);
             refetch();
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : "Xoá thất bại";
-            toast.error(msg);
+            toast.error(resolveErrorMessage(err, t("walletErrors.unableToConnectToTheServer")));
         }
     };
 
@@ -250,7 +263,7 @@ export function BeneficiariesModal({
                                     {isLookingUp ? (
                                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                     ) : (
-                                        "Tra cứu"
+                                        t("lookup")
                                     )}
                                 </Button>
                             </div>
@@ -315,7 +328,7 @@ export function BeneficiariesModal({
                     {isLoading ? (
                         <div className="h-40 flex items-center justify-center text-xs text-slate-400">
                             <Loader2 className="w-5 h-5 animate-spin mr-2 text-blue-600" />
-                            Đang tải danh bạ...
+                            {t("beneficiariesLoading")}
                         </div>
                     ) : filteredBeneficiaries.length === 0 ? (
                         <div className="h-40 flex flex-col items-center justify-center text-center p-4 rounded-xl border border-dashed border-slate-200">
@@ -324,7 +337,7 @@ export function BeneficiariesModal({
                                 {t("noBeneficiariesYet")}
                             </p>
                             <p className="text-[11px] text-slate-400 mt-0.5">
-                                Các tài khoản thường xuyên giao dịch sẽ xuất hiện tại đây
+                                {t("beneficiariesEmptyNotice")}
                             </p>
                         </div>
                     ) : (
@@ -351,23 +364,23 @@ export function BeneficiariesModal({
                                                     <Input
                                                         value={editNicknameValue}
                                                         onChange={(e) =>
-                                                            setEditNicknameValue(e.target.value)
+                                                             setEditNicknameValue(e.target.value)
                                                         }
-                                                        placeholder="Tên gợi nhớ..."
+                                                        placeholder={t("nicknamePlaceholder")}
                                                         className="h-7 text-xs py-0 px-2 font-medium"
                                                         autoFocus
                                                     />
                                                     <button
                                                         onClick={() => handleSaveEdit(b.id)}
                                                         className="p-1 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-                                                        title="Lưu"
+                                                        title={common("save")}
                                                     >
                                                         <Check className="w-3.5 h-3.5" />
                                                     </button>
                                                     <button
                                                         onClick={() => setEditingId(null)}
                                                         className="p-1 rounded bg-slate-200 text-slate-600 hover:bg-slate-300 cursor-pointer"
-                                                        title="Huỷ"
+                                                        title={common("cancel")}
                                                     >
                                                         <X className="w-3.5 h-3.5" />
                                                     </button>
@@ -407,19 +420,19 @@ export function BeneficiariesModal({
                                         {isDeleting ? (
                                             <div className="flex items-center gap-1">
                                                 <span className="text-[10px] text-rose-600 font-medium">
-                                                    Xác nhận xoá?
+                                                    {t("confirmDelete")}
                                                 </span>
                                                 <button
                                                     onClick={() => handleDelete(b.id)}
                                                     className="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-600 text-white hover:bg-rose-700 cursor-pointer"
                                                 >
-                                                    Có
+                                                    {common("yes")}
                                                 </button>
                                                 <button
                                                     onClick={() => setDeletingId(null)}
                                                     className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"
                                                 >
-                                                    Không
+                                                    {common("no")}
                                                 </button>
                                             </div>
                                         ) : (

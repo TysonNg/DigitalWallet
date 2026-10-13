@@ -15,6 +15,7 @@ import { revalidatePath } from "next/cache";
 export interface ActionResult<T> {
     success: boolean;
     message: string;
+    errorCode?: string;
     data?: T;
 }
 
@@ -38,7 +39,7 @@ export async function getMyWalletAction(): Promise<ActionResult<WalletDto>> {
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            return { success: false, message: error.message };
+            return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: t("unableToConnectToTheServer") };
     }
@@ -61,7 +62,7 @@ export async function getWalletTransactionsAction(
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            return { success: false, message: error.message };
+            return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: t("unableToRetrieveTransactionHistory") };
     }
@@ -78,7 +79,7 @@ export async function depositMoneyAction(
 
     try {
         if (amount <= 0) {
-            return { success: false, message: t("theDepositAmountMustBeGreaterThan0") };
+            return { success: false, message: t("theDepositAmountMustBeGreaterThan0"), errorCode: "INVALID_AMOUNT" };
         }
 
         let targetWalletId = walletId;
@@ -105,7 +106,7 @@ export async function depositMoneyAction(
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            return { success: false, message: error.message };
+            return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: t("depositFailed") };
     }
@@ -138,7 +139,7 @@ export async function withdrawMoneyAction(
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            return { success: false, message: error.message };
+            return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: t("withdrawalFailed") };
     }
@@ -157,13 +158,13 @@ export async function transferMoneyAction(
 
     try {
         if (amount <= 0) {
-            return { success: false, message: t("theTransferAmountMustBeGreaterThan0") };
+            return { success: false, message: t("theTransferAmountMustBeGreaterThan0"), errorCode: "INVALID_AMOUNT" };
         }
         if (!receiverWalletId || receiverWalletId.trim() === "") {
-            return { success: false, message: t("pleaseEnterTheRecipientWalletID") };
+            return { success: false, message: t("pleaseEnterTheRecipientWalletID"), errorCode: "INVALID_RECIPIENT_IDENTIFIER" };
         }
         if (senderWalletId === receiverWalletId) {
-            return { success: false, message: t("youCannotTransferToYourOwnWallet") };
+            return { success: false, message: t("youCannotTransferToYourOwnWallet"), errorCode: "CANNOT_TRANSFER_TO_SELF" };
         }
 
         const idempotencyKey = crypto.randomUUID();
@@ -190,7 +191,7 @@ export async function transferMoneyAction(
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            return { success: false, message: error.message };
+            return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: t("transferFailed") };
     }
@@ -209,11 +210,11 @@ export async function createPaymentOrderAction(params: {
     try {
         const session = await getSession();
         if (!session.isLoggedIn || !session.user) {
-            return { success: false, message: t("yourSessionHasExpired") };
+            return { success: false, message: t("yourSessionHasExpired"), errorCode: "SESSION_EXPIRED" };
         }
 
         if (params.amount < 1000) {
-            return { success: false, message: t("theMinimumDepositIsVND1000") };
+            return { success: false, message: t("theMinimumDepositIsVND1000"), errorCode: "INVALID_AMOUNT" };
         }
 
         let walletId = params.walletId;
@@ -241,7 +242,7 @@ export async function createPaymentOrderAction(params: {
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            return { success: false, message: error.message };
+            return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: t("unableToConnectToThePaymentGateway") };
     }
@@ -257,7 +258,7 @@ export async function lookupRecipientAction(
 
     try {
         if (!identifier || identifier.trim() === "") {
-            return { success: false, message: t("pleaseEnterTheRecipientWalletID") };
+            return { success: false, message: t("pleaseEnterTheRecipientWalletID"), errorCode: "INVALID_RECIPIENT_IDENTIFIER" };
         }
 
         const encoded = encodeURIComponent(identifier.trim());
@@ -272,7 +273,7 @@ export async function lookupRecipientAction(
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            return { success: false, message: error.message };
+            return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: "Không tìm thấy người nhận hoặc lỗi hệ thống" };
     }
@@ -295,7 +296,7 @@ export async function getBeneficiariesAction(): Promise<
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            return { success: false, message: error.message };
+            return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: "Không thể lấy danh bạ thụ hưởng" };
     }
@@ -328,7 +329,7 @@ export async function addBeneficiaryAction(params: {
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            return { success: false, message: error.message };
+            return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: "Thêm người thụ hưởng thất bại" };
     }
@@ -358,7 +359,7 @@ export async function updateBeneficiaryAction(
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            return { success: false, message: error.message };
+            return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: "Cập nhật tên gợi nhớ thất bại" };
     }
@@ -380,7 +381,7 @@ export async function deleteBeneficiaryAction(
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            return { success: false, message: error.message };
+            return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: "Xoá người thụ hưởng thất bại" };
     }

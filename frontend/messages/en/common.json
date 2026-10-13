@@ -7,6 +7,10 @@
         "copyWalletId": "Copy wallet ID",
         "moreOptions": "More options",
         "loading": "Processing",
-        "required": "Required"
+        "required": "Required",
+        "save": "Save",
+        "cancel": "Cancel",
+        "yes": "Yes",
+        "no": "No"
     }
 }

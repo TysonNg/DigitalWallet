@@ -50,22 +50,31 @@ public class BeneficiaryUseCaseImpl implements BeneficiaryUseCase {
         UUID beneficiaryWalletId = command.beneficiaryWalletId();
 
         if (userId == null || beneficiaryUserId == null || beneficiaryWalletId == null) {
-            throw new IllegalArgumentException("Thông tin người thụ hưởng không đầy đủ");
+            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.INVALID_RECIPIENT_IDENTIFIER,
+                    "Beneficiary information is incomplete"
+            );
         }
 
         if (userId.equals(beneficiaryUserId)) {
-            throw new IllegalArgumentException("Không thể thêm chính mình vào danh bạ thụ hưởng");
+            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.CANNOT_ADD_SELF_AS_BENEFICIARY,
+                    "Cannot add yourself as a beneficiary"
+            );
         }
 
         if (beneficiaryRepository.existsByUserIdAndBeneficiaryUserId(userId, beneficiaryUserId)) {
-            throw new IllegalStateException("Người nhận này đã có trong danh bạ thụ hưởng");
+            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.BENEFICIARY_ALREADY_EXISTS,
+                    "Recipient is already in your beneficiaries"
+            );
         }
 
         User targetUser = userRepository.findById(beneficiaryUserId)
-                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng thụ hưởng"));
+                .orElseThrow(() -> new UserNotFoundException("Beneficiary user not found"));
 
         walletRepository.findById(beneficiaryWalletId)
-                .orElseThrow(() -> new WalletNotFoundException("Ví thụ hưởng không tồn tại"));
+                .orElseThrow(() -> new WalletNotFoundException("Beneficiary wallet not found"));
 
         Beneficiary beneficiary = Beneficiary.create(
                 userId,
@@ -86,10 +95,16 @@ public class BeneficiaryUseCaseImpl implements BeneficiaryUseCase {
     @Transactional
     public BeneficiaryResponse updateBeneficiary(UpdateBeneficiaryCommand command) {
         Beneficiary beneficiary = beneficiaryRepository.findById(command.beneficiaryId())
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy liên hệ thụ hưởng"));
+                .orElseThrow(() -> new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                        com.tyson.digitalwallet.ddd.application.exception.ErrorCode.BENEFICIARY_NOT_FOUND,
+                        "Beneficiary contact not found"
+                ));
 
         if (!beneficiary.getUserId().equals(command.userId())) {
-            throw new SecurityException("Bạn không có quyền chỉnh sửa liên hệ thụ hưởng này");
+            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.FORBIDDEN_ACCESS,
+                    "You are not authorized to update this beneficiary"
+            );
         }
 
         beneficiary.updateNickname(command.nickname());
@@ -111,10 +126,16 @@ public class BeneficiaryUseCaseImpl implements BeneficiaryUseCase {
     @Transactional
     public void deleteBeneficiary(UUID beneficiaryId, UUID userId) {
         Beneficiary beneficiary = beneficiaryRepository.findById(beneficiaryId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy liên hệ thụ hưởng"));
+                .orElseThrow(() -> new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                        com.tyson.digitalwallet.ddd.application.exception.ErrorCode.BENEFICIARY_NOT_FOUND,
+                        "Beneficiary contact not found"
+                ));
 
         if (!beneficiary.getUserId().equals(userId)) {
-            throw new SecurityException("Bạn không có quyền xoá liên hệ thụ hưởng này");
+            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.FORBIDDEN_ACCESS,
+                    "You are not authorized to delete this beneficiary"
+            );
         }
 
         beneficiaryRepository.delete(beneficiary);

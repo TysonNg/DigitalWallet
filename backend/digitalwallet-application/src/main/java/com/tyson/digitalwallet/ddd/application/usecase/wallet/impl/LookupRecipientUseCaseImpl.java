@@ -32,7 +32,10 @@ public class LookupRecipientUseCaseImpl implements LookupRecipientUseCase {
     @Transactional(readOnly = true)
     public RecipientLookupResponse lookup(UUID currentUserId, String identifier) {
         if (identifier == null || identifier.isBlank()) {
-            throw new IllegalArgumentException("Thông tin người nhận (SĐT/Email/Mã ví) không được để trống");
+            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.INVALID_RECIPIENT_IDENTIFIER,
+                    "Recipient identifier must not be blank"
+            );
         }
 
         String query = identifier.trim();
@@ -57,27 +60,33 @@ public class LookupRecipientUseCaseImpl implements LookupRecipientUseCase {
         // 2. Tìm theo Email hoặc Số điện thoại
         if (recipientUser == null) {
             recipientUser = userRepository.findByIdentifier(query)
-                    .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người nhận với thông tin: " + query));
+                    .orElseThrow(() -> new UserNotFoundException("Recipient not found with identifier: " + query));
         }
 
         // 3. Kiểm tra không được chuyển cho chính mình
         if (currentUserId != null && recipientUser.getId().equals(currentUserId)) {
-            throw new IllegalArgumentException("Không thể chuyển tiền cho chính tài khoản của bạn");
+            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.CANNOT_TRANSFER_TO_SELF,
+                    "Cannot transfer money to yourself"
+            );
         }
 
         // 4. Kiểm tra trạng thái tài khoản người nhận
         if (recipientUser.getStatus() != UserStatus.ACTIVE) {
-            throw new UserNotActiveException("Tài khoản người nhận hiện không trong trạng thái hoạt động");
+            throw new UserNotActiveException("Recipient account is not active");
         }
 
         // 5. Kiểm tra ví người nhận nếu chưa tìm thấy ở bước 1
         if (recipientWallet == null) {
             recipientWallet = walletRepository.findByUserId(recipientUser.getId())
-                    .orElseThrow(() -> new WalletNotFoundException("Người nhận chưa mở ví hoặc ví không tồn tại"));
+                    .orElseThrow(() -> new WalletNotFoundException("Recipient does not have an active wallet"));
         }
 
         if (recipientWallet.getStatus() != WalletStatus.ACTIVE) {
-            throw new IllegalStateException("Ví của người nhận hiện đang bị tạm khóa hoặc không hoạt động");
+            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.WALLET_NOT_ACTIVE,
+                    "Recipient wallet is currently not active"
+            );
         }
 
         return new RecipientLookupResponse(

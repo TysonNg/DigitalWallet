@@ -1,0 +1,23 @@
+{
+    "apiErrors": {
+        "USER_NOT_FOUND": "Không tìm thấy người dùng trong hệ thống",
+        "WALLET_NOT_FOUND": "Ví không tồn tại hoặc chưa được kích hoạt",
+        "BENEFICIARY_NOT_FOUND": "Không tìm thấy liên hệ thụ hưởng trong danh bạ",
+        "BENEFICIARY_ALREADY_EXISTS": "Người nhận này đã có trong danh bạ thụ hưởng của bạn",
+        "CANNOT_TRANSFER_TO_SELF": "Không thể tự chuyển tiền cho chính mình",
+        "CANNOT_ADD_SELF_AS_BENEFICIARY": "Không thể thêm chính mình vào danh bạ thụ hưởng",
+        "USER_NOT_ACTIVE": "Tài khoản người nhận hiện đang bị tạm khóa hoặc không hoạt động",
+        "WALLET_NOT_ACTIVE": "Ví người nhận hiện đang bị tạm khóa hoặc không hoạt động",
+        "INSUFFICIENT_BALANCE": "Số dư trong ví không đủ để thực hiện giao dịch",
+        "INVALID_AMOUNT": "Số tiền giao dịch không hợp lệ",
+        "INVALID_RECIPIENT_IDENTIFIER": "Thông tin người nhận (SĐT/Email/Mã ví) không hợp lệ",
+        "FORBIDDEN_ACCESS": "Bạn không có quyền thực hiện hành động này",
+        "UNAUTHORIZED": "Yêu cầu đăng nhập để tiếp tục",
+        "SESSION_EXPIRED": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại",
+        "INVALID_CREDENTIALS": "Email hoặc mật khẩu không chính xác",
+        "INVALID_OTP": "Mã OTP không chính xác hoặc đã hết hạn",
+        "EMAIL_ALREADY_EXISTS": "Email này đã được đăng ký tài khoản",
+        "VALIDATION_ERROR": "Dữ liệu nhập không hợp lệ",
+        "INTERNAL_SERVER_ERROR": "Lỗi hệ thống máy chủ, vui lòng thử lại sau"
+    }
+}

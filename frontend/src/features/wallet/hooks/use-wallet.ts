@@ -100,6 +100,16 @@ export function useWithdrawMutation() {
     });
 }
 
+export class ActionError extends Error {
+    errorCode?: string;
+
+    constructor(message: string, errorCode?: string) {
+        super(message);
+        this.name = "ActionError";
+        this.errorCode = errorCode;
+    }
+}
+
 /**
  * Hook Mutation: Chuyển tiền giữa các ví
  */
@@ -127,7 +137,7 @@ export function useTransferMutation() {
                 description
             );
             if (!res.success) {
-                throw new Error(res.message || t("transferFailed"));
+                throw new ActionError(res.message || t("transferFailed"), res.errorCode);
             }
             return res;
         },
@@ -155,7 +165,7 @@ export function useCreatePaymentOrderMutation() {
         }) => {
             const res = await createPaymentOrderAction({ walletId, amount, gateway });
             if (!res.success || !res.data) {
-                throw new Error(res.message || t("unableToCreateAPaymentLink"));
+                throw new ActionError(res.message || t("unableToCreateAPaymentLink"), res.errorCode);
             }
             return res.data;
         },
@@ -171,7 +181,7 @@ export function useBeneficiariesQuery() {
         queryFn: async () => {
             const res = await getBeneficiariesAction();
             if (!res.success) {
-                throw new Error(res.message || "Không thể tải danh bạ thụ hưởng");
+                throw new ActionError(res.message || "Không thể tải danh bạ thụ hưởng", res.errorCode);
             }
             return res.data ?? [];
         },
@@ -192,7 +202,7 @@ export function useAddBeneficiaryMutation() {
         }) => {
             const res = await addBeneficiaryAction(params);
             if (!res.success) {
-                throw new Error(res.message || "Thêm người thụ hưởng thất bại");
+                throw new ActionError(res.message || "Thêm người thụ hưởng thất bại", res.errorCode);
             }
             return res.data;
         },
@@ -218,7 +228,7 @@ export function useUpdateBeneficiaryMutation() {
         }) => {
             const res = await updateBeneficiaryAction(beneficiaryId, nickname);
             if (!res.success) {
-                throw new Error(res.message || "Cập nhật tên gợi nhớ thất bại");
+                throw new ActionError(res.message || "Cập nhật tên gợi nhớ thất bại", res.errorCode);
             }
             return res.data;
         },
@@ -238,7 +248,7 @@ export function useDeleteBeneficiaryMutation() {
         mutationFn: async (beneficiaryId: string) => {
             const res = await deleteBeneficiaryAction(beneficiaryId);
             if (!res.success) {
-                throw new Error(res.message || "Xoá người thụ hưởng thất bại");
+                throw new ActionError(res.message || "Xoá người thụ hưởng thất bại", res.errorCode);
             }
             return res;
         },

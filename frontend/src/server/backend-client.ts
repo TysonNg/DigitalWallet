@@ -11,16 +11,20 @@ export interface ApiResponse<T> {
     success: boolean;
     statusCode: number;
     message: string;
+    errorCode?: string;
     data: T;
     timestamp: string;
 }
 
 export class BackendError extends Error {
     statusCode: number;
-    constructor(message: string, statusCode: number = 500) {
+    errorCode?: string;
+
+    constructor(message: string, statusCode: number = 500, errorCode?: string) {
         super(message);
         this.name = "BackendError";
         this.statusCode = statusCode;
+        this.errorCode = errorCode;
     }
 }
 
@@ -39,6 +43,7 @@ export async function backendFetch<T>(
     const url = `${env.SPRING_BOOT_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
     const headers = new Headers(options.headers || {});
     headers.set("Content-Type", "application/json");
+    headers.set("Accept-Language", locale);
 
     const session = requireAuth ? await getSession() : null;
 
@@ -67,7 +72,7 @@ export async function backendFetch<T>(
     }));
 
     if (!response.ok || !data.success) {
-        throw new BackendError(data.message || fallback, response.status);
+        throw new BackendError(data.message || fallback, response.status, data.errorCode);
     }
 
     return data;

@@ -19,6 +19,7 @@ import {
     useTransferMutation,
     useBeneficiariesQuery,
     useAddBeneficiaryMutation,
+    ActionError,
 } from "../hooks/use-wallet";
 import { lookupRecipientAction } from "../actions/wallet.actions";
 import { BeneficiaryDto, RecipientLookupDto } from "../types/wallet.types";
@@ -51,6 +52,7 @@ export function TransferModal({
     initialRecipient,
 }: TransferModalProps) {
     const t = useTranslations("wallet");
+    const apiErr = useTranslations("apiErrors");
     const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
     const common = useTranslations("common");
     const formatVND = (value: number) =>
@@ -138,7 +140,11 @@ export function TransferModal({
                 } else {
                     setVerifiedRecipient(null);
                     setReceiverWalletId("");
-                    setLookupError(res.message || t("recipientNotFound"));
+                    const msg =
+                        res.errorCode && apiErr.has(res.errorCode as any)
+                            ? apiErr(res.errorCode as any)
+                            : res.message || t("recipientNotFound");
+                    setLookupError(msg);
                 }
             } catch {
                 setVerifiedRecipient(null);
@@ -227,8 +233,16 @@ export function TransferModal({
             onSuccess?.();
             onClose();
         } catch (err: unknown) {
-            const msg =
-                err instanceof Error ? err.message : t("anErrorOccurredWhileTransferringMoney");
+            let msg = t("anErrorOccurredWhileTransferringMoney");
+            if (
+                err instanceof ActionError &&
+                err.errorCode &&
+                apiErr.has(err.errorCode as any)
+            ) {
+                msg = apiErr(err.errorCode as any);
+            } else if (err instanceof Error) {
+                msg = err.message;
+            }
             setError(msg);
             toast.error(msg);
         }
@@ -342,7 +356,7 @@ export function TransferModal({
                                                 </div>
                                             </div>
                                             <span className="text-[10px] text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                                                Chọn
+                                                {t("choose")}
                                             </span>
                                         </button>
                                     ))

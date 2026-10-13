@@ -7,6 +7,10 @@
         "copyWalletId": "Sao chép mã ví",
         "moreOptions": "Tùy chọn khác",
         "loading": "Đang xử lý",
-        "required": "Bắt buộc"
+        "required": "Bắt buộc",
+        "save": "Lưu",
+        "cancel": "Hủy",
+        "yes": "Có",
+        "no": "Không"
     }
 }

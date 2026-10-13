@@ -97,3 +97,28 @@ test("Prevent transferring to self detection logic", () => {
     const isSelf = currentUserId === recipientUserId;
     assert.equal(isSelf, true);
 });
+
+test("Resolves localized error message from machine-readable errorCode in vi and en", () => {
+    const viMessages = require("../messages/vi.json");
+    const enMessages = require("../messages/en.json");
+
+    const sampleCodes = [
+        "USER_NOT_FOUND",
+        "CANNOT_TRANSFER_TO_SELF",
+        "BENEFICIARY_ALREADY_EXISTS",
+        "INSUFFICIENT_BALANCE",
+        "CANNOT_ADD_SELF_AS_BENEFICIARY"
+    ];
+
+    for (const code of sampleCodes) {
+        assert.ok(viMessages.apiErrors[code], `vi.json missing apiErrors.${code}`);
+        assert.ok(enMessages.apiErrors[code], `en.json missing apiErrors.${code}`);
+        assert.notEqual(viMessages.apiErrors[code], enMessages.apiErrors[code]);
+    }
+
+    assert.equal(viMessages.apiErrors.USER_NOT_FOUND, "Không tìm thấy người dùng trong hệ thống");
+    assert.equal(enMessages.apiErrors.USER_NOT_FOUND, "User not found in the system");
+    assert.equal(viMessages.apiErrors.CANNOT_TRANSFER_TO_SELF, "Không thể tự chuyển tiền cho chính mình");
+    assert.equal(enMessages.apiErrors.CANNOT_TRANSFER_TO_SELF, "You cannot transfer money to yourself");
+});
+

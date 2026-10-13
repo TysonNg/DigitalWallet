@@ -1,0 +1,23 @@
+{
+    "apiErrors": {
+        "USER_NOT_FOUND": "User not found in the system",
+        "WALLET_NOT_FOUND": "Wallet does not exist or has not been activated",
+        "BENEFICIARY_NOT_FOUND": "Beneficiary contact not found in your address book",
+        "BENEFICIARY_ALREADY_EXISTS": "This recipient is already in your beneficiaries",
+        "CANNOT_TRANSFER_TO_SELF": "You cannot transfer money to yourself",
+        "CANNOT_ADD_SELF_AS_BENEFICIARY": "You cannot add yourself as a beneficiary",
+        "USER_NOT_ACTIVE": "Recipient account is currently suspended or inactive",
+        "WALLET_NOT_ACTIVE": "Recipient wallet is currently locked or inactive",
+        "INSUFFICIENT_BALANCE": "Insufficient wallet balance for this transaction",
+        "INVALID_AMOUNT": "Invalid transaction amount",
+        "INVALID_RECIPIENT_IDENTIFIER": "Invalid recipient information (phone/email/wallet ID)",
+        "FORBIDDEN_ACCESS": "You do not have permission to perform this action",
+        "UNAUTHORIZED": "Authentication is required to proceed",
+        "SESSION_EXPIRED": "Your session has expired, please log in again",
+        "INVALID_CREDENTIALS": "Email or password is incorrect",
+        "INVALID_OTP": "OTP code is incorrect or expired",
+        "EMAIL_ALREADY_EXISTS": "This email has already been registered",
+        "VALIDATION_ERROR": "Invalid input data",
+        "INTERNAL_SERVER_ERROR": "Internal server error, please try again later"
+    }
+}

@@ -1,12 +1,10 @@
 package com.tyson.digitalwallet.ddd.controller.exception;
 
+import com.tyson.digitalwallet.ddd.application.exception.AppException;
 import com.tyson.digitalwallet.ddd.application.exception.ExistEmailException;
 import com.tyson.digitalwallet.ddd.application.exception.InvalidCredentialsException;
 import com.tyson.digitalwallet.ddd.application.exception.InvalidOtpException;
 import com.tyson.digitalwallet.ddd.application.exception.SessionExpiredException;
-import com.tyson.digitalwallet.ddd.application.exception.UserNotActiveException;
-import com.tyson.digitalwallet.ddd.application.exception.UserNotFoundException;
-import com.tyson.digitalwallet.ddd.application.exception.WalletNotFoundException;
 import com.tyson.digitalwallet.ddd.controller.common.ApiResponse;
 import com.tyson.digitalwallet.ddd.controller.enums.ErrorStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,32 +15,28 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAppException(AppException ex) {
+        ErrorStatus status = switch (ex.getErrorCode()) {
+            case USER_NOT_FOUND, WALLET_NOT_FOUND, BENEFICIARY_NOT_FOUND -> ErrorStatus.NOTFOUND;
+            case FORBIDDEN_ACCESS -> ErrorStatus.FORBIDDEN;
+            case UNAUTHORIZED, SESSION_EXPIRED, INVALID_CREDENTIALS -> ErrorStatus.UNAUTHORIZED;
+            default -> ErrorStatus.BAD_REQUEST;
+        };
+        return ApiResponse.error(status, ex.getMessage(), ex.getErrorCode().getCode());
+    }
+
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<ApiResponse<Void>> handleForbidden(SecurityException ex) {
-        return ApiResponse.error(ErrorStatus.FORBIDDEN, ex.getMessage());
-    }
-
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleUserNotFound(UserNotFoundException ex) {
-        return ApiResponse.error(
-                ErrorStatus.NOTFOUND,
-                ex.getMessage()
-        );
-    }
-
-    @ExceptionHandler(WalletNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleWalletNotFound(WalletNotFoundException ex) {
-        return ApiResponse.error(
-                ErrorStatus.NOTFOUND,
-                ex.getMessage()
-        );
+        return ApiResponse.error(ErrorStatus.FORBIDDEN, ex.getMessage(), "FORBIDDEN_ACCESS");
     }
 
     @ExceptionHandler(ExistEmailException.class)
     public ResponseEntity<ApiResponse<Void>> handleExistEmail(ExistEmailException ex) {
         return ApiResponse.error(
                 ErrorStatus.BAD_REQUEST,
-                ex.getMessage()
+                ex.getMessage(),
+                "EMAIL_ALREADY_EXISTS"
         );
     }
 
@@ -50,7 +44,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleInvalidOtp(InvalidOtpException ex) {
         return ApiResponse.error(
                 ErrorStatus.BAD_REQUEST,
-                ex.getMessage()
+                ex.getMessage(),
+                "INVALID_OTP"
         );
     }
 
@@ -58,15 +53,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleInvalidCredentials(InvalidCredentialsException ex) {
         return ApiResponse.error(
                 ErrorStatus.UNAUTHORIZED,
-                ex.getMessage()
-        );
-    }
-
-    @ExceptionHandler(UserNotActiveException.class)
-    public ResponseEntity<ApiResponse<Void>> handleUserNotActive(UserNotActiveException ex) {
-        return ApiResponse.error(
-                ErrorStatus.BAD_REQUEST,
-                ex.getMessage()
+                ex.getMessage(),
+                "INVALID_CREDENTIALS"
         );
     }
 
@@ -74,7 +62,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleSessionExpired(SessionExpiredException ex) {
         return ApiResponse.error(
                 ErrorStatus.UNAUTHORIZED,
-                ex.getMessage()
+                ex.getMessage(),
+                "SESSION_EXPIRED"
         );
     }
 
@@ -82,7 +71,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
         return ApiResponse.error(
                 ErrorStatus.BAD_REQUEST,
-                ex.getMessage()
+                ex.getMessage(),
+                "INVALID_ARGUMENT"
         );
     }
 
@@ -90,7 +80,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleIllegalState(IllegalStateException ex) {
         return ApiResponse.error(
                 ErrorStatus.BAD_REQUEST,
-                ex.getMessage()
+                ex.getMessage(),
+                "ILLEGAL_STATE"
         );
     }
 
@@ -103,7 +94,8 @@ public class GlobalExceptionHandler {
 
         return ApiResponse.error(
                 ErrorStatus.BAD_REQUEST,
-                errorMessage
+                errorMessage,
+                "VALIDATION_ERROR"
         );
     }
 
@@ -113,7 +105,8 @@ public class GlobalExceptionHandler {
                 ErrorStatus.INTERNAL_ERROR,
                 ex.getMessage() != null && !ex.getMessage().isBlank()
                         ? ex.getMessage()
-                        : "An unexpected internal server error occurred."
+                        : "An unexpected internal server error occurred.",
+                "INTERNAL_SERVER_ERROR"
         );
     }
 }
