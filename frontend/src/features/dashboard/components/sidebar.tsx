@@ -2,12 +2,12 @@
 
 import { useTranslations } from "next-intl";
 
-import { Home, ArrowLeftRight, CreditCard, Clock, Settings } from "lucide-react";
+import { Home, ArrowLeftRight, CreditCard, Clock, Settings, BookUser } from "lucide-react";
 
 interface SidebarProps {
-    activeTab: "overview" | "transfer" | "deposit-withdraw" | "history" | "settings";
+    activeTab: "overview" | "transfer" | "deposit-withdraw" | "beneficiaries" | "history" | "settings";
     onTabSelect: (
-        tab: "overview" | "transfer" | "deposit-withdraw" | "history" | "settings"
+        tab: "overview" | "transfer" | "deposit-withdraw" | "beneficiaries" | "history" | "settings"
     ) => void;
 }
 
@@ -29,6 +29,11 @@ export function Sidebar({ activeTab, onTabSelect }: SidebarProps) {
             id: "deposit-withdraw" as const,
             label: t("depositWithdraw"),
             icon: CreditCard,
+        },
+        {
+            id: "beneficiaries" as const,
+            label: t("beneficiaries"),
+            icon: BookUser,
         },
         {
             id: "history" as const,

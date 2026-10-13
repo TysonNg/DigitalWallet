@@ -5,6 +5,7 @@ import com.tyson.digitalwallet.ddd.application.exception.InvalidCredentialsExcep
 import com.tyson.digitalwallet.ddd.application.exception.InvalidOtpException;
 import com.tyson.digitalwallet.ddd.application.exception.SessionExpiredException;
 import com.tyson.digitalwallet.ddd.application.exception.UserNotActiveException;
+import com.tyson.digitalwallet.ddd.application.exception.UserNotFoundException;
 import com.tyson.digitalwallet.ddd.application.exception.WalletNotFoundException;
 import com.tyson.digitalwallet.ddd.controller.common.ApiResponse;
 import com.tyson.digitalwallet.ddd.controller.enums.ErrorStatus;
@@ -19,6 +20,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<ApiResponse<Void>> handleForbidden(SecurityException ex) {
         return ApiResponse.error(ErrorStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUserNotFound(UserNotFoundException ex) {
+        return ApiResponse.error(
+                ErrorStatus.NOTFOUND,
+                ex.getMessage()
+        );
     }
 
     @ExceptionHandler(WalletNotFoundException.class)

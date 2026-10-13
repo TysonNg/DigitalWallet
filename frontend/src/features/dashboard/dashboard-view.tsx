@@ -22,6 +22,7 @@ import { AllocationChart } from "./components/allocation-chart";
 import { DepositModal } from "@/features/wallet/components/deposit-modal";
 import { WithdrawModal } from "@/features/wallet/components/withdraw-modal";
 import { TransferModal } from "@/features/wallet/components/transfer-modal";
+import { BeneficiariesModal } from "@/features/wallet/components/beneficiaries-modal";
 import { SettingsModal } from "./components/settings-modal";
 import { useNotificationSocket } from "./hooks/use-notification-socket";
 import { Menu, X } from "lucide-react";
@@ -69,15 +70,23 @@ export function DashboardView({ user, initialWallet, initialTransactions }: Dash
 
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [activeTab, setActiveTab] = useState<
-        "overview" | "transfer" | "deposit-withdraw" | "history" | "settings"
+        "overview" | "transfer" | "deposit-withdraw" | "beneficiaries" | "history" | "settings"
     >("overview");
 
     // Modal states
     const [isDepositOpen, setIsDepositOpen] = useState(false);
     const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
     const [isTransferOpen, setIsTransferOpen] = useState(false);
+    const [isBeneficiariesOpen, setIsBeneficiariesOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // Initial recipient when transferring from address book
+    const [transferRecipient, setTransferRecipient] = useState<{
+        identifier: string;
+        walletId: string;
+        fullName: string;
+    } | null>(null);
 
     const mainBalance = currentWallet ? currentWallet.balance : 0;
     const walletId = currentWallet ? currentWallet.id : "";
@@ -92,7 +101,7 @@ export function DashboardView({ user, initialWallet, initialTransactions }: Dash
     });
 
     const handleTabSelect = (
-        tab: "overview" | "transfer" | "deposit-withdraw" | "history" | "settings"
+        tab: "overview" | "transfer" | "deposit-withdraw" | "beneficiaries" | "history" | "settings"
     ) => {
         setActiveTab(tab);
         setIsMobileMenuOpen(false);
@@ -101,6 +110,8 @@ export function DashboardView({ user, initialWallet, initialTransactions }: Dash
             setIsTransferOpen(true);
         } else if (tab === "deposit-withdraw") {
             setIsDepositOpen(true);
+        } else if (tab === "beneficiaries") {
+            setIsBeneficiariesOpen(true);
         } else if (tab === "settings") {
             setIsSettingsOpen(true);
         } else if (tab === "history") {
@@ -259,9 +270,27 @@ export function DashboardView({ user, initialWallet, initialTransactions }: Dash
             <TransferModal
                 currency={currentWallet?.currency ?? "VND"}
                 isOpen={isTransferOpen}
-                onClose={() => setIsTransferOpen(false)}
+                onClose={() => {
+                    setIsTransferOpen(false);
+                    setTransferRecipient(null);
+                }}
                 senderWalletId={walletId}
                 currentBalance={mainBalance}
+                initialRecipient={transferRecipient}
+            />
+
+            <BeneficiariesModal
+                isOpen={isBeneficiariesOpen}
+                onClose={() => setIsBeneficiariesOpen(false)}
+                onSelectBeneficiary={(b) => {
+                    setIsBeneficiariesOpen(false);
+                    setTransferRecipient({
+                        identifier: b.phoneNumber || b.email || b.beneficiaryWalletId,
+                        walletId: b.beneficiaryWalletId,
+                        fullName: b.fullName || b.nickname || "",
+                    });
+                    setIsTransferOpen(true);
+                }}
             />
 
             <SettingsModal

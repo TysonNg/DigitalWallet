@@ -12,5 +12,9 @@ public interface UserRepository {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByPhoneNumber(String phoneNumber);
+
+    Optional<User> findByIdentifier(String identifier);
+
     User save(User user);
 }

@@ -29,15 +29,24 @@ public class WalletController {
     private final GetWalletUseCase getWalletUseCase;
     private final TransferMoneyUseCase transferMoneyUseCase;
     private final GetTransactionsUseCase getTransactionsUseCase;
+    private final com.tyson.digitalwallet.ddd.application.usecase.wallet.LookupRecipientUseCase lookupRecipientUseCase;
 
     public WalletController(CreateWalletUseCase createWalletUseCase, WithdrawUseCase withdrawUseCase,
                             GetWalletUseCase getWalletUseCase, TransferMoneyUseCase transferMoneyUseCase,
-                            GetTransactionsUseCase getTransactionsUseCase) {
+                            GetTransactionsUseCase getTransactionsUseCase,
+                            com.tyson.digitalwallet.ddd.application.usecase.wallet.LookupRecipientUseCase lookupRecipientUseCase) {
         this.createWalletUseCase = createWalletUseCase;
         this.withdrawUseCase = withdrawUseCase;
         this.getWalletUseCase = getWalletUseCase;
         this.transferMoneyUseCase = transferMoneyUseCase;
         this.getTransactionsUseCase = getTransactionsUseCase;
+        this.lookupRecipientUseCase = lookupRecipientUseCase;
+    }
+
+    public WalletController(CreateWalletUseCase createWalletUseCase, WithdrawUseCase withdrawUseCase,
+                            GetWalletUseCase getWalletUseCase, TransferMoneyUseCase transferMoneyUseCase,
+                            GetTransactionsUseCase getTransactionsUseCase) {
+        this(createWalletUseCase, withdrawUseCase, getWalletUseCase, transferMoneyUseCase, getTransactionsUseCase, null);
     }
 
     @PostMapping
@@ -97,5 +106,17 @@ public class WalletController {
         List<TransactionResponseDto> list = getTransactionsUseCase.getTransactionsByWalletId(id).stream()
                 .map(TransactionResponseDto::from).toList();
         return ApiResponse.ok("Get transactions successfully", list);
+    }
+
+    @GetMapping("/lookup")
+    public ResponseEntity<ApiResponse<com.tyson.digitalwallet.ddd.controller.dto.response.wallet.RecipientLookupResponseDto>> lookupRecipient(
+            @RequestParam("identifier") String identifier,
+            Principal principal
+    ) {
+        UUID currentUserId = WalletAccess.currentUser(principal);
+        com.tyson.digitalwallet.ddd.application.usecase.wallet.response.RecipientLookupResponse response =
+                lookupRecipientUseCase.lookup(currentUserId, identifier);
+        return ApiResponse.ok("Tra cứu người nhận thành công",
+                com.tyson.digitalwallet.ddd.controller.dto.response.wallet.RecipientLookupResponseDto.from(response));
     }
 }

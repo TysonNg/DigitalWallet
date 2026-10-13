@@ -1,14 +1,35 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
-
-import { useState } from "react";
-import { X, Send } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import {
+    X,
+    Send,
+    BookUser,
+    CheckCircle2,
+    Loader2,
+    BookmarkPlus,
+    User as UserIcon,
+    AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTransferMutation } from "../hooks/use-wallet";
+import {
+    useTransferMutation,
+    useBeneficiariesQuery,
+    useAddBeneficiaryMutation,
+} from "../hooks/use-wallet";
+import { lookupRecipientAction } from "../actions/wallet.actions";
+import { BeneficiaryDto, RecipientLookupDto } from "../types/wallet.types";
 import { toast } from "sonner";
+
+interface InitialRecipient {
+    identifier: string;
+    walletId: string;
+    fullName: string;
+    nickname?: string;
+}
 
 interface TransferModalProps {
     isOpen: boolean;
@@ -17,6 +38,7 @@ interface TransferModalProps {
     currentBalance: number;
     currency?: string;
     onSuccess?: () => void;
+    initialRecipient?: InitialRecipient | null;
 }
 
 export function TransferModal({
@@ -26,6 +48,7 @@ export function TransferModal({
     currentBalance,
     currency = "VND",
     onSuccess,
+    initialRecipient,
 }: TransferModalProps) {
     const t = useTranslations("wallet");
     const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
@@ -33,25 +56,138 @@ export function TransferModal({
     const formatVND = (value: number) =>
         new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
 
+    // Form inputs
+    const [identifier, setIdentifier] = useState<string>("");
     const [receiverWalletId, setReceiverWalletId] = useState<string>("");
     const [amount, setAmount] = useState<number>(200000);
     const [description, setDescription] = useState<string>(t("defaultTransferDescription"));
     const [error, setError] = useState<string | null>(null);
 
-    const transferMutation = useTransferMutation();
+    // Recipient lookup states
+    const [isLookingUp, setIsLookingUp] = useState<boolean>(false);
+    const [verifiedRecipient, setVerifiedRecipient] = useState<RecipientLookupDto | null>(null);
+    const [lookupError, setLookupError] = useState<string | null>(null);
 
-    if (!isOpen) return null;
+    // Beneficiary save options
+    const [saveBeneficiary, setSaveBeneficiary] = useState<boolean>(false);
+    const [beneficiaryNickname, setBeneficiaryNickname] = useState<string>("");
+
+    // Quick address book selector
+    const [isAddressBookOpen, setIsAddressBookOpen] = useState<boolean>(false);
+
+    const { data: beneficiaries = [] } = useBeneficiariesQuery();
+    const transferMutation = useTransferMutation();
+    const addBeneficiaryMutation = useAddBeneficiaryMutation();
+
+    // Debounce timer ref
+    const lookupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Initialize or reset when modal opens or initialRecipient changes
+    useEffect(() => {
+        if (!isOpen) {
+            setIdentifier("");
+            setReceiverWalletId("");
+            setVerifiedRecipient(null);
+            setLookupError(null);
+            setError(null);
+            setSaveBeneficiary(false);
+            setBeneficiaryNickname("");
+            setIsAddressBookOpen(false);
+            return;
+        }
+
+        if (initialRecipient) {
+            setIdentifier(initialRecipient.identifier);
+            setReceiverWalletId(initialRecipient.walletId);
+            setVerifiedRecipient({
+                userId: "",
+                walletId: initialRecipient.walletId,
+                fullName: initialRecipient.fullName,
+                currency,
+            });
+            setLookupError(null);
+        }
+    }, [isOpen, initialRecipient, currency]);
+
+    // Handle debounced lookup when user types in the identifier input
+    const handleIdentifierChange = (value: string) => {
+        setIdentifier(value);
+        setError(null);
+        setLookupError(null);
+
+        if (lookupTimeoutRef.current) {
+            clearTimeout(lookupTimeoutRef.current);
+        }
+
+        const trimmed = value.trim();
+        if (!trimmed || trimmed.length < 3) {
+            setVerifiedRecipient(null);
+            setReceiverWalletId("");
+            setIsLookingUp(false);
+            return;
+        }
+
+        setIsLookingUp(true);
+        lookupTimeoutRef.current = setTimeout(async () => {
+            try {
+                const res = await lookupRecipientAction(trimmed);
+                if (res.success && res.data) {
+                    setVerifiedRecipient(res.data);
+                    setReceiverWalletId(res.data.walletId);
+                    setLookupError(null);
+                } else {
+                    setVerifiedRecipient(null);
+                    setReceiverWalletId("");
+                    setLookupError(res.message || t("recipientNotFound"));
+                }
+            } catch {
+                setVerifiedRecipient(null);
+                setReceiverWalletId("");
+                setLookupError(t("recipientNotFound"));
+            } finally {
+                setIsLookingUp(false);
+            }
+        }, 400);
+    };
+
+    const handleSelectBeneficiary = (b: BeneficiaryDto) => {
+        const val = b.phoneNumber || b.email || b.beneficiaryWalletId;
+        setIdentifier(val);
+        setReceiverWalletId(b.beneficiaryWalletId);
+        setVerifiedRecipient({
+            userId: b.beneficiaryUserId,
+            walletId: b.beneficiaryWalletId,
+            fullName: b.fullName || b.nickname || "",
+            phoneNumber: b.phoneNumber,
+            email: b.email,
+            currency,
+        });
+        setLookupError(null);
+        setError(null);
+        setIsAddressBookOpen(false);
+    };
+
+    // Check if the current recipient is already saved in beneficiaries
+    const isAlreadyBeneficiary =
+        verifiedRecipient &&
+        beneficiaries.some(
+            (b) =>
+                b.beneficiaryWalletId === receiverWalletId ||
+                (verifiedRecipient.userId && b.beneficiaryUserId === verifiedRecipient.userId)
+        );
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
 
-        if (!receiverWalletId.trim()) {
+        const targetWalletId = receiverWalletId.trim();
+
+        if (!targetWalletId) {
             setError(t("pleaseEnterTheRecipientWalletID"));
             return;
         }
 
-        if (receiverWalletId.trim() === senderWalletId) {
+        if (targetWalletId === senderWalletId) {
             setError(t("youCannotTransferToYourOwnWallet"));
             return;
         }
@@ -69,10 +205,24 @@ export function TransferModal({
         try {
             await transferMutation.mutateAsync({
                 senderWalletId,
-                receiverWalletId: receiverWalletId.trim(),
+                receiverWalletId: targetWalletId,
                 amount,
                 description: description.trim() || t("defaultTransferDescription"),
             });
+
+            // Automatically save to beneficiaries if checked and recipient info is available
+            if (saveBeneficiary && verifiedRecipient && verifiedRecipient.userId) {
+                try {
+                    await addBeneficiaryMutation.mutateAsync({
+                        beneficiaryUserId: verifiedRecipient.userId,
+                        beneficiaryWalletId: targetWalletId,
+                        nickname: beneficiaryNickname.trim() || undefined,
+                    });
+                } catch {
+                    // Ignored if already added or background error
+                }
+            }
+
             toast.success(t("transferSuccess", { amount: formatVND(amount) }));
             onSuccess?.();
             onClose();
@@ -83,6 +233,8 @@ export function TransferModal({
             toast.error(msg);
         }
     };
+
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
@@ -106,8 +258,7 @@ export function TransferModal({
                     </div>
                     <div>
                         <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                            {" "}
-                            {t("transferBetweenWallets")}{" "}
+                            {t("transferBetweenWallets")}
                         </h3>
                         <p className="text-xs text-slate-500">
                             {t("available")}{" "}
@@ -120,28 +271,154 @@ export function TransferModal({
 
                 <form onSubmit={handleSubmit} className="space-y-3.5">
                     {error && (
-                        <div className="p-2.5 bg-rose-50 border border-rose-200 text-xs text-rose-700 rounded-lg">
-                            {error}
+                        <div className="p-2.5 bg-rose-50 border border-rose-200 text-xs text-rose-700 rounded-lg flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            <span>{error}</span>
                         </div>
                     )}
 
+                    {/* Recipient Input with Address Book Icon */}
                     <div>
-                        <Label htmlFor="receiver-wallet-id" required>
-                            {t("recipientWalletIDUUID")}{" "}
+                        <Label htmlFor="receiver-identifier" required>
+                            {t("recipientIdentifier")}
                         </Label>
-                        <Input
-                            id="receiver-wallet-id"
-                            placeholder="b8a7c2e1-4567-..."
-                            value={receiverWalletId}
-                            onChange={(e) => setReceiverWalletId(e.target.value)}
-                            className="font-mono text-xs"
-                            required
-                        />
+                        <div className="relative mt-1">
+                            <Input
+                                id="receiver-identifier"
+                                placeholder={t("searchRecipientPlaceholder")}
+                                value={identifier}
+                                onChange={(e) => handleIdentifierChange(e.target.value)}
+                                className="text-xs pr-18 font-medium"
+                                required
+                            />
+                            <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                {isLookingUp && (
+                                    <Loader2 className="w-4 h-4 animate-spin text-blue-600 mr-1" />
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAddressBookOpen(!isAddressBookOpen)}
+                                    className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                                        isAddressBookOpen
+                                            ? "bg-blue-100 text-blue-700"
+                                            : "text-slate-400 hover:text-blue-600 hover:bg-slate-100"
+                                    }`}
+                                    title={t("openAddressBook")}
+                                >
+                                    <BookUser className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Quick Address Book Dropdown */}
+                        {isAddressBookOpen && (
+                            <div className="mt-2 p-2 rounded-xl bg-slate-50 border border-slate-200 shadow-sm max-h-48 overflow-y-auto space-y-1">
+                                <div className="text-[11px] font-semibold text-slate-500 px-2 py-1">
+                                    {t("selectFromBeneficiaries")}
+                                </div>
+                                {beneficiaries.length === 0 ? (
+                                    <div className="text-center py-3 text-xs text-slate-400">
+                                        {t("noBeneficiariesYet")}
+                                    </div>
+                                ) : (
+                                    beneficiaries.map((b) => (
+                                        <button
+                                            key={b.id}
+                                            type="button"
+                                            onClick={() => handleSelectBeneficiary(b)}
+                                            className="w-full text-left p-2 rounded-lg hover:bg-white hover:shadow-xs transition-all flex items-center justify-between text-xs cursor-pointer group"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-bold text-[10px] flex items-center justify-center uppercase shrink-0">
+                                                    {(b.fullName || b.nickname || "?").charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <div className="font-semibold text-slate-800 group-hover:text-blue-600">
+                                                        {b.nickname || b.fullName}
+                                                    </div>
+                                                    <div className="text-[10px] text-slate-400">
+                                                        {b.phoneNumber || b.email}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                                Chọn
+                                            </span>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        )}
+
+                        {/* Recipient Lookup Error */}
+                        {lookupError && !isLookingUp && (
+                            <div className="mt-1.5 text-xs text-rose-600 flex items-center gap-1">
+                                <AlertCircle className="w-3.5 h-3.5" />
+                                <span>{lookupError}</span>
+                            </div>
+                        )}
+
+                        {/* Verified Recipient Card */}
+                        {verifiedRecipient && !isLookingUp && (
+                            <div className="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between transition-all">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center uppercase shadow-xs">
+                                        {(verifiedRecipient.fullName || "?").charAt(0)}
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-xs font-bold text-slate-900 tracking-wide uppercase">
+                                                {verifiedRecipient.fullName}
+                                            </span>
+                                            <span className="inline-flex items-center gap-0.5 text-[9px] text-emerald-700 font-semibold bg-emerald-100/90 px-1.5 py-0.5 rounded-full">
+                                                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                                {t("verifiedRecipient")}
+                                            </span>
+                                        </div>
+                                        <div className="text-[10px] text-slate-500 font-mono">
+                                            {verifiedRecipient.phoneNumber ||
+                                                verifiedRecipient.email ||
+                                                `Ví: ${verifiedRecipient.walletId.slice(0, 8)}...`}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Checkbox Save to Beneficiaries */}
+                        {verifiedRecipient && !isAlreadyBeneficiary && (
+                            <div className="mt-2.5 pt-2 border-t border-slate-100 space-y-2">
+                                <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={saveBeneficiary}
+                                        onChange={(e) => setSaveBeneficiary(e.target.checked)}
+                                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                                    />
+                                    <span className="font-medium flex items-center gap-1">
+                                        <BookmarkPlus className="w-3.5 h-3.5 text-blue-600" />
+                                        {t("saveToBeneficiaries")}
+                                    </span>
+                                </label>
+
+                                {saveBeneficiary && (
+                                    <div className="pl-5">
+                                        <Input
+                                            placeholder={t("nicknamePlaceholder")}
+                                            value={beneficiaryNickname}
+                                            onChange={(e) => setBeneficiaryNickname(e.target.value)}
+                                            className="text-xs h-8"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
+                    {/* Amount Input */}
                     <div>
                         <Label htmlFor="transfer-amount" required>
-                            {t("transferAmount")}{" "}
+                            {t("transferAmount")}
                         </Label>
                         <div className="relative mt-1">
                             <Input
@@ -162,8 +439,9 @@ export function TransferModal({
                         </div>
                     </div>
 
+                    {/* Description Input */}
                     <div>
-                        <Label htmlFor="transfer-desc"> {t("transferDescription")} </Label>
+                        <Label htmlFor="transfer-desc">{t("transferDescription")}</Label>
                         <Input
                             id="transfer-desc"
                             value={description}
@@ -175,8 +453,8 @@ export function TransferModal({
 
                     <div className="p-2.5 bg-slate-50 rounded-lg space-y-1 text-xs text-slate-600 border border-slate-100">
                         <div className="flex justify-between">
-                            <span> {t("transferFee")} </span>
-                            <span className="font-semibold text-emerald-600"> {t("free")} </span>
+                            <span>{t("transferFee")}</span>
+                            <span className="font-semibold text-emerald-600">{t("free")}</span>
                         </div>
                     </div>
 
@@ -185,7 +463,7 @@ export function TransferModal({
                         variant="primary"
                         className="w-full mt-2"
                         isLoading={transferMutation.isPending}
-                        disabled={currentBalance <= 0}
+                        disabled={currentBalance <= 0 || !receiverWalletId || isLookingUp}
                     >
                         {t("transferNowAmount", { amount: amount > 0 ? formatVND(amount) : "" })}
                     </Button>

@@ -246,3 +246,142 @@ export async function createPaymentOrderAction(params: {
         return { success: false, message: t("unableToConnectToThePaymentGateway") };
     }
 }
+
+/**
+ * Tra cứu thông tin người nhận trước khi chuyển tiền (SĐT / Email / Mã ví)
+ */
+export async function lookupRecipientAction(
+    identifier: string
+): Promise<ActionResult<import("../types/wallet.types").RecipientLookupDto>> {
+    const t = await getTranslations("walletErrors");
+
+    try {
+        if (!identifier || identifier.trim() === "") {
+            return { success: false, message: t("pleaseEnterTheRecipientWalletID") };
+        }
+
+        const encoded = encodeURIComponent(identifier.trim());
+        const res = await backendFetch<import("../types/wallet.types").RecipientLookupDto>(
+            `/wallet/lookup?identifier=${encoded}`
+        );
+
+        return {
+            success: true,
+            message: "Tra cứu thông tin người nhận thành công",
+            data: res.data,
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            return { success: false, message: error.message };
+        }
+        return { success: false, message: "Không tìm thấy người nhận hoặc lỗi hệ thống" };
+    }
+}
+
+/**
+ * Lấy danh sách danh bạ người thụ hưởng của người dùng hiện tại
+ */
+export async function getBeneficiariesAction(): Promise<
+    ActionResult<import("../types/wallet.types").BeneficiaryDto[]>
+> {
+    try {
+        const res = await backendFetch<import("../types/wallet.types").BeneficiaryDto[]>(
+            "/beneficiaries"
+        );
+        return {
+            success: true,
+            message: "Lấy danh bạ thụ hưởng thành công",
+            data: res.data ?? [],
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            return { success: false, message: error.message };
+        }
+        return { success: false, message: "Không thể lấy danh bạ thụ hưởng" };
+    }
+}
+
+/**
+ * Thêm người thụ hưởng mới vào danh bạ
+ */
+export async function addBeneficiaryAction(params: {
+    beneficiaryUserId: string;
+    beneficiaryWalletId: string;
+    nickname?: string;
+}): Promise<ActionResult<import("../types/wallet.types").BeneficiaryDto>> {
+    try {
+        const res = await backendFetch<import("../types/wallet.types").BeneficiaryDto>(
+            "/beneficiaries",
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    beneficiaryUserId: params.beneficiaryUserId,
+                    beneficiaryWalletId: params.beneficiaryWalletId,
+                    nickname: params.nickname?.trim() || undefined,
+                }),
+            }
+        );
+        return {
+            success: true,
+            message: "Đã thêm vào danh bạ thụ hưởng",
+            data: res.data,
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            return { success: false, message: error.message };
+        }
+        return { success: false, message: "Thêm người thụ hưởng thất bại" };
+    }
+}
+
+/**
+ * Cập nhật tên gợi nhớ của người thụ hưởng
+ */
+export async function updateBeneficiaryAction(
+    beneficiaryId: string,
+    nickname?: string
+): Promise<ActionResult<import("../types/wallet.types").BeneficiaryDto>> {
+    try {
+        const res = await backendFetch<import("../types/wallet.types").BeneficiaryDto>(
+            `/beneficiaries/${beneficiaryId}`,
+            {
+                method: "PUT",
+                body: JSON.stringify({
+                    nickname: nickname?.trim() || undefined,
+                }),
+            }
+        );
+        return {
+            success: true,
+            message: "Cập nhật tên gợi nhớ thành công",
+            data: res.data,
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            return { success: false, message: error.message };
+        }
+        return { success: false, message: "Cập nhật tên gợi nhớ thất bại" };
+    }
+}
+
+/**
+ * Xoá người thụ hưởng khỏi danh bạ
+ */
+export async function deleteBeneficiaryAction(
+    beneficiaryId: string
+): Promise<ActionResult<void>> {
+    try {
+        await backendFetch<void>(`/beneficiaries/${beneficiaryId}`, {
+            method: "DELETE",
+        });
+        return {
+            success: true,
+            message: "Xoá người thụ hưởng thành công",
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            return { success: false, message: error.message };
+        }
+        return { success: false, message: "Xoá người thụ hưởng thất bại" };
+    }
+}

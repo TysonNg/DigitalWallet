@@ -38,3 +38,25 @@ export interface PaymentOrderDto {
     createdAt: string;
     completedAt?: string | null;
 }
+
+export interface RecipientLookupDto {
+    userId: string;
+    walletId: string;
+    fullName: string;
+    phoneNumber?: string | null;
+    email?: string | null;
+    currency: string;
+}
+
+export interface BeneficiaryDto {
+    id: string;
+    userId: string;
+    beneficiaryUserId: string;
+    beneficiaryWalletId: string;
+    nickname?: string | null;
+    fullName?: string | null;
+    phoneNumber?: string | null;
+    email?: string | null;
+    createdAt: string;
+    updatedAt: string;
+}

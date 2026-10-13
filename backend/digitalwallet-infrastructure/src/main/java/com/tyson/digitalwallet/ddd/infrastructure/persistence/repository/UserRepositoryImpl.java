@@ -37,6 +37,19 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Optional<User> findByPhoneNumber(String phoneNumber) {
+        return springDataUserRepository.findByPhoneNumber(phoneNumber).map(userMapper::toDomain);
+    }
+
+    @Override
+    public Optional<User> findByIdentifier(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            return Optional.empty();
+        }
+        return springDataUserRepository.findByIdentifier(identifier.trim()).map(userMapper::toDomain);
+    }
+
+    @Override
     public User save(User user) {
         UserEntity entity = userMapper.toEntity(user);
         UserEntity savedEntity = springDataUserRepository.save(entity);

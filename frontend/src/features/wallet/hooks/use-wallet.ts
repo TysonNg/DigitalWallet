@@ -11,8 +11,12 @@ import {
     withdrawMoneyAction,
     transferMoneyAction,
     createPaymentOrderAction,
+    getBeneficiariesAction,
+    addBeneficiaryAction,
+    updateBeneficiaryAction,
+    deleteBeneficiaryAction,
 } from "../actions/wallet.actions";
-import { WalletDto, TransactionDto, PaymentGatewayType } from "../types/wallet.types";
+import { WalletDto, TransactionDto, PaymentGatewayType, BeneficiaryDto } from "../types/wallet.types";
 
 /**
  * Hook truy vấn thông tin ví của người dùng hiện tại
@@ -154,6 +158,92 @@ export function useCreatePaymentOrderMutation() {
                 throw new Error(res.message || t("unableToCreateAPaymentLink"));
             }
             return res.data;
+        },
+    });
+}
+
+/**
+ * Hook truy vấn danh sách người thụ hưởng đã lưu
+ */
+export function useBeneficiariesQuery() {
+    return useQuery<BeneficiaryDto[]>({
+        queryKey: queryKeys.beneficiaries.all,
+        queryFn: async () => {
+            const res = await getBeneficiariesAction();
+            if (!res.success) {
+                throw new Error(res.message || "Không thể tải danh bạ thụ hưởng");
+            }
+            return res.data ?? [];
+        },
+    });
+}
+
+/**
+ * Hook Mutation: Thêm người thụ hưởng mới
+ */
+export function useAddBeneficiaryMutation() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (params: {
+            beneficiaryUserId: string;
+            beneficiaryWalletId: string;
+            nickname?: string;
+        }) => {
+            const res = await addBeneficiaryAction(params);
+            if (!res.success) {
+                throw new Error(res.message || "Thêm người thụ hưởng thất bại");
+            }
+            return res.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.beneficiaries.all });
+        },
+    });
+}
+
+/**
+ * Hook Mutation: Cập nhật tên gợi nhớ
+ */
+export function useUpdateBeneficiaryMutation() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            beneficiaryId,
+            nickname,
+        }: {
+            beneficiaryId: string;
+            nickname?: string;
+        }) => {
+            const res = await updateBeneficiaryAction(beneficiaryId, nickname);
+            if (!res.success) {
+                throw new Error(res.message || "Cập nhật tên gợi nhớ thất bại");
+            }
+            return res.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.beneficiaries.all });
+        },
+    });
+}
+
+/**
+ * Hook Mutation: Xoá người thụ hưởng khỏi danh bạ
+ */
+export function useDeleteBeneficiaryMutation() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (beneficiaryId: string) => {
+            const res = await deleteBeneficiaryAction(beneficiaryId);
+            if (!res.success) {
+                throw new Error(res.message || "Xoá người thụ hưởng thất bại");
+            }
+            return res;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.beneficiaries.all });
         },
     });
 }
