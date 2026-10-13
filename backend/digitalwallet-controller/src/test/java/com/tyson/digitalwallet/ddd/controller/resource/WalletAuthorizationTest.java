@@ -34,6 +34,7 @@ public class WalletAuthorizationTest {
     private final TransferMoneyUseCase transfer = mock(TransferMoneyUseCase.class);
     private final GetTransactionsUseCase transactions = mock(GetTransactionsUseCase.class);
     private final CreatePaymentOrderUseCase payment = mock(CreatePaymentOrderUseCase.class);
+    private final LookupRecipientUseCase lookupRecipient = mock(LookupRecipientUseCase.class);
     private MockMvc mvc;
 
     @Before public void setup() {
@@ -44,7 +45,7 @@ public class WalletAuthorizationTest {
         when(withdraw.withdraw(any())).thenReturn(wallet(ownWallet, user));
         when(transfer.transfer(any())).thenReturn(wallet(ownWallet, user));
         mvc = MockMvcBuilders.standaloneSetup(
-                new WalletController(create, withdraw, wallets, transfer, transactions),
+                new WalletController(create, withdraw, wallets, transfer, transactions, lookupRecipient),
                 new TransactionController(transactions, wallets),
                 new PaymentController(payment, webhook))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
@@ -156,5 +157,13 @@ public class WalletAuthorizationTest {
         verify(webhook, atLeastOnce()).processWebhook(command.capture());
         assertEquals(PaymentGatewayType.PAYOS, command.getValue().gateway());
         assertEquals("{\"code\":\"00\"}", command.getValue().rawPayload());
+    }
+
+    @Test public void lookupRecipientReturnsOkWhenFound() throws Exception {
+        when(lookupRecipient.lookup(eq(user), eq("0901234567"))).thenReturn(
+                new com.tyson.digitalwallet.ddd.application.usecase.wallet.response.RecipientLookupResponse(
+                        UUID.randomUUID(), UUID.randomUUID(), "NGUYEN VAN B", "0901234567", "b@example.com", "VND")
+        );
+        status(200, get("/wallet/lookup").param("identifier", "0901234567"));
     }
 }

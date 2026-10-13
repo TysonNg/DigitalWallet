@@ -17,6 +17,8 @@ import com.tyson.digitalwallet.ddd.controller.security.WalletAccess;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.tyson.digitalwallet.ddd.application.usecase.wallet.LookupRecipientUseCase;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
@@ -29,24 +31,19 @@ public class WalletController {
     private final GetWalletUseCase getWalletUseCase;
     private final TransferMoneyUseCase transferMoneyUseCase;
     private final GetTransactionsUseCase getTransactionsUseCase;
-    private final com.tyson.digitalwallet.ddd.application.usecase.wallet.LookupRecipientUseCase lookupRecipientUseCase;
+    private final LookupRecipientUseCase lookupRecipientUseCase;
 
+    @Autowired
     public WalletController(CreateWalletUseCase createWalletUseCase, WithdrawUseCase withdrawUseCase,
                             GetWalletUseCase getWalletUseCase, TransferMoneyUseCase transferMoneyUseCase,
                             GetTransactionsUseCase getTransactionsUseCase,
-                            com.tyson.digitalwallet.ddd.application.usecase.wallet.LookupRecipientUseCase lookupRecipientUseCase) {
+                            LookupRecipientUseCase lookupRecipientUseCase) {
         this.createWalletUseCase = createWalletUseCase;
         this.withdrawUseCase = withdrawUseCase;
         this.getWalletUseCase = getWalletUseCase;
         this.transferMoneyUseCase = transferMoneyUseCase;
         this.getTransactionsUseCase = getTransactionsUseCase;
         this.lookupRecipientUseCase = lookupRecipientUseCase;
-    }
-
-    public WalletController(CreateWalletUseCase createWalletUseCase, WithdrawUseCase withdrawUseCase,
-                            GetWalletUseCase getWalletUseCase, TransferMoneyUseCase transferMoneyUseCase,
-                            GetTransactionsUseCase getTransactionsUseCase) {
-        this(createWalletUseCase, withdrawUseCase, getWalletUseCase, transferMoneyUseCase, getTransactionsUseCase, null);
     }
 
     @PostMapping
