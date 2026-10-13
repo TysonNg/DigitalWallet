@@ -147,4 +147,14 @@ public class WalletAuthorizationTest {
         assertEquals(PaymentGatewayType.STRIPE, command.getValue().gateway());
         assertEquals("{\"type\":\"test\"}", command.getValue().rawPayload());
     }
+
+    @Test public void payOsWebhookStillReachesPaymentVerificationWithoutUserPrincipal() throws Exception {
+        assertEquals(200, mvc.perform(post("/payments/webhook/payos").contentType("application/json")
+                .content("{\"code\":\"00\"}"))
+                .andReturn().getResponse().getStatus());
+        var command = ArgumentCaptor.forClass(com.tyson.digitalwallet.ddd.application.usecase.payment.command.ProcessPaymentWebhookCommand.class);
+        verify(webhook, atLeastOnce()).processWebhook(command.capture());
+        assertEquals(PaymentGatewayType.PAYOS, command.getValue().gateway());
+        assertEquals("{\"code\":\"00\"}", command.getValue().rawPayload());
+    }
 }

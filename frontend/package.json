@@ -12,7 +12,9 @@
         "test:i18n": "tsx --test tests/i18n.test.ts",
         "prebuild": "pnpm messages:check",
         "predev": "pnpm messages:check",
-        "test:auth": "tsx --test tests/refresh.test.ts"
+        "test:auth": "tsx --test tests/refresh.test.ts",
+        "test:payment": "tsx --test tests/payment.test.ts",
+        "test": "tsx --test tests/*.test.ts"
     },
     "dependencies": {
         "@hookform/resolvers": "^5.9.1",
