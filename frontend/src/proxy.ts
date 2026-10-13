@@ -21,12 +21,14 @@ export function proxy(request: NextRequest) {
         headers.set("X-NEXT-INTL-LOCALE", locale);
         response = NextResponse.next({ request: { headers } });
     }
-    response.cookies.set("NEXT_LOCALE", locale, {
-        maxAge: 31536000,
-        path: "/",
-        sameSite: "lax",
-        secure: request.nextUrl.protocol === "https:",
-    });
+    if (request.cookies.get("NEXT_LOCALE")?.value !== locale) {
+        response.cookies.set("NEXT_LOCALE", locale, {
+            maxAge: 31536000,
+            path: "/",
+            sameSite: "lax",
+            secure: request.nextUrl.protocol === "https:",
+        });
+    }
     return response;
 }
 export const config = { matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"] };

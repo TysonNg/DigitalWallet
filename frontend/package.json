@@ -11,7 +11,8 @@
         "messages:check": "node scripts/merge-messages.mjs",
         "test:i18n": "tsx --test tests/i18n.test.ts",
         "prebuild": "pnpm messages:check",
-        "predev": "pnpm messages:check"
+        "predev": "pnpm messages:check",
+        "test:auth": "tsx --test tests/refresh.test.ts"
     },
     "dependencies": {
         "@hookform/resolvers": "^5.9.1",

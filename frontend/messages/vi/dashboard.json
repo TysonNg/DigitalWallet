@@ -69,6 +69,10 @@
         "todayAt": "Hôm nay, {time}",
         "yesterdayAt": "Hôm qua, {time}",
         "yearlyInterest": "{rate}/năm",
-        "walletId": "Mã ví: {id}"
+        "walletId": "Mã ví: {id}",
+        "walletLoading": "Đang tải thông tin ví…",
+        "walletUnavailable": "Không tải được thông tin ví. Vui lòng thử lại.",
+        "walletRetry": "Thử lại",
+        "walletLogin": "Đăng nhập lại"
     }
 }

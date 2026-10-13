@@ -148,7 +148,11 @@
         "todayAt": "Today, {time}",
         "yesterdayAt": "Yesterday, {time}",
         "yearlyInterest": "{rate} per year",
-        "walletId": "Wallet ID: {id}"
+        "walletId": "Wallet ID: {id}",
+        "walletLoading": "Loading your wallet?",
+        "walletUnavailable": "Unable to load your wallet. Please retry.",
+        "walletRetry": "Retry",
+        "walletLogin": "Log in again"
     },
     "landing": {
         "logIn": "Log in",

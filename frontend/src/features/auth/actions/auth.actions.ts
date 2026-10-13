@@ -1,6 +1,7 @@
 "use server";
 
 import { getTranslations } from "next-intl/server";
+import { BackendError, getFreshAccessToken } from "@/server/backend-client";
 import { env } from "@/lib/env";
 import { getSession } from "@/server/session";
 import {
@@ -263,9 +264,10 @@ export async function getCurrentUserAction(): Promise<User | null> {
  * Lấy Access Token từ BFF Session phục vụ kết nối WebSocket
  */
 export async function getAccessTokenAction(): Promise<string | null> {
-    const session = await getSession();
-    if (!session.isLoggedIn || !session.accessToken) {
-        return null;
+    try {
+        return await getFreshAccessToken();
+    } catch (error) {
+        if (error instanceof BackendError && error.statusCode === 401) return null;
+        throw error;
     }
-    return session.accessToken;
 }

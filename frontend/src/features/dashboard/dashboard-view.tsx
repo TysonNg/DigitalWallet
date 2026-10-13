@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { User } from "@/features/auth/types/auth.types";
 import { WalletDto, TransactionDto } from "@/features/wallet/types/wallet.types";
+import { Link } from "@/i18n/navigation";
 import { queryKeys } from "@/lib/query-keys";
 import { useMyWalletQuery, useTransactionsQuery } from "@/features/wallet/hooks/use-wallet";
 import { Sidebar } from "./components/sidebar";
@@ -59,8 +60,8 @@ export function DashboardView({ user, initialWallet, initialTransactions }: Dash
     const common = useTranslations("common");
     const queryClient = useQueryClient();
 
-    // Queries từ React Query (Đã được hydrate dữ liệu từ SSR Server Component)
-    const { data: wallet = initialWallet ?? null } = useMyWalletQuery();
+    // Fetch through client-invoked actions so token refresh can persist the session cookie.
+    const { data: wallet = initialWallet ?? null, isPending, error, refetch } = useMyWalletQuery();
     const currentWallet = wallet || initialWallet;
     const { data: transactions = initialTransactions ?? [] } = useTransactionsQuery(
         currentWallet?.id
@@ -116,6 +117,22 @@ export function DashboardView({ user, initialWallet, initialTransactions }: Dash
             month: "long",
             year: "numeric",
         }).format(new Date());
+
+    if (!currentWallet) {
+        return (
+            <main className="min-h-screen flex flex-col items-center justify-center gap-4 p-6">
+                <p role={error ? "alert" : "status"}>
+                    {isPending ? t("walletLoading") : error?.message || t("walletUnavailable")}
+                </p>
+                {!isPending && (
+                    <button className="rounded-lg border px-4 py-2" onClick={() => void refetch()}>
+                        {t("walletRetry")}
+                    </button>
+                )}
+                {!isPending && <Link href="/?auth=login">{t("walletLogin")}</Link>}
+            </main>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 flex text-slate-900">

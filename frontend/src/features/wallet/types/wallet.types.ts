@@ -38,4 +38,3 @@ export interface PaymentOrderDto {
     createdAt: string;
     completedAt?: string | null;
 }
-

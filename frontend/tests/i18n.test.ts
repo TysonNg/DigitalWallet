@@ -156,3 +156,14 @@ test("Vietnamese metadata and language selector retain Unicode", async () => {
     assert.ok(metadata.includes("Ví điện tử"));
     assert.ok(selector.includes("Tiếng Việt"));
 });
+
+test("server-action POST with the selected locale does not rewrite its cookie", () => {
+    const response = proxy(
+        new NextRequest("https://wallet.test/vi/dashboard", {
+            method: "POST",
+            headers: { cookie: "NEXT_LOCALE=vi", "Next-Action": "action-id" },
+        })
+    );
+    assert.equal(response.headers.get("set-cookie"), null);
+    assert.equal(response.headers.get("location"), null);
+});

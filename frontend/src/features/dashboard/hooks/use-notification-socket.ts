@@ -13,6 +13,10 @@ interface UseNotificationSocketProps {
 
 export function useNotificationSocket({ onNotificationReceived }: UseNotificationSocketProps = {}) {
     const t = useTranslations("dashboard");
+    const translationRef = useRef(t);
+    useEffect(() => {
+        translationRef.current = t;
+    }, [t]);
     const callbackRef = useRef(onNotificationReceived);
     useEffect(() => {
         callbackRef.current = onNotificationReceived;
@@ -21,20 +25,30 @@ export function useNotificationSocket({ onNotificationReceived }: UseNotificatio
     useEffect(() => {
         let isMounted = true;
         let client: Client | null = null;
+        let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-        async function connect() {
-            // 1. Lấy JWT Access Token từ BFF Session
-            const token = await getAccessTokenAction();
-            if (!token || !isMounted) return;
-
-            // 2. Địa chỉ WebSocket kết nối tới Spring Boot
+        function connect() {
             const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3006/api/v1/ws";
 
             // 3. Khởi tạo Client STOMP
             client = new Client({
                 brokerURL: wsUrl,
-                connectHeaders: {
-                    Authorization: `Bearer ${token}`,
+                beforeConnect: async () => {
+                    try {
+                        const token = await getAccessTokenAction();
+                        if (!isMounted || !token) {
+                            await client?.deactivate();
+                            return;
+                        }
+                        if (client) client.connectHeaders = { Authorization: `Bearer ${token}` };
+                    } catch {
+                        await client?.deactivate();
+                        if (isMounted) {
+                            retryTimer = setTimeout(() => {
+                                if (isMounted) client?.activate();
+                            }, 5000);
+                        }
+                    }
                 },
                 reconnectDelay: 5000,
                 heartbeatIncoming: 4000,
@@ -46,10 +60,14 @@ export function useNotificationSocket({ onNotificationReceived }: UseNotificatio
                             const notification: NotificationItem = JSON.parse(message.body);
 
                             // Hiển thị Toast thông báo realtime bằng Sonner
-                            toast.success(notification.title || t("transactionNotifications"), {
-                                description: notification.content,
-                                duration: 5000,
-                            });
+                            toast.success(
+                                notification.title ||
+                                    translationRef.current("transactionNotifications"),
+                                {
+                                    description: notification.content,
+                                    duration: 5000,
+                                }
+                            );
 
                             // Gọi callback để cập nhật UI (số dư, danh sách)
                             if (callbackRef.current) {
@@ -72,9 +90,10 @@ export function useNotificationSocket({ onNotificationReceived }: UseNotificatio
 
         return () => {
             isMounted = false;
+            if (retryTimer) clearTimeout(retryTimer);
             if (client) {
                 client.deactivate();
             }
         };
-    }, [t]);
+    }, []);
 }
