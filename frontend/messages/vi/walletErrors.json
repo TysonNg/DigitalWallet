@@ -1,0 +1,26 @@
+{
+    "walletErrors": {
+        "yourSessionHasExpired": "Phiên đăng nhập đã hết hạn",
+        "walletRetrievedSuccessfully": "Lấy thông tin ví thành công",
+        "unableToConnectToTheServer": "Không thể kết nối đến máy chủ",
+        "transactionHistoryRetrievedSuccessfully": "Lấy lịch sử giao dịch thành công",
+        "unableToRetrieveTransactionHistory": "Không thể lấy lịch sử giao dịch",
+        "theDepositAmountMustBeGreaterThan0": "Số tiền nạp phải lớn hơn 0",
+        "depositSuccessful": "Nạp tiền thành công!",
+        "depositFailed": "Nạp tiền thất bại",
+        "theWithdrawalAmountMustBeGreaterThan0": "Số tiền rút phải lớn hơn 0",
+        "withdrawalSuccessful": "Rút tiền thành công!",
+        "withdrawalFailed": "Rút tiền thất bại",
+        "theTransferAmountMustBeGreaterThan0": "Số tiền chuyển phải lớn hơn 0",
+        "pleaseEnterTheRecipientWalletID": "Vui lòng nhập mã ví người nhận",
+        "youCannotTransferToYourOwnWallet": "Không thể chuyển tiền vào ví của bạn",
+        "transferSuccessful": "Chuyển tiền thành công!",
+        "transferFailed": "Chuyển tiền thất bại",
+        "unableToRetrieveYourWallet": "Không thể lấy thông tin ví",
+        "unableToRetrieveTransactions": "Không thể lấy lịch sử giao dịch",
+        "unableToCreateAPaymentLink": "Không thể tạo đường dẫn thanh toán",
+        "theMinimumDepositIsVND1000": "Số tiền nạp tối thiểu là 1.000 đ",
+        "paymentLinkCreatedSuccessfully": "Tạo link thanh toán thành công!",
+        "unableToConnectToThePaymentGateway": "Không thể kết nối đến cổng thanh toán"
+    }
+}

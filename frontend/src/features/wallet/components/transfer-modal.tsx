@@ -1,11 +1,12 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import { useState } from "react";
 import { X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatVND } from "@/lib/utils";
 import { useTransferMutation } from "../hooks/use-wallet";
 import { toast } from "sonner";
 
@@ -14,6 +15,7 @@ interface TransferModalProps {
     onClose: () => void;
     senderWalletId: string;
     currentBalance: number;
+    currency?: string;
     onSuccess?: () => void;
 }
 
@@ -22,11 +24,18 @@ export function TransferModal({
     onClose,
     senderWalletId,
     currentBalance,
+    currency = "VND",
     onSuccess,
 }: TransferModalProps) {
+    const t = useTranslations("wallet");
+    const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
+    const common = useTranslations("common");
+    const formatVND = (value: number) =>
+        new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
+
     const [receiverWalletId, setReceiverWalletId] = useState<string>("");
     const [amount, setAmount] = useState<number>(200000);
-    const [description, setDescription] = useState<string>("Chuyển tiền ví điện tử");
+    const [description, setDescription] = useState<string>(t("defaultTransferDescription"));
     const [error, setError] = useState<string | null>(null);
 
     const transferMutation = useTransferMutation();
@@ -38,22 +47,22 @@ export function TransferModal({
         setError(null);
 
         if (!receiverWalletId.trim()) {
-            setError("Vui lòng nhập mã ví người nhận");
+            setError(t("pleaseEnterTheRecipientWalletID"));
             return;
         }
 
         if (receiverWalletId.trim() === senderWalletId) {
-            setError("Không thể tự chuyển tiền cho chính ví của bạn");
+            setError(t("youCannotTransferToYourOwnWallet"));
             return;
         }
 
         if (amount <= 0) {
-            setError("Số tiền chuyển phải lớn hơn 0");
+            setError(t("theTransferAmountMustBeGreaterThan0"));
             return;
         }
 
         if (amount > currentBalance) {
-            setError("Số dư ví không đủ để thực hiện chuyển khoản này");
+            setError(t("yourWalletBalanceIsInsufficientForThisTransfer"));
             return;
         }
 
@@ -62,13 +71,14 @@ export function TransferModal({
                 senderWalletId,
                 receiverWalletId: receiverWalletId.trim(),
                 amount,
-                description: description.trim() || "Chuyển tiền ví điện tử",
+                description: description.trim() || t("defaultTransferDescription"),
             });
-            toast.success(`Chuyển ${formatVND(amount)} thành công!`);
+            toast.success(t("transferSuccess", { amount: formatVND(amount) }));
             onSuccess?.();
             onClose();
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : "Có lỗi xảy ra khi chuyển tiền";
+            const msg =
+                err instanceof Error ? err.message : t("anErrorOccurredWhileTransferringMoney");
             setError(msg);
             toast.error(msg);
         }
@@ -78,6 +88,7 @@ export function TransferModal({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <div
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-150"
+                aria-label={common("close")}
                 onClick={onClose}
             />
 
@@ -94,9 +105,12 @@ export function TransferModal({
                         <Send className="w-4 h-4 stroke-[2]" />
                     </div>
                     <div>
-                        <h3 className="text-base font-bold text-slate-900 tracking-tight">Chuyển tiền qua Ví</h3>
+                        <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                            {" "}
+                            {t("transferBetweenWallets")}{" "}
+                        </h3>
                         <p className="text-xs text-slate-500">
-                            Khả dụng:{" "}
+                            {t("available")}{" "}
                             <span className="font-semibold text-slate-800">
                                 {formatVND(currentBalance)}
                             </span>
@@ -113,7 +127,7 @@ export function TransferModal({
 
                     <div>
                         <Label htmlFor="receiver-wallet-id" required>
-                            Mã ví người nhận (UUID)
+                            {t("recipientWalletIDUUID")}{" "}
                         </Label>
                         <Input
                             id="receiver-wallet-id"
@@ -127,7 +141,7 @@ export function TransferModal({
 
                     <div>
                         <Label htmlFor="transfer-amount" required>
-                            Số tiền chuyển
+                            {t("transferAmount")}{" "}
                         </Label>
                         <div className="relative mt-1">
                             <Input
@@ -143,26 +157,26 @@ export function TransferModal({
                                 required
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
-                                VND
+                                {currency ?? "VND"}
                             </span>
                         </div>
                     </div>
 
                     <div>
-                        <Label htmlFor="transfer-desc">Nội dung chuyển tiền</Label>
+                        <Label htmlFor="transfer-desc"> {t("transferDescription")} </Label>
                         <Input
                             id="transfer-desc"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Nhập ghi chú giao dịch"
+                            placeholder={t("enterATransactionNote")}
                             className="text-xs"
                         />
                     </div>
 
                     <div className="p-2.5 bg-slate-50 rounded-lg space-y-1 text-xs text-slate-600 border border-slate-100">
                         <div className="flex justify-between">
-                            <span>Phí chuyển tiền:</span>
-                            <span className="font-semibold text-emerald-600">Miễn phí 0 đ</span>
+                            <span> {t("transferFee")} </span>
+                            <span className="font-semibold text-emerald-600"> {t("free")} </span>
                         </div>
                     </div>
 
@@ -173,7 +187,7 @@ export function TransferModal({
                         isLoading={transferMutation.isPending}
                         disabled={currentBalance <= 0}
                     >
-                        Chuyển ngay {amount > 0 ? formatVND(amount) : ""}
+                        {t("transferNowAmount", { amount: amount > 0 ? formatVND(amount) : "" })}
                     </Button>
                 </form>
             </div>

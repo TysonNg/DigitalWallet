@@ -18,11 +18,7 @@ export default function PreviewPage() {
         status: "ACTIVE" as const,
     };
 
-    return (
-        <DashboardView
-            user={mockUser}
-            initialWallet={mockWallet}
-            initialTransactions={[]}
-        />
-    );
+    return <DashboardView user={mockUser} initialWallet={mockWallet} initialTransactions={[]} />;
 }
+
+export const metadata = { robots: { index: false, follow: false } };

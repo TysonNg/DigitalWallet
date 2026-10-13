@@ -1,0 +1,12 @@
+{
+    "common": {
+        "close": "Đóng",
+        "openMenu": "Mở trình đơn",
+        "clearSearch": "Xóa tìm kiếm",
+        "profile": "Hồ sơ",
+        "copyWalletId": "Sao chép mã ví",
+        "moreOptions": "Tùy chọn khác",
+        "loading": "Đang xử lý",
+        "required": "Bắt buộc"
+    }
+}

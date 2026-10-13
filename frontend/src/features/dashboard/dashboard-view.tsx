@@ -1,7 +1,10 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { User } from "@/features/auth/types/auth.types";
@@ -29,6 +32,7 @@ interface DashboardViewProps {
 }
 
 function PaymentFeedbackListener() {
+    const t = useTranslations("dashboard");
     const router = useRouter();
     const searchParams = useSearchParams();
     const queryClient = useQueryClient();
@@ -36,32 +40,36 @@ function PaymentFeedbackListener() {
     useEffect(() => {
         const payment = searchParams.get("payment");
         if (payment === "success") {
-            toast.success("Thanh toán thành công! Tiền đã được nạp vào ví của bạn.");
+            toast.success(t("paymentSuccessfulYourWalletHasBeenCredited"));
             queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
             router.replace("/dashboard", { scroll: false });
         } else if (payment === "cancelled") {
-            toast.info("Giao dịch nạp tiền đã bị hủy.");
+            toast.info(t("yourDepositWasCancelled"));
             router.replace("/dashboard", { scroll: false });
         }
-    }, [searchParams, queryClient, router]);
+    }, [searchParams, queryClient, router, t]);
 
     return null;
 }
 
-export function DashboardView({
-    user,
-    initialWallet,
-    initialTransactions,
-}: DashboardViewProps) {
+export function DashboardView({ user, initialWallet, initialTransactions }: DashboardViewProps) {
+    const t = useTranslations("dashboard");
+    const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
+
+    const common = useTranslations("common");
     const queryClient = useQueryClient();
 
     // Queries từ React Query (Đã được hydrate dữ liệu từ SSR Server Component)
     const { data: wallet = initialWallet ?? null } = useMyWalletQuery();
     const currentWallet = wallet || initialWallet;
-    const { data: transactions = initialTransactions ?? [] } = useTransactionsQuery(currentWallet?.id);
+    const { data: transactions = initialTransactions ?? [] } = useTransactionsQuery(
+        currentWallet?.id
+    );
 
     const [searchQuery, setSearchQuery] = useState<string>("");
-    const [activeTab, setActiveTab] = useState<"overview" | "transfer" | "deposit-withdraw" | "history" | "settings">("overview");
+    const [activeTab, setActiveTab] = useState<
+        "overview" | "transfer" | "deposit-withdraw" | "history" | "settings"
+    >("overview");
 
     // Modal states
     const [isDepositOpen, setIsDepositOpen] = useState(false);
@@ -82,7 +90,9 @@ export function DashboardView({
         },
     });
 
-    const handleTabSelect = (tab: "overview" | "transfer" | "deposit-withdraw" | "history" | "settings") => {
+    const handleTabSelect = (
+        tab: "overview" | "transfer" | "deposit-withdraw" | "history" | "settings"
+    ) => {
         setActiveTab(tab);
         setIsMobileMenuOpen(false);
 
@@ -98,16 +108,14 @@ export function DashboardView({
         }
     };
 
-    // Format current localized Vietnamese date
-    const getFormattedDate = () => {
-        const today = new Date();
-        const days = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
-        const dayOfWeek = days[today.getDay()];
-        const day = today.getDate();
-        const month = today.getMonth() + 1;
-        const year = today.getFullYear();
-        return `${dayOfWeek}, ${day} tháng ${month}, ${year}`;
-    };
+    const getFormattedDate = () =>
+        new Intl.DateTimeFormat(locale, {
+            timeZone: "Asia/Ho_Chi_Minh",
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        }).format(new Date());
 
     return (
         <div className="min-h-screen bg-slate-50 flex text-slate-900">
@@ -129,6 +137,7 @@ export function DashboardView({
                     <div className="relative z-10 w-64 bg-white h-full shadow-2xl flex flex-col">
                         <div className="flex justify-end p-2">
                             <button
+                                aria-label={common("close")}
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className="p-2 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
                             >
@@ -145,6 +154,7 @@ export function DashboardView({
                 {/* Mobile Top Bar */}
                 <div className="lg:hidden flex items-center justify-between p-3 bg-white border-b border-slate-200">
                     <button
+                        aria-label={common("openMenu")}
                         onClick={() => setIsMobileMenuOpen(true)}
                         className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 cursor-pointer"
                     >
@@ -168,10 +178,10 @@ export function DashboardView({
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div>
                             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                                Tổng quan ví
+                                {t("walletOverview")}{" "}
                             </h1>
                             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                                Chào mừng bạn trở lại! Cùng xem tình hình tài chính của bạn hôm nay.
+                                {t("welcomeBackSeeHowYourFinancesAreDoingToday")}{" "}
                             </p>
                         </div>
                         <div className="text-xs font-medium text-slate-400 sm:text-right">
@@ -181,6 +191,7 @@ export function DashboardView({
 
                     {/* Row 1: 3 Wallet Cards */}
                     <WalletCards
+                        currency={currentWallet?.currency ?? "VND"}
                         mainBalance={mainBalance}
                         walletId={walletId}
                         onDepositClick={() => setIsDepositOpen(true)}
@@ -192,17 +203,21 @@ export function DashboardView({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                         {/* Left Column: Hoạt động 30 ngày + Hạn mức & tóm tắt */}
                         <div className="space-y-6">
-                            <ActivityChart />
-                            <SummaryLimitsCard />
+                            <ActivityChart currency={currentWallet?.currency ?? "VND"} />
+                            <SummaryLimitsCard currency={currentWallet?.currency ?? "VND"} />
                         </div>
 
                         {/* Right Column: Giao dịch gần đây + Phân bổ ví */}
                         <div className="space-y-6">
                             <RecentTransactions
+                                currency={currentWallet?.currency ?? "VND"}
                                 searchQuery={searchQuery}
                                 realTransactions={transactions}
                             />
-                            <AllocationChart mainBalance={mainBalance} />
+                            <AllocationChart
+                                currency={currentWallet?.currency ?? "VND"}
+                                mainBalance={mainBalance}
+                            />
                         </div>
                     </div>
                 </main>
@@ -210,12 +225,14 @@ export function DashboardView({
 
             {/* Modals */}
             <DepositModal
+                currency={currentWallet?.currency ?? "VND"}
                 isOpen={isDepositOpen}
                 onClose={() => setIsDepositOpen(false)}
                 walletId={walletId}
             />
 
             <WithdrawModal
+                currency={currentWallet?.currency ?? "VND"}
                 isOpen={isWithdrawOpen}
                 onClose={() => setIsWithdrawOpen(false)}
                 walletId={walletId}
@@ -223,6 +240,7 @@ export function DashboardView({
             />
 
             <TransferModal
+                currency={currentWallet?.currency ?? "VND"}
                 isOpen={isTransferOpen}
                 onClose={() => setIsTransferOpen(false)}
                 senderWalletId={walletId}

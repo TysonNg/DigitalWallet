@@ -1,0 +1,20 @@
+{
+    "landing": {
+        "logIn": "Log in",
+        "openAWallet": "Open a wallet",
+        "yourNextgenerationPersonalWallet": "Your next-generation personal wallet.",
+        "manageYourBalanceSendAndReceiveMoneyInstantlyAndTrackYourSpendingWithASimpleSecureExperience": "Manage your balance, send and receive money instantly, and track your spending with a simple, secure experience.",
+        "openYourFreeWallet": "Open your free wallet",
+        "logInToYourWallet": "Log in to your wallet",
+        "walletOverview": "Wallet overview",
+        "liveDashboardPreview": "Live dashboard preview",
+        "previewMode": "Preview mode",
+        "instantFree": "Instant & free",
+        "depositWithdrawAndTransferMoneyInternally247NoInternalTransactionOrBalanceMaintenanceFees": "Deposit, withdraw, and transfer money internally 24/7. No internal transaction or balance maintenance fees.",
+        "twolayerSecurity": "Two-layer security",
+        "securePasswordEncryptionAccountActivationAndVerificationOfChangesUsingAnOTPSentToYourEmail": "Secure password encryption, account activation, and verification of changes using an OTP sent to your email.",
+        "clearInsights": "Clear insights",
+        "seeDailyBalanceChangesWalletAllocationsAndSmartSpendingLimitAlerts": "See daily balance changes, wallet allocations, and smart spending limit alerts.",
+        "digitalWallet2026SimpleAndSecureByDesign": "Digital Wallet © 2026. Simple and secure by design."
+    }
+}

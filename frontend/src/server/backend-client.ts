@@ -1,3 +1,4 @@
+import { getLocale } from "next-intl/server";
 import { env } from "@/lib/env";
 import { getSession } from "@/server/session";
 
@@ -27,6 +28,9 @@ export async function backendFetch<T>(
     options: RequestInit = {},
     requireAuth: boolean = true
 ): Promise<ApiResponse<T>> {
+    const locale = await getLocale();
+    const fallback =
+        locale === "vi" ? "Không thể kết nối với máy chủ" : "Unable to communicate with the server";
     const url = `${env.SPRING_BOOT_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
     const headers = new Headers(options.headers || {});
     headers.set("Content-Type", "application/json");
@@ -60,13 +64,13 @@ export async function backendFetch<T>(
     const data: ApiResponse<T> = await response.json().catch(() => ({
         success: false,
         statusCode: response.status,
-        message: response.statusText || "Server communication failed",
+        message: fallback,
         data: null as unknown as T,
         timestamp: new Date().toISOString(),
     }));
 
     if (!response.ok || !data.success) {
-        throw new BackendError(data.message || "An error occurred", response.status);
+        throw new BackendError(data.message || fallback, response.status);
     }
 
     return data;

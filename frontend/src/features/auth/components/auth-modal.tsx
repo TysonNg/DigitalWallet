@@ -1,62 +1,54 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useEffect } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useAuthStore } from "../store/auth.store";
 import { LoginForm } from "./login-form";
 import { RegisterView } from "./register-view";
 import { X } from "lucide-react";
 
 export function AuthModal() {
+    const t = useTranslations("auth");
     const {
         isAuthModalOpen,
         authModalTab,
         registrationStep,
         closeAuthModal,
         setAuthModalTab,
-        openAuthModal,
+        syncAuthModalFromUrl,
     } = useAuthStore();
     const searchParams = useSearchParams();
-    const router = useRouter();
-    const pathname = usePathname();
+    const authQuery = searchParams.get("auth");
 
     useEffect(() => {
-        const authQuery = searchParams.get("auth");
-        if (authQuery === "login" || authQuery === "register") {
-            openAuthModal(authQuery);
-        }
-    }, [searchParams, openAuthModal]);
+        syncAuthModalFromUrl(authQuery);
+    }, [authQuery, syncAuthModalFromUrl]);
 
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && isAuthModalOpen) {
-                handleClose();
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape" && isAuthModalOpen) {
+                closeAuthModal();
             }
         };
+
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [isAuthModalOpen]);
-
-    const handleClose = () => {
-        closeAuthModal();
-        if (searchParams.get("auth")) {
-            router.replace(pathname);
-        }
-    };
+    }, [isAuthModalOpen, closeAuthModal]);
 
     if (!isAuthModalOpen) return null;
 
     const getTitle = () => {
-        if (authModalTab === "login") return "Sign In";
-        if (registrationStep === "verify") return "Verify OTP Code";
-        return "Create an Account";
+        if (authModalTab === "login") return t("signIn");
+        if (registrationStep === "verify") return t("verifyTitle");
+        return t("createAccount");
     };
 
     const getDescription = () => {
-        if (authModalTab === "login") return "Enter your email and password to continue.";
-        if (registrationStep === "verify")
-            return "Enter the 6-digit verification code sent to your email inbox.";
-        return "Fill in your details to activate your secure digital wallet.";
+        if (authModalTab === "login") return t("loginDescription");
+        if (registrationStep === "verify") return t("verifyDescription");
+        return t("registerDescription");
     };
 
     return (
@@ -64,7 +56,7 @@ export function AuthModal() {
             {/* Minimalist Backdrop */}
             <div
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-150"
-                onClick={handleClose}
+                onClick={closeAuthModal}
                 aria-hidden="true"
             />
 
@@ -72,9 +64,9 @@ export function AuthModal() {
             <div className="relative w-full max-w-sm sm:max-w-md bg-white rounded-2xl shadow-xl border border-slate-200/90 p-6 sm:p-7 z-10 duration-150 my-auto">
                 {/* Close Button */}
                 <button
-                    onClick={handleClose}
+                    onClick={closeAuthModal}
                     className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                    aria-label="Close"
+                    aria-label={t("close")}
                 >
                     <X className="w-4 h-4 stroke-[1.75]" />
                 </button>
@@ -88,7 +80,7 @@ export function AuthModal() {
                 </div>
 
                 {/* Tab Switcher (Minimalist segmented) */}
-                {registrationStep !== "verify" && (
+                {(authModalTab === "login" || registrationStep !== "verify") && (
                     <div className="flex bg-slate-100 p-0.5 rounded-lg mb-5 border border-slate-200/60">
                         <button
                             type="button"
@@ -99,7 +91,7 @@ export function AuthModal() {
                                     : "text-slate-500 hover:text-slate-900"
                             }`}
                         >
-                            Sign In
+                            {t("signIn")}
                         </button>
                         <button
                             type="button"
@@ -110,7 +102,7 @@ export function AuthModal() {
                                     : "text-slate-500 hover:text-slate-900"
                             }`}
                         >
-                            Register
+                            {t("register")}
                         </button>
                     </div>
                 )}

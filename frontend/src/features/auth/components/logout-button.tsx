@@ -1,13 +1,16 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { logoutAction } from "../actions/auth.actions";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuthStore } from "../store/auth.store";
 
 export function LogoutButton() {
+    const t = useTranslations("auth");
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const setCurrentUser = useAuthStore((state) => state.setCurrentUser);
@@ -29,7 +32,7 @@ export function LogoutButton() {
             className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
         >
             <LogOut className="w-3.5 h-3.5 mr-1.5" />
-            Đăng xuất
+            {t("logout")}
         </Button>
     );
 }

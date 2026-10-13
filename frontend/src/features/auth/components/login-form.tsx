@@ -1,11 +1,15 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { safeReturnTo } from "@/i18n/paths";
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { toast } from "sonner";
-import { loginSchema, LoginInput } from "../schemas/auth.schema";
+import { createLoginSchema, LoginInput } from "../schemas/auth.schema";
 import { loginAction } from "../actions/auth.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +17,12 @@ import { Label } from "@/components/ui/label";
 import { useAuthStore } from "../store/auth.store";
 
 export function LoginForm() {
+    const t = useTranslations("auth");
+    const validation = useTranslations("authValidation");
+    const authErrors = useTranslations("authErrors");
     const router = useRouter();
+    const locale = useLocale();
+    const searchParams = useSearchParams();
     const [serverError, setServerError] = useState<string | null>(null);
     const setCurrentUser = useAuthStore((state) => state.setCurrentUser);
     const closeAuthModal = useAuthStore((state) => state.closeAuthModal);
@@ -23,7 +32,7 @@ export function LoginForm() {
         handleSubmit,
         formState: { errors, isSubmitting },
     } = useForm<LoginInput>({
-        resolver: zodResolver(loginSchema),
+        resolver: zodResolver(createLoginSchema(validation)),
         defaultValues: {
             email: "",
             password: "",
@@ -36,7 +45,7 @@ export function LoginForm() {
 
         if (!result.success) {
             setServerError(result.message);
-            toast.error(result.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản!");
+            toast.error(result.message || authErrors("invalidCredentials"));
             return;
         }
 
@@ -44,9 +53,11 @@ export function LoginForm() {
             setCurrentUser(result.data);
         }
 
-        toast.success(`Đăng nhập thành công! Chào mừng ${result.data?.fullName || "bạn quay trở lại"}`);
+        toast.success(t("welcome", { name: result.data?.fullName || t("welcomeBack") }));
+        // safeReturnTo returns a localized URL; next-intl's router adds the prefix itself.
+        const destination = safeReturnTo(searchParams.get("returnTo"), locale);
         closeAuthModal();
-        router.push("/dashboard");
+        router.push(destination.replace(/^\/(?:vi|en)(?=\/)/, ""), { locale });
         router.refresh();
     };
 
@@ -60,7 +71,7 @@ export function LoginForm() {
 
             <div>
                 <Label htmlFor="email" required>
-                    Email Address
+                    {t("emailAddress")}
                 </Label>
                 <Input
                     id="email"
@@ -75,10 +86,10 @@ export function LoginForm() {
             <div>
                 <div className="flex items-center justify-between mb-1">
                     <Label htmlFor="password" required className="mb-0">
-                        Password
+                        {t("password")}
                     </Label>
                     <span className="text-[11px] text-slate-400 hover:text-slate-700 cursor-pointer">
-                        Forgot password?
+                        {t("forgotPassword")}
                     </span>
                 </div>
                 <Input
@@ -91,19 +102,24 @@ export function LoginForm() {
                 />
             </div>
 
-            <Button type="submit" variant="primary" className="w-full mt-1" isLoading={isSubmitting}>
-                Sign In
+            <Button
+                type="submit"
+                variant="primary"
+                className="w-full mt-1"
+                isLoading={isSubmitting}
+            >
+                {t("signIn")}
             </Button>
 
             <div className="text-center pt-2">
                 <p className="text-xs text-slate-500">
-                    Don't have a wallet account?{" "}
+                    {t("noAccount")}{" "}
                     <button
                         type="button"
                         onClick={() => useAuthStore.getState().setAuthModalTab("register")}
                         className="font-medium text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
                     >
-                        Register now
+                        {t("registerNow")}
                     </button>
                 </p>
             </div>

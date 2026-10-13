@@ -1,19 +1,26 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import { CreditCard, Wallet, ArrowDownRight, ArrowRight } from "lucide-react";
 
-export function SummaryLimitsCard() {
+export function SummaryLimitsCard({ currency = "VND" }: { currency?: string } = {}) {
+    const t = useTranslations("dashboard");
+    const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
+    const money = (value: number) =>
+        new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
+
     return (
         <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-xs">
             <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-base text-slate-900 tracking-tight">
-                    Hạn mức & tóm tắt
+                    {t("limitsSummary")}{" "}
                 </h3>
                 <button
                     type="button"
                     className="inline-flex items-center text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
                 >
-                    Xem chi tiết <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    {t("viewDetails")} <ArrowRight className="w-3.5 h-3.5 ml-1" />
                 </button>
             </div>
 
@@ -25,7 +32,7 @@ export function SummaryLimitsCard() {
                             <Wallet className="w-3.5 h-3.5 stroke-[1.75]" />
                         </div>
                         <span className="text-xs font-semibold text-slate-700">
-                            Hạn mức giao dịch
+                            {t("transactionLimit")}{" "}
                         </span>
                     </div>
 
@@ -34,8 +41,8 @@ export function SummaryLimitsCard() {
                             <div className="bg-blue-600 h-full rounded-full w-1/2" />
                         </div>
                         <p className="text-xs font-bold text-slate-900">
-                            50.000.000 đ{" "}
-                            <span className="text-slate-400 font-normal">/ 100.000.000 đ</span>
+                            {money(50000000)}{" "}
+                            <span className="text-slate-400 font-normal">/ {money(100000000)}</span>
                         </p>
                     </div>
                 </div>
@@ -47,7 +54,7 @@ export function SummaryLimitsCard() {
                             <CreditCard className="w-3.5 h-3.5 stroke-[1.75]" />
                         </div>
                         <span className="text-xs font-semibold text-slate-700">
-                            Hạn mức rút tiền
+                            {t("withdrawalLimit")}{" "}
                         </span>
                     </div>
 
@@ -56,8 +63,8 @@ export function SummaryLimitsCard() {
                             <div className="bg-blue-600 h-full rounded-full w-full" />
                         </div>
                         <p className="text-xs font-bold text-slate-900">
-                            20.000.000 đ{" "}
-                            <span className="text-slate-400 font-normal">/ 20.000.000 đ</span>
+                            {money(20000000)}{" "}
+                            <span className="text-slate-400 font-normal">/ {money(20000000)}</span>
                         </p>
                     </div>
                 </div>
@@ -69,15 +76,18 @@ export function SummaryLimitsCard() {
                             <ArrowDownRight className="w-3.5 h-3.5 stroke-[1.75]" />
                         </div>
                         <span className="text-xs font-semibold text-slate-700">
-                            Tổng chi tiêu tháng này
+                            {t("spendingThisMonth")}{" "}
                         </span>
                     </div>
 
                     <div>
-                        <p className="text-base font-bold text-slate-900">6.320.000 đ</p>
+                        <p className="text-base font-bold text-slate-900">{money(6320000)}</p>
                         <div className="inline-flex items-center space-x-1 mt-1 text-[11px] font-semibold text-emerald-600">
                             <span>↓ 12%</span>
-                            <span className="text-slate-400 font-normal">So với tháng trước</span>
+                            <span className="text-slate-400 font-normal">
+                                {" "}
+                                {t("comparedWithLastMonth")}{" "}
+                            </span>
                         </div>
                     </div>
                 </div>

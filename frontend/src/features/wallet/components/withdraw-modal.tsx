@@ -1,11 +1,12 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import { useState } from "react";
 import { X, ArrowUpRight, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatVND } from "@/lib/utils";
 import { useWithdrawMutation } from "../hooks/use-wallet";
 import { toast } from "sonner";
 
@@ -14,6 +15,7 @@ interface WithdrawModalProps {
     onClose: () => void;
     walletId: string;
     currentBalance: number;
+    currency?: string;
     onSuccess?: () => void;
 }
 
@@ -22,10 +24,19 @@ export function WithdrawModal({
     onClose,
     walletId,
     currentBalance,
+    currency,
     onSuccess,
 }: WithdrawModalProps) {
+    const t = useTranslations("wallet");
+    const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
+    const common = useTranslations("common");
+    const formatVND = (value: number) =>
+        new Intl.NumberFormat(locale, { style: "currency", currency: currency ?? "VND" }).format(
+            value
+        );
+
     const [amount, setAmount] = useState<number>(500000);
-    const [bankNumber, setBankNumber] = useState<string>("1029384756");
+    const bankNumber = "1029384756";
     const [error, setError] = useState<string | null>(null);
 
     const withdrawMutation = useWithdrawMutation();
@@ -37,22 +48,23 @@ export function WithdrawModal({
         setError(null);
 
         if (amount <= 0) {
-            setError("Số tiền rút phải lớn hơn 0");
+            setError(t("theWithdrawalAmountMustBeGreaterThan0"));
             return;
         }
 
         if (amount > currentBalance) {
-            setError("Số dư khả dụng không đủ để thực hiện giao dịch này");
+            setError(t("yourAvailableBalanceIsInsufficientForThisTransaction"));
             return;
         }
 
         try {
             await withdrawMutation.mutateAsync({ walletId, amount });
-            toast.success(`Rút thành công ${formatVND(amount)} về tài khoản ngân hàng!`);
+            toast.success(t("withdrawSuccess", { amount: formatVND(amount) }));
             onSuccess?.();
             onClose();
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : "Có lỗi xảy ra khi rút tiền";
+            const msg =
+                err instanceof Error ? err.message : t("anErrorOccurredWhileWithdrawingMoney");
             setError(msg);
             toast.error(msg);
         }
@@ -62,6 +74,7 @@ export function WithdrawModal({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <div
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-150"
+                aria-label={common("close")}
                 onClick={onClose}
             />
 
@@ -78,9 +91,12 @@ export function WithdrawModal({
                         <ArrowUpRight className="w-4.5 h-4.5 stroke-[2]" />
                     </div>
                     <div>
-                        <h3 className="text-base font-bold text-slate-900 tracking-tight">Rút tiền về ngân hàng</h3>
+                        <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                            {" "}
+                            {t("withdrawToBank")}{" "}
+                        </h3>
                         <p className="text-xs text-slate-500">
-                            Khả dụng:{" "}
+                            {t("available")}{" "}
                             <span className="font-semibold text-slate-800">
                                 {formatVND(currentBalance)}
                             </span>
@@ -97,13 +113,13 @@ export function WithdrawModal({
 
                     <div>
                         <div className="flex justify-between items-center mb-1">
-                            <Label htmlFor="withdraw-amount">Số tiền muốn rút</Label>
+                            <Label htmlFor="withdraw-amount"> {t("withdrawalAmount")} </Label>
                             <button
                                 type="button"
                                 onClick={() => setAmount(currentBalance)}
                                 className="text-xs font-medium text-blue-600 hover:underline cursor-pointer"
                             >
-                                Rút tối đa
+                                {t("withdrawMaximum")}{" "}
                             </button>
                         </div>
                         <div className="relative">
@@ -120,34 +136,37 @@ export function WithdrawModal({
                                 required
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
-                                VND
+                                {currency ?? "VND"}
                             </span>
                         </div>
                     </div>
 
                     <div>
-                        <Label>Tài khoản nhận tiền</Label>
+                        <Label> {t("receivingAccount")} </Label>
                         <div className="flex items-center space-x-3 p-2.5 mt-1 rounded-lg border border-slate-200 bg-slate-50/70">
                             <div className="w-7 h-7 rounded-md bg-white border border-slate-200 flex items-center justify-center text-slate-600">
                                 <Landmark className="w-3.5 h-3.5 stroke-[1.75]" />
                             </div>
                             <div className="flex-1 text-xs">
                                 <p className="font-semibold text-slate-800">
-                                    Vietcombank (Chi nhánh TP.HCM)
+                                    {t("vietcombankHoChiMinhCityBranch")}{" "}
                                 </p>
-                                <p className="text-slate-400 font-mono text-[11px]">STK: {bankNumber}</p>
+                                <p className="text-slate-400 font-mono text-[11px]">
+                                    {" "}
+                                    {t("account")} {bankNumber}
+                                </p>
                             </div>
                         </div>
                     </div>
 
                     <div className="p-2.5 bg-slate-50 rounded-lg space-y-1 text-xs text-slate-600 border border-slate-100">
                         <div className="flex justify-between">
-                            <span>Phí rút tiền:</span>
-                            <span className="font-semibold text-emerald-600">Miễn phí 0 đ</span>
+                            <span> {t("withdrawalFee")} </span>
+                            <span className="font-semibold text-emerald-600"> {t("free")} </span>
                         </div>
                         <div className="flex justify-between">
-                            <span>Thời gian xử lý:</span>
-                            <span className="font-medium text-slate-700">Tức thời (24/7)</span>
+                            <span> {t("processingTime")} </span>
+                            <span className="font-medium text-slate-700"> {t("instant247")} </span>
                         </div>
                     </div>
 
@@ -158,7 +177,7 @@ export function WithdrawModal({
                         isLoading={withdrawMutation.isPending}
                         disabled={currentBalance <= 0}
                     >
-                        Xác nhận rút {amount > 0 ? formatVND(amount) : ""}
+                        {t("confirmWithdrawal", { amount: amount > 0 ? formatVND(amount) : "" })}
                     </Button>
                 </form>
             </div>

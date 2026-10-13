@@ -1,15 +1,11 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useRouter } from "@/i18n/navigation";
 import { useState, useRef, useEffect } from "react";
-import {
-    Search,
-    Bell,
-    ChevronDown,
-    LogOut,
-    Copy,
-    Check,
-    X,
-} from "lucide-react";
+import { Search, Bell, ChevronDown, LogOut, Copy, Check, X } from "lucide-react";
 import { User } from "@/features/auth/types/auth.types";
 import { logoutAction } from "@/features/auth/actions/auth.actions";
 import { toast } from "sonner";
@@ -23,12 +19,12 @@ interface TopHeaderProps {
     onSearchChange: (query: string) => void;
 }
 
-export function TopHeader({
-    user,
-    walletId,
-    searchQuery,
-    onSearchChange,
-}: TopHeaderProps) {
+export function TopHeader({ user, walletId, searchQuery, onSearchChange }: TopHeaderProps) {
+    const t = useTranslations("dashboard");
+    const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
+    const common = useTranslations("common");
+    const router = useRouter();
+
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -57,13 +53,14 @@ export function TopHeader({
         if (!walletId) return;
         navigator.clipboard.writeText(walletId);
         setCopied(true);
-        toast.success("Đã sao chép mã ví của bạn!");
+        toast.success(t("walletIDCopied"));
         setTimeout(() => setCopied(false), 2000);
     };
 
     const handleLogout = async () => {
         await logoutAction();
-        window.location.href = "/";
+        router.push("/?auth=login");
+        router.refresh();
     };
 
     const handleToggleNotifications = () => {
@@ -77,7 +74,8 @@ export function TopHeader({
     const formatNotificationTime = (dateStr: string) => {
         try {
             const date = new Date(dateStr);
-            return date.toLocaleTimeString("vi-VN", {
+            return date.toLocaleTimeString(locale, {
+                timeZone: "Asia/Ho_Chi_Minh",
                 hour: "2-digit",
                 minute: "2-digit",
             });
@@ -94,7 +92,8 @@ export function TopHeader({
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 stroke-[1.75]" />
                     <input
                         type="text"
-                        placeholder="Tìm kiếm giao dịch, người nhận, ..."
+                        aria-label={t("searchTransactionsRecipients")}
+                        placeholder={t("searchTransactionsRecipients")}
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
                         className="w-full bg-slate-50 hover:bg-slate-100/60 focus:bg-white text-xs text-slate-800 placeholder-slate-400 pl-8.5 pr-8 py-1.5 rounded-lg border border-slate-200/90 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 transition-all"
@@ -102,6 +101,7 @@ export function TopHeader({
                     {searchQuery && (
                         <button
                             type="button"
+                            aria-label={common("clearSearch")}
                             onClick={() => onSearchChange("")}
                             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                         >
@@ -113,13 +113,14 @@ export function TopHeader({
 
             {/* Right Action Icons: Notification & Profile */}
             <div className="flex items-center space-x-2">
+                <LanguageSwitcher />
                 {/* Notification Bell */}
                 <div className="relative" ref={notifRef}>
                     <button
                         type="button"
                         onClick={handleToggleNotifications}
                         className="relative p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer"
-                        aria-label="Thông báo"
+                        aria-label={t("notifications")}
                     >
                         <Bell className="w-4 h-4 stroke-[1.75]" />
                         {hasUnread && (
@@ -132,17 +133,19 @@ export function TopHeader({
                         <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-slate-200/80 p-3.5 z-50 animate-in fade-in zoom-in-95 duration-100">
                             <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-2">
                                 <span className="font-semibold text-xs text-slate-900">
-                                    Thông báo giao dịch
+                                    {t("transactionNotifications")}{" "}
                                 </span>
                                 <span className="text-[10px] font-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
-                                    {notifications.length > 0 ? `${notifications.length} tin` : "Mới nhất"}
+                                    {notifications.length > 0
+                                        ? t("notificationCount", { count: notifications.length })
+                                        : t("latest")}
                                 </span>
                             </div>
 
                             <div className="space-y-1.5 max-h-64 overflow-y-auto">
                                 {notifications.length === 0 ? (
                                     <div className="py-6 text-center text-slate-400 text-xs">
-                                        Chưa có thông báo nào
+                                        {t("noNotificationsYet")}{" "}
                                     </div>
                                 ) : (
                                     notifications.map((item) => (
@@ -177,6 +180,7 @@ export function TopHeader({
                 <div className="relative" ref={profileRef}>
                     <button
                         type="button"
+                        aria-label={common("profile")}
                         onClick={() => setIsProfileOpen(!isProfileOpen)}
                         className="flex items-center space-x-2 p-1 sm:px-2 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
                     >
@@ -200,10 +204,13 @@ export function TopHeader({
                                 {walletId && (
                                     <button
                                         type="button"
+                                        aria-label={common("copyWalletId")}
                                         onClick={handleCopyWalletId}
                                         className="mt-1.5 flex items-center justify-between w-full text-[10px] bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-600 hover:text-blue-600 cursor-pointer"
                                     >
-                                        <span className="truncate">ID: {walletId.slice(0, 10)}...</span>
+                                        <span className="truncate">
+                                            {t("walletId", { id: `${walletId.slice(0, 10)}...` })}
+                                        </span>
                                         {copied ? (
                                             <Check className="w-3 h-3 text-emerald-600" />
                                         ) : (
@@ -220,7 +227,7 @@ export function TopHeader({
                                     className="w-full flex items-center space-x-2 px-2.5 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer font-medium"
                                 >
                                     <LogOut className="w-3.5 h-3.5 stroke-[1.75]" />
-                                    <span>Đăng xuất ví</span>
+                                    <span> {t("logOut")} </span>
                                 </button>
                             </div>
                         </div>

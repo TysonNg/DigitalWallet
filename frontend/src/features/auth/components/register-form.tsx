@@ -1,9 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { registerSchema, RegisterInput } from "../schemas/auth.schema";
+import { createRegisterSchema, RegisterInput } from "../schemas/auth.schema";
 import { registerAction } from "../actions/auth.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { useAuthStore } from "../store/auth.store";
 
 export function RegisterForm() {
+    const t = useTranslations("auth");
+    const validation = useTranslations("authValidation");
     const [serverError, setServerError] = useState<string | null>(null);
     const setPendingEmail = useAuthStore((state) => state.setPendingEmail);
     const setRegistrationStep = useAuthStore((state) => state.setRegistrationStep);
@@ -20,7 +24,7 @@ export function RegisterForm() {
         handleSubmit,
         formState: { errors, isSubmitting },
     } = useForm<RegisterInput>({
-        resolver: zodResolver(registerSchema),
+        resolver: zodResolver(createRegisterSchema(validation)),
         defaultValues: {
             fullName: "",
             email: "",
@@ -54,11 +58,11 @@ export function RegisterForm() {
 
             <div>
                 <Label htmlFor="fullName" required>
-                    Full Name
+                    {t("fullName")}
                 </Label>
                 <Input
                     id="fullName"
-                    placeholder="John Doe"
+                    placeholder={t("namePlaceholder")}
                     error={errors.fullName?.message}
                     {...register("fullName")}
                 />
@@ -67,7 +71,7 @@ export function RegisterForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                     <Label htmlFor="email" required>
-                        Email
+                        {t("email")}
                     </Label>
                     <Input
                         id="email"
@@ -80,7 +84,7 @@ export function RegisterForm() {
 
                 <div>
                     <Label htmlFor="phoneNumber" required>
-                        Phone Number
+                        {t("phoneNumber")}
                     </Label>
                     <Input
                         id="phoneNumber"
@@ -93,7 +97,7 @@ export function RegisterForm() {
 
             <div>
                 <Label htmlFor="dateOfBirth" required>
-                    Date of Birth
+                    {t("dateOfBirth")}
                 </Label>
                 <Input
                     id="dateOfBirth"
@@ -106,7 +110,7 @@ export function RegisterForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                     <Label htmlFor="password" required>
-                        Password
+                        {t("password")}
                     </Label>
                     <Input
                         id="password"
@@ -119,7 +123,7 @@ export function RegisterForm() {
 
                 <div>
                     <Label htmlFor="confirmPassword" required>
-                        Confirm Password
+                        {t("confirmPassword")}
                     </Label>
                     <Input
                         id="confirmPassword"
@@ -131,19 +135,24 @@ export function RegisterForm() {
                 </div>
             </div>
 
-            <Button type="submit" variant="primary" className="w-full mt-2" isLoading={isSubmitting}>
-                Continue to OTP Verification
+            <Button
+                type="submit"
+                variant="primary"
+                className="w-full mt-2"
+                isLoading={isSubmitting}
+            >
+                {t("continueOtp")}
             </Button>
 
             <div className="text-center pt-1.5">
                 <p className="text-xs text-slate-500">
-                    Already have an account?{" "}
+                    {t("hasAccount")}{" "}
                     <button
                         type="button"
                         onClick={() => useAuthStore.getState().setAuthModalTab("login")}
                         className="font-medium text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
                     >
-                        Sign In
+                        {t("signIn")}
                     </button>
                 </p>
             </div>

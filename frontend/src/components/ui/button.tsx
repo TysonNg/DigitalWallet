@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +23,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         },
         ref
     ) => {
+        const t = useTranslations("common");
+
         const baseStyles =
             "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer";
 
@@ -30,12 +35,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 "bg-slate-100 text-slate-800 hover:bg-slate-200 active:bg-slate-300 rounded-lg font-medium",
             outline:
                 "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:bg-slate-100 rounded-lg font-medium",
-            ghost:
-                "bg-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg font-medium",
-            dark:
-                "bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950 rounded-lg shadow-xs font-medium",
-            danger:
-                "bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 rounded-lg shadow-xs font-medium",
+            ghost: "bg-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg font-medium",
+            dark: "bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950 rounded-lg shadow-xs font-medium",
+            danger: "bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 rounded-lg shadow-xs font-medium",
         };
 
         const sizes = {
@@ -47,6 +49,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         return (
             <button
                 ref={ref}
+                aria-busy={isLoading}
                 disabled={disabled || isLoading}
                 className={cn(baseStyles, variants[variant], sizes[size], className)}
                 {...props}
@@ -54,6 +57,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 {isLoading && (
                     <svg
                         className="mr-2 h-3.5 w-3.5 animate-spin text-current"
+                        role="img"
+                        aria-label={t("loading")}
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"

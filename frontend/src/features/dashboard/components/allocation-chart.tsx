@@ -1,31 +1,55 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { formatVND } from "@/lib/utils";
 
 interface AllocationChartProps {
     mainBalance?: number;
+    currency?: string;
 }
 
-export function AllocationChart({ mainBalance = 12450000 }: AllocationChartProps) {
+export function AllocationChart({
+    mainBalance = 12450000,
+    currency = "VND",
+}: AllocationChartProps) {
+    const t = useTranslations("dashboard");
+    const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
+    const formatVND = (value: number) =>
+        new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
+
     const savingsBalance = 28300000;
     const travelBalance = 5720000;
     const totalAssets = mainBalance + savingsBalance + travelBalance;
 
-    const mainPercent = ((mainBalance / totalAssets) * 100).toFixed(1);
-    const savingsPercent = ((savingsBalance / totalAssets) * 100).toFixed(1);
-    const travelPercent = ((travelBalance / totalAssets) * 100).toFixed(1);
+    const mainPercent = new Intl.NumberFormat(locale, {
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 1,
+    }).format((mainBalance / totalAssets) * 100);
+    const savingsPercent = new Intl.NumberFormat(locale, {
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 1,
+    }).format((savingsBalance / totalAssets) * 100);
+    const travelPercent = new Intl.NumberFormat(locale, {
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 1,
+    }).format((travelBalance / totalAssets) * 100);
 
     const data = [
-        { name: "Ví chính", value: mainBalance, color: "#2563eb", percent: mainPercent },
-        { name: "Ví tiết kiệm", value: savingsBalance, color: "#38bdf8", percent: savingsPercent },
-        { name: "Ví du lịch", value: travelBalance, color: "#93c5fd", percent: travelPercent },
+        { name: t("mainWallet"), value: mainBalance, color: "#2563eb", percent: mainPercent },
+        {
+            name: t("savingsWallet"),
+            value: savingsBalance,
+            color: "#38bdf8",
+            percent: savingsPercent,
+        },
+        { name: t("travelWallet"), value: travelBalance, color: "#93c5fd", percent: travelPercent },
     ];
 
     return (
         <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
             <h3 className="font-bold text-base text-slate-900 tracking-tight mb-4">
-                Phân bổ ví
+                {t("walletAllocation")}{" "}
             </h3>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -72,7 +96,7 @@ export function AllocationChart({ mainBalance = 12450000 }: AllocationChartProps
                             {formatVND(totalAssets)}
                         </span>
                         <span className="text-[10px] text-slate-400 font-medium">
-                            Tổng tài sản
+                            {t("totalAssets")}{" "}
                         </span>
                     </div>
                 </div>
@@ -82,7 +106,7 @@ export function AllocationChart({ mainBalance = 12450000 }: AllocationChartProps
                     <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center space-x-2">
                             <span className="w-2 h-2 rounded-full bg-blue-600 inline-block" />
-                            <span className="text-slate-600 font-medium">Ví chính</span>
+                            <span className="text-slate-600 font-medium"> {t("mainWallet")} </span>
                         </div>
                         <div className="flex items-center space-x-3">
                             <span className="text-slate-400 font-medium">{mainPercent}%</span>
@@ -95,7 +119,10 @@ export function AllocationChart({ mainBalance = 12450000 }: AllocationChartProps
                     <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center space-x-2">
                             <span className="w-2 h-2 rounded-full bg-sky-400 inline-block" />
-                            <span className="text-slate-600 font-medium">Ví tiết kiệm</span>
+                            <span className="text-slate-600 font-medium">
+                                {" "}
+                                {t("savingsWallet")}{" "}
+                            </span>
                         </div>
                         <div className="flex items-center space-x-3">
                             <span className="text-slate-400 font-medium">{savingsPercent}%</span>
@@ -108,7 +135,10 @@ export function AllocationChart({ mainBalance = 12450000 }: AllocationChartProps
                     <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center space-x-2">
                             <span className="w-2 h-2 rounded-full bg-blue-300 inline-block" />
-                            <span className="text-slate-600 font-medium">Ví du lịch</span>
+                            <span className="text-slate-600 font-medium">
+                                {" "}
+                                {t("travelWallet")}{" "}
+                            </span>
                         </div>
                         <div className="flex items-center space-x-3">
                             <span className="text-slate-400 font-medium">{travelPercent}%</span>

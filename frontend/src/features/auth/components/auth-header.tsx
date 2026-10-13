@@ -1,5 +1,8 @@
+"use client";
+
 import { Wallet } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 interface AuthHeaderProps {
     title: string;
@@ -7,10 +10,13 @@ interface AuthHeaderProps {
 }
 
 export function AuthHeader({ title, description }: AuthHeaderProps) {
+    const t = useTranslations("auth");
+
     return (
         <div className="flex flex-col items-center text-center space-y-3 mb-6">
             <Link
                 href="/"
+                aria-label={t("home")}
                 className="flex items-center justify-center w-10 h-10 rounded-md bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 border border-zinc-800 dark:border-zinc-200"
             >
                 <Wallet className="w-5 h-5 stroke-[1.75]" />

@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +10,8 @@ export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> 
 
 export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
     ({ className, children, required, ...props }, ref) => {
+        const t = useTranslations("common");
+
         return (
             <label
                 ref={ref}
@@ -17,7 +22,11 @@ export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
                 {...props}
             >
                 {children}
-                {required && <span className="text-red-500 ml-0.5">*</span>}
+                {required && (
+                    <span className="text-red-500 ml-0.5" aria-label={t("required")}>
+                        *
+                    </span>
+                )}
             </label>
         );
     }

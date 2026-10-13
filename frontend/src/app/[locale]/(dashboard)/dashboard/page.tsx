@@ -1,5 +1,6 @@
 import { getSession } from "@/server/session";
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/navigation";
+import { getLocale } from "next-intl/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/get-query-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -11,19 +12,20 @@ import {
 import { getNotificationsAction } from "@/features/dashboard/actions/notification.actions";
 import { WalletDto } from "@/features/wallet/types/wallet.types";
 
-export const metadata = {
-    title: "Tổng quan ví | Digital Wallet",
-    description: "Quản lý số dư, hoạt động chi tiêu và giao dịch ví điện tử",
-};
-
 export default async function DashboardPage() {
     const session = await getSession();
 
     if (!session.isLoggedIn || !session.user) {
-        redirect("/?auth=login");
+        redirect({
+            href: {
+                pathname: "/",
+                query: { auth: "login", returnTo: "/" + (await getLocale()) + "/dashboard" },
+            },
+            locale: await getLocale(),
+        });
     }
 
-    const user = session.user;
+    const user = session.user!;
     const queryClient = getQueryClient();
 
     // 1. Prefetch Wallet

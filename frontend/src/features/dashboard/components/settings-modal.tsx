@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import { X, User as UserIcon, Mail, Phone, Calendar } from "lucide-react";
 import { User } from "@/features/auth/types/auth.types";
 import { Button } from "@/components/ui/button";
@@ -11,12 +13,17 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose, user }: SettingsModalProps) {
+    const t = useTranslations("dashboard");
+    const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
+    const common = useTranslations("common");
+
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <div
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-150"
+                aria-label={common("close")}
                 onClick={onClose}
             />
 
@@ -33,8 +40,14 @@ export function SettingsModal({ isOpen, onClose, user }: SettingsModalProps) {
                         <UserIcon className="w-4.5 h-4.5 stroke-[1.75]" />
                     </div>
                     <div>
-                        <h3 className="text-base font-bold text-slate-900 tracking-tight">Hồ sơ tài khoản</h3>
-                        <p className="text-xs text-slate-500">Thông tin cá nhân liên kết ví điện tử</p>
+                        <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                            {" "}
+                            {t("accountProfile")}{" "}
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                            {" "}
+                            {t("personalDetailsLinkedToYourWallet")}{" "}
+                        </p>
                     </div>
                 </div>
 
@@ -42,7 +55,8 @@ export function SettingsModal({ isOpen, onClose, user }: SettingsModalProps) {
                     <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-2.5">
                         <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200/70">
                             <span className="text-slate-500 flex items-center gap-1.5">
-                                <UserIcon className="w-3.5 h-3.5 text-slate-400 stroke-[1.75]" /> Họ và tên:
+                                <UserIcon className="w-3.5 h-3.5 text-slate-400 stroke-[1.75]" />{" "}
+                                {t("fullName")}{" "}
                             </span>
                             <span className="font-semibold text-slate-900">
                                 {user.fullName || "Nguyễn Minh Anh"}
@@ -51,14 +65,16 @@ export function SettingsModal({ isOpen, onClose, user }: SettingsModalProps) {
 
                         <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200/70">
                             <span className="text-slate-500 flex items-center gap-1.5">
-                                <Mail className="w-3.5 h-3.5 text-slate-400 stroke-[1.75]" /> Email:
+                                <Mail className="w-3.5 h-3.5 text-slate-400 stroke-[1.75]" />{" "}
+                                {t("email")}{" "}
                             </span>
                             <span className="font-medium text-slate-800">{user.email}</span>
                         </div>
 
                         <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200/70">
                             <span className="text-slate-500 flex items-center gap-1.5">
-                                <Phone className="w-3.5 h-3.5 text-slate-400 stroke-[1.75]" /> Số điện thoại:
+                                <Phone className="w-3.5 h-3.5 text-slate-400 stroke-[1.75]" />{" "}
+                                {t("phoneNumber")}{" "}
                             </span>
                             <span className="font-medium text-slate-800">
                                 {user.phoneNumber || "0912345678"}
@@ -67,10 +83,16 @@ export function SettingsModal({ isOpen, onClose, user }: SettingsModalProps) {
 
                         <div className="flex items-center justify-between text-xs">
                             <span className="text-slate-500 flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5 text-slate-400 stroke-[1.75]" /> Ngày sinh:
+                                <Calendar className="w-3.5 h-3.5 text-slate-400 stroke-[1.75]" />{" "}
+                                {t("dateOfBirth")}{" "}
                             </span>
                             <span className="font-medium text-slate-800">
-                                {user.dateOfBirth || "2000-01-01"}
+                                {new Intl.DateTimeFormat(locale, {
+                                    dateStyle: "medium",
+                                    timeZone: "Asia/Ho_Chi_Minh",
+                                }).format(
+                                    new Date(`${user.dateOfBirth || "2000-01-01"}T00:00:00Z`)
+                                )}
                             </span>
                         </div>
                     </div>
@@ -83,7 +105,7 @@ export function SettingsModal({ isOpen, onClose, user }: SettingsModalProps) {
                         onClick={onClose}
                         className="w-full text-xs"
                     >
-                        Đóng cửa sổ
+                        {t("closeWindow")}{" "}
                     </Button>
                 </div>
             </div>

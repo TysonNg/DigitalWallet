@@ -1,14 +1,15 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { env } from "@/lib/env";
 import { getSession } from "@/server/session";
 import {
     LoginInput,
-    loginSchema,
+    createLoginSchema,
     RegisterInput,
-    registerSchema,
+    createRegisterSchema,
     VerifyOtpInput,
-    verifyOtpSchema,
+    createVerifyOtpSchema,
 } from "../schemas/auth.schema";
 import { ActionResponse, AuthResponseData, User } from "../types/auth.types";
 
@@ -17,11 +18,15 @@ import { ActionResponse, AuthResponseData, User } from "../types/auth.types";
  * Gọi Spring Boot -> Lấy Tokens -> Mã hóa lưu vào HttpOnly Cookie
  */
 export async function loginAction(input: LoginInput): Promise<ActionResponse<User>> {
-    const parsed = loginSchema.safeParse(input);
+    const [t, validation] = await Promise.all([
+        getTranslations("authErrors"),
+        getTranslations("authValidation"),
+    ]);
+    const parsed = createLoginSchema(validation).safeParse(input);
     if (!parsed.success) {
         return {
             success: false,
-            message: "Invalid input data",
+            message: t("invalidInput"),
             errors: parsed.error.flatten().fieldErrors,
         };
     }
@@ -38,7 +43,7 @@ export async function loginAction(input: LoginInput): Promise<ActionResponse<Use
         if (!response.ok || !resData.success) {
             return {
                 success: false,
-                message: resData.message || "Invalid email or password",
+                message: resData.message || t("invalidCredentials"),
             };
         }
 
@@ -70,18 +75,14 @@ export async function loginAction(input: LoginInput): Promise<ActionResponse<Use
 
         return {
             success: true,
-            message: "Login successful!",
+            message: t("loginSuccess"),
             data: session.user,
         };
     } catch (error) {
         const isFetchError = error instanceof Error && error.message.includes("fetch failed");
         return {
             success: false,
-            message: isFetchError
-                ? "Unable to connect to backend server. Please check your connection."
-                : error instanceof Error
-                  ? error.message
-                  : "Server connection error",
+            message: isFetchError ? t("backendConnection") : t("serverConnection"),
         };
     }
 }
@@ -90,11 +91,15 @@ export async function loginAction(input: LoginInput): Promise<ActionResponse<Use
  * BFF Server Action: Đăng ký bước 1 (Gửi mã OTP)
  */
 export async function registerAction(input: RegisterInput): Promise<ActionResponse<null>> {
-    const parsed = registerSchema.safeParse(input);
+    const [t, validation] = await Promise.all([
+        getTranslations("authErrors"),
+        getTranslations("authValidation"),
+    ]);
+    const parsed = createRegisterSchema(validation).safeParse(input);
     if (!parsed.success) {
         return {
             success: false,
-            message: "Invalid input data",
+            message: t("invalidInput"),
             errors: parsed.error.flatten().fieldErrors,
         };
     }
@@ -120,23 +125,19 @@ export async function registerAction(input: RegisterInput): Promise<ActionRespon
         if (!response.ok || !resData.success) {
             return {
                 success: false,
-                message: resData.message || "Registration failed. Please try again.",
+                message: resData.message || t("registerFailed"),
             };
         }
 
         return {
             success: true,
-            message: "An OTP verification code has been sent to your email. Please check your inbox!",
+            message: t("otpSent"),
         };
     } catch (error) {
         const isFetchError = error instanceof Error && error.message.includes("fetch failed");
         return {
             success: false,
-            message: isFetchError
-                ? "Unable to connect to backend server. Please check your connection."
-                : error instanceof Error
-                  ? error.message
-                  : "Server connection error",
+            message: isFetchError ? t("backendConnection") : t("serverConnection"),
         };
     }
 }
@@ -145,11 +146,15 @@ export async function registerAction(input: RegisterInput): Promise<ActionRespon
  * BFF Server Action: Xác thực OTP và kích hoạt tài khoản
  */
 export async function verifyOtpAction(input: VerifyOtpInput): Promise<ActionResponse<User>> {
-    const parsed = verifyOtpSchema.safeParse(input);
+    const [t, validation] = await Promise.all([
+        getTranslations("authErrors"),
+        getTranslations("authValidation"),
+    ]);
+    const parsed = createVerifyOtpSchema(validation).safeParse(input);
     if (!parsed.success) {
         return {
             success: false,
-            message: "Invalid OTP format",
+            message: t("invalidOtpFormat"),
             errors: parsed.error.flatten().fieldErrors,
         };
     }
@@ -166,7 +171,7 @@ export async function verifyOtpAction(input: VerifyOtpInput): Promise<ActionResp
         if (!response.ok || !resData.success) {
             return {
                 success: false,
-                message: resData.message || "Invalid or expired OTP code",
+                message: resData.message || t("invalidOtp"),
             };
         }
 
@@ -197,18 +202,14 @@ export async function verifyOtpAction(input: VerifyOtpInput): Promise<ActionResp
 
         return {
             success: true,
-            message: "Account activated successfully!",
+            message: t("activationSuccess"),
             data: session.user,
         };
     } catch (error) {
         const isFetchError = error instanceof Error && error.message.includes("fetch failed");
         return {
             success: false,
-            message: isFetchError
-                ? "Unable to connect to backend server. Please check your connection."
-                : error instanceof Error
-                  ? error.message
-                  : "Server connection error",
+            message: isFetchError ? t("backendConnection") : t("serverConnection"),
         };
     }
 }
@@ -217,6 +218,7 @@ export async function verifyOtpAction(input: VerifyOtpInput): Promise<ActionResp
  * BFF Server Action: Đăng xuất (Blacklist Token + Xóa Cookie)
  */
 export async function logoutAction(): Promise<ActionResponse<null>> {
+    const t = await getTranslations("authErrors");
     try {
         const session = await getSession();
 
@@ -236,12 +238,12 @@ export async function logoutAction(): Promise<ActionResponse<null>> {
 
         return {
             success: true,
-            message: "Logged out successfully!",
+            message: t("logoutSuccess"),
         };
-    } catch (error) {
+    } catch {
         return {
             success: false,
-            message: error instanceof Error ? error.message : "Error logging out",
+            message: t("logoutFailed"),
         };
     }
 }
@@ -267,4 +269,3 @@ export async function getAccessTokenAction(): Promise<string | null> {
     }
     return session.accessToken;
 }
-

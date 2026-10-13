@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useAuthStore } from "../store/auth.store";
 import { RegisterForm } from "./register-form";
 import { VerifyOtpForm } from "./verify-otp-form";
@@ -10,17 +12,18 @@ interface RegisterViewProps {
 }
 
 export function RegisterView({ showHeader = false }: RegisterViewProps) {
+    const t = useTranslations("auth");
     const step = useAuthStore((state) => state.registrationStep);
 
     return (
         <>
             {showHeader && (
                 <AuthHeader
-                    title={step === "register" ? "Create Digital Wallet Account" : "Verify Email OTP Code"}
+                    title={step === "register" ? t("registerTitle") : t("emailOtpTitle")}
                     description={
                         step === "register"
-                            ? "Fill in your details to create a secure wallet"
-                            : "Enter the verification code sent to your email"
+                            ? t("registerPageDescription")
+                            : t("verifyPageDescription")
                     }
                 />
             )}

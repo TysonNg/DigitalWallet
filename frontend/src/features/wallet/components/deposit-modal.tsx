@@ -1,12 +1,17 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import { useState } from "react";
 import { X, ArrowDownLeft, Check, QrCode, CreditCard, Building2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatVND } from "@/lib/utils";
-import { useDepositMutation, useCreatePaymentOrderMutation, useMyWalletQuery } from "../hooks/use-wallet";
+import {
+    useDepositMutation,
+    useCreatePaymentOrderMutation,
+    useMyWalletQuery,
+} from "../hooks/use-wallet";
 import { toast } from "sonner";
 import { PaymentGatewayType } from "../types/wallet.types";
 
@@ -14,6 +19,7 @@ interface DepositModalProps {
     isOpen: boolean;
     onClose: () => void;
     walletId: string;
+    currency?: string;
     onSuccess?: () => void;
 }
 
@@ -21,7 +27,19 @@ const PRESET_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000, 5000000];
 
 type PaymentMethodType = "PAYOS" | "STRIPE" | "MOCK";
 
-export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositModalProps) {
+export function DepositModal({
+    isOpen,
+    onClose,
+    walletId,
+    onSuccess,
+    currency = "VND",
+}: DepositModalProps) {
+    const t = useTranslations("wallet");
+    const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
+    const common = useTranslations("common");
+    const formatVND = (value: number) =>
+        new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
+
     const [amount, setAmount] = useState<number>(500000);
     const [method, setMethod] = useState<PaymentMethodType>("PAYOS");
     const [error, setError] = useState<string | null>(null);
@@ -40,7 +58,7 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
         e.preventDefault();
         setError(null);
         if (amount < 10000) {
-            setError("Số tiền nạp tối thiểu là 10.000 đ");
+            setError(t("theMinimumDepositIsVND10000"));
             return;
         }
 
@@ -48,7 +66,7 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
             if (method === "MOCK") {
                 // Phương thức nạp mô phỏng trực tiếp
                 await depositMutation.mutateAsync({ walletId: effectiveWalletId, amount });
-                toast.success(`Nạp thành công ${formatVND(amount)} vào Ví chính!`);
+                toast.success(t("depositSuccess", { amount: formatVND(amount) }));
                 onSuccess?.();
                 onClose();
             } else {
@@ -61,14 +79,15 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                 });
 
                 if (order.checkoutUrl) {
-                    toast.info(`Đang chuyển hướng sang cổng thanh toán ${gateway}...`);
+                    toast.info(t("redirectPayment", { gateway }));
                     window.location.href = order.checkoutUrl;
                 } else {
-                    throw new Error("Không nhận được đường dẫn thanh toán từ cổng.");
+                    throw new Error(t("thePaymentGatewayDidNotReturnACheckoutLink"));
                 }
             }
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : "Có lỗi xảy ra khi xử lý nạp tiền";
+            const msg =
+                err instanceof Error ? err.message : t("anErrorOccurredWhileProcessingYourDeposit");
             setError(msg);
             toast.error(msg);
         }
@@ -78,6 +97,7 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <div
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-150"
+                aria-label={common("close")}
                 onClick={onClose}
             />
 
@@ -94,8 +114,14 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                         <ArrowDownLeft className="w-4.5 h-4.5 stroke-[2]" />
                     </div>
                     <div>
-                        <h3 className="text-base font-bold text-slate-900 tracking-tight">Nạp tiền vào ví</h3>
-                        <p className="text-xs text-slate-500">Hỗ trợ VietQR ngân hàng, Thẻ quốc tế & Mô phỏng</p>
+                        <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                            {" "}
+                            {t("depositIntoWallet")}{" "}
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                            {" "}
+                            {t("supportsVietQRInternationalCardsSimulatedDeposits")}{" "}
+                        </p>
                     </div>
                 </div>
 
@@ -107,7 +133,7 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                     )}
 
                     <div>
-                        <Label htmlFor="deposit-amount">Số tiền muốn nạp</Label>
+                        <Label htmlFor="deposit-amount"> {t("depositAmount")} </Label>
                         <div className="relative mt-1">
                             <Input
                                 id="deposit-amount"
@@ -121,14 +147,14 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                                 required
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
-                                VND
+                                {currency ?? "VND"}
                             </span>
                         </div>
                     </div>
 
                     <div>
                         <span className="text-[11px] font-medium text-slate-500 mb-1.5 block">
-                            Gợi ý số tiền nhanh:
+                            {t("quickAmounts")}{" "}
                         </span>
                         <div className="grid grid-cols-3 gap-2">
                             {PRESET_AMOUNTS.map((val) => (
@@ -149,7 +175,7 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                     </div>
 
                     <div>
-                        <Label>Chọn phương thức thanh toán</Label>
+                        <Label> {t("chooseAPaymentMethod")} </Label>
                         <div className="space-y-2 mt-1.5">
                             {/* Option 1: PayOS (VietQR) */}
                             <div
@@ -166,12 +192,18 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                                     </div>
                                     <div className="text-xs">
                                         <div className="flex items-center space-x-1.5">
-                                            <p className="font-semibold text-slate-900">VietQR Ngân hàng (PayOS)</p>
+                                            <p className="font-semibold text-slate-900">
+                                                {" "}
+                                                {t("bankVietQRPayOS")}{" "}
+                                            </p>
                                             <span className="px-1.5 py-0.2 bg-emerald-100 text-emerald-700 text-[10px] font-medium rounded">
-                                                Phổ biến
+                                                {t("popular")}{" "}
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-slate-500">Quét mã bằng mọi app ngân hàng tại VN</p>
+                                        <p className="text-[11px] text-slate-500">
+                                            {" "}
+                                            {t("scanWithAnyVietnameseBankingApp")}{" "}
+                                        </p>
                                     </div>
                                 </div>
                                 {method === "PAYOS" && <Check className="w-4 h-4 text-blue-600" />}
@@ -192,12 +224,18 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                                     </div>
                                     <div className="text-xs">
                                         <div className="flex items-center space-x-1.5">
-                                            <p className="font-semibold text-slate-900">Thẻ Quốc Tế (Stripe)</p>
+                                            <p className="font-semibold text-slate-900">
+                                                {" "}
+                                                {t("internationalCardsStripe")}{" "}
+                                            </p>
                                             <span className="px-1.5 py-0.2 bg-indigo-100 text-indigo-700 text-[10px] font-medium rounded">
                                                 Visa / Master
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-slate-500">Thanh toán qua thẻ Visa, Mastercard, JCB</p>
+                                        <p className="text-[11px] text-slate-500">
+                                            {" "}
+                                            {t("payWithVisaMastercardOrJCB")}{" "}
+                                        </p>
                                     </div>
                                 </div>
                                 {method === "STRIPE" && <Check className="w-4 h-4 text-blue-600" />}
@@ -217,8 +255,16 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                                         <Building2 className="w-4 h-4 stroke-[2]" />
                                     </div>
                                     <div className="text-xs">
-                                        <p className="font-semibold text-slate-900">Nạp nhanh tài khoản liên kết (Mô phỏng)</p>
-                                        <p className="text-[11px] text-slate-500">Cộng tiền trực tiếp không qua cổng thật</p>
+                                        <p className="font-semibold text-slate-900">
+                                            {" "}
+                                            {t("quickLinkedaccountDepositSimulated")}{" "}
+                                        </p>
+                                        <p className="text-[11px] text-slate-500">
+                                            {" "}
+                                            {t(
+                                                "creditYourWalletDirectlyWithoutAPaymentGateway"
+                                            )}{" "}
+                                        </p>
                                     </div>
                                 </div>
                                 {method === "MOCK" && <Check className="w-4 h-4 text-blue-600" />}
@@ -233,10 +279,15 @@ export function DepositModal({ isOpen, onClose, walletId, onSuccess }: DepositMo
                         isLoading={isLoading}
                     >
                         {method === "MOCK" ? (
-                            `Xác nhận nạp ${amount > 0 ? formatVND(amount) : ""}`
+                            t("confirmDeposit", { amount: amount > 0 ? formatVND(amount) : "" })
                         ) : (
                             <span className="flex items-center justify-center space-x-1.5">
-                                <span>Thanh toán {amount > 0 ? formatVND(amount) : ""}</span>
+                                <span>
+                                    {" "}
+                                    {t("payAmount", {
+                                        amount: amount > 0 ? formatVND(amount) : "",
+                                    })}
+                                </span>
                                 <ExternalLink className="w-3.5 h-3.5 ml-1" />
                             </span>
                         )}

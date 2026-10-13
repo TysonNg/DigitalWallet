@@ -1,5 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { AuthModal } from "@/features/auth/components/auth-modal";
 import { Button } from "@/components/ui/button";
@@ -12,6 +15,8 @@ import { RecentTransactions } from "../dashboard/components/recent-transactions"
 import { AllocationChart } from "../dashboard/components/allocation-chart";
 
 export function LandingView() {
+    const t = useTranslations("landing");
+
     const openAuthModal = useAuthStore((state) => state.openAuthModal);
 
     return (
@@ -29,19 +34,20 @@ export function LandingView() {
                     </div>
 
                     <div className="flex items-center space-x-2 sm:space-x-3">
+                        <LanguageSwitcher />
                         <button
                             type="button"
                             onClick={() => openAuthModal("login")}
                             className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
                         >
-                            Đăng nhập
+                            {t("logIn")}{" "}
                         </button>
                         <button
                             type="button"
                             onClick={() => openAuthModal("register")}
                             className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
                         >
-                            Mở ví ngay
+                            {t("openAWallet")}{" "}
                         </button>
                     </div>
                 </div>
@@ -51,12 +57,13 @@ export function LandingView() {
             <main className="flex-1">
                 <section className="pt-16 pb-12 sm:pt-20 sm:pb-16 text-center max-w-4xl mx-auto px-4 sm:px-6">
                     <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
-                        Ví điện tử cá nhân thế hệ mới.
+                        {t("yourNextgenerationPersonalWallet")}{" "}
                     </h1>
 
                     <p className="mt-4 text-sm sm:text-base text-slate-500 max-w-xl mx-auto leading-relaxed">
-                        Quản lý số dư, chuyển nhận tiền tức thì và kiểm soát chi tiêu cá nhân
-                        với trải nghiệm tối giản và an toàn tuyệt đối.
+                        {t(
+                            "manageYourBalanceSendAndReceiveMoneyInstantlyAndTrackYourSpendingWithASimpleSecureExperience"
+                        )}{" "}
                     </p>
 
                     <div className="flex items-center justify-center gap-3 mt-7">
@@ -65,8 +72,7 @@ export function LandingView() {
                             onClick={() => openAuthModal("register")}
                             className="h-10 px-5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-xs cursor-pointer flex items-center gap-1.5"
                         >
-                            Bắt đầu mở ví miễn phí
-                            <ArrowRight className="w-3.5 h-3.5" />
+                            {t("openYourFreeWallet")} <ArrowRight className="w-3.5 h-3.5" />
                         </Button>
                         <Button
                             variant="outline"
@@ -74,7 +80,7 @@ export function LandingView() {
                             onClick={() => openAuthModal("login")}
                             className="h-10 px-5 text-xs font-semibold border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg cursor-pointer"
                         >
-                            Đăng nhập ví
+                            {t("logInToYourWallet")}{" "}
                         </Button>
                     </div>
                 </section>
@@ -85,14 +91,14 @@ export function LandingView() {
                         <div className="flex items-center justify-between pb-5 border-b border-slate-100 mb-6">
                             <div>
                                 <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                                    Tổng quan ví
+                                    {t("walletOverview")}{" "}
                                 </h2>
                                 <p className="text-xs text-slate-400 mt-0.5">
-                                    Bản xem trước giao diện bảng điều khiển trực tiếp
+                                    {t("liveDashboardPreview")}{" "}
                                 </p>
                             </div>
                             <span className="text-[11px] font-semibold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200/60">
-                                Chế độ xem trước
+                                {t("previewMode")}{" "}
                             </span>
                         </div>
 
@@ -128,33 +134,36 @@ export function LandingView() {
                             <div>
                                 <div className="flex items-center space-x-2 text-slate-900 font-bold text-sm mb-2">
                                     <Zap className="w-4 h-4 text-blue-600 stroke-[2]" />
-                                    <span>Tức thời & Miễn phí</span>
+                                    <span> {t("instantFree")} </span>
                                 </div>
                                 <p className="text-xs text-slate-500 leading-relaxed">
-                                    Nạp, rút và chuyển tiền nội bộ nhanh chóng 24/7. Không thu phí giao dịch
-                                    nội bộ hay phí duy trì số dư.
+                                    {t(
+                                        "depositWithdrawAndTransferMoneyInternally247NoInternalTransactionOrBalanceMaintenanceFees"
+                                    )}{" "}
                                 </p>
                             </div>
 
                             <div>
                                 <div className="flex items-center space-x-2 text-slate-900 font-bold text-sm mb-2">
                                     <ShieldCheck className="w-4 h-4 text-blue-600 stroke-[2]" />
-                                    <span>Bảo mật hai lớp</span>
+                                    <span> {t("twolayerSecurity")} </span>
                                 </div>
                                 <p className="text-xs text-slate-500 leading-relaxed">
-                                    Mã hóa mật khẩu an toàn, kích hoạt tài khoản và xác thực mọi thay
-                                    đổi qua mã số OTP gửi trực tiếp tới email.
+                                    {t(
+                                        "securePasswordEncryptionAccountActivationAndVerificationOfChangesUsingAnOTPSentToYourEmail"
+                                    )}{" "}
                                 </p>
                             </div>
 
                             <div>
                                 <div className="flex items-center space-x-2 text-slate-900 font-bold text-sm mb-2">
                                     <BarChart2 className="w-4 h-4 text-blue-600 stroke-[2]" />
-                                    <span>Thống kê minh bạch</span>
+                                    <span> {t("clearInsights")} </span>
                                 </div>
                                 <p className="text-xs text-slate-500 leading-relaxed">
-                                    Trực quan hóa biến động số dư theo ngày, phân bổ tỷ lệ giữa các ví
-                                    và cảnh báo hạn mức chi tiêu thông minh.
+                                    {t(
+                                        "seeDailyBalanceChangesWalletAllocationsAndSmartSpendingLimitAlerts"
+                                    )}{" "}
                                 </p>
                             </div>
                         </div>
@@ -164,7 +173,7 @@ export function LandingView() {
 
             {/* Clean Footer */}
             <footer className="border-t border-slate-200/80 bg-slate-50 py-6 text-center text-xs text-slate-400">
-                <p>Digital Wallet © 2026. Thiết kế tối giản và bảo mật.</p>
+                <p> {t("digitalWallet2026SimpleAndSecureByDesign")} </p>
             </footer>
 
             {/* Auth Popup Modal */}

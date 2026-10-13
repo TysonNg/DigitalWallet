@@ -1,0 +1,20 @@
+{
+    "landing": {
+        "logIn": "Đăng nhập",
+        "openAWallet": "Mở ví ngay",
+        "yourNextgenerationPersonalWallet": "Ví điện tử cá nhân thế hệ mới.",
+        "manageYourBalanceSendAndReceiveMoneyInstantlyAndTrackYourSpendingWithASimpleSecureExperience": "Quản lý số dư, chuyển nhận tiền tức thì và kiểm soát chi tiêu cá nhân với trải nghiệm tối giản và an toàn tuyệt đối.",
+        "openYourFreeWallet": "Bắt đầu mở ví miễn phí",
+        "logInToYourWallet": "Đăng nhập ví",
+        "walletOverview": "Tổng quan ví",
+        "liveDashboardPreview": "Bản xem trước giao diện bảng điều khiển trực tiếp",
+        "previewMode": "Chế độ xem trước",
+        "instantFree": "Tức thời & Miễn phí",
+        "depositWithdrawAndTransferMoneyInternally247NoInternalTransactionOrBalanceMaintenanceFees": "Nạp, rút và chuyển tiền nội bộ nhanh chóng 24/7. Không thu phí giao dịch nội bộ hay phí duy trì số dư.",
+        "twolayerSecurity": "Bảo mật hai lớp",
+        "securePasswordEncryptionAccountActivationAndVerificationOfChangesUsingAnOTPSentToYourEmail": "Mã hóa mật khẩu an toàn, kích hoạt tài khoản và xác thực mọi thay đổi qua mã số OTP gửi trực tiếp tới email.",
+        "clearInsights": "Thống kê minh bạch",
+        "seeDailyBalanceChangesWalletAllocationsAndSmartSpendingLimitAlerts": "Trực quan hóa biến động số dư theo ngày, phân bổ tỷ lệ giữa các ví và cảnh báo hạn mức chi tiêu thông minh.",
+        "digitalWallet2026SimpleAndSecureByDesign": "Digital Wallet © 2026. Thiết kế tối giản và bảo mật."
+    }
+}

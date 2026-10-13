@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { Client } from "@stomp/stompjs";
 import { toast } from "sonner";
@@ -11,8 +12,11 @@ interface UseNotificationSocketProps {
 }
 
 export function useNotificationSocket({ onNotificationReceived }: UseNotificationSocketProps = {}) {
+    const t = useTranslations("dashboard");
     const callbackRef = useRef(onNotificationReceived);
-    callbackRef.current = onNotificationReceived;
+    useEffect(() => {
+        callbackRef.current = onNotificationReceived;
+    }, [onNotificationReceived]);
 
     useEffect(() => {
         let isMounted = true;
@@ -42,7 +46,7 @@ export function useNotificationSocket({ onNotificationReceived }: UseNotificatio
                             const notification: NotificationItem = JSON.parse(message.body);
 
                             // Hiển thị Toast thông báo realtime bằng Sonner
-                            toast.success(notification.title || "Thông báo giao dịch", {
+                            toast.success(notification.title || t("transactionNotifications"), {
                                 description: notification.content,
                                 duration: 5000,
                             });
@@ -72,5 +76,5 @@ export function useNotificationSocket({ onNotificationReceived }: UseNotificatio
                 client.deactivate();
             }
         };
-    }, []);
+    }, [t]);
 }

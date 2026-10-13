@@ -1,7 +1,4 @@
 import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  output: "standalone",
-};
-
-export default nextConfig;
+import createNextIntlPlugin from "next-intl/plugin";
+const nextConfig: NextConfig = { output: "standalone" };
+export default createNextIntlPlugin("./src/i18n/request.ts")(nextConfig);

@@ -1,43 +1,43 @@
 "use client";
 
-import {
-    Home,
-    ArrowLeftRight,
-    CreditCard,
-    Clock,
-    Settings,
-} from "lucide-react";
+import { useTranslations } from "next-intl";
+
+import { Home, ArrowLeftRight, CreditCard, Clock, Settings } from "lucide-react";
 
 interface SidebarProps {
     activeTab: "overview" | "transfer" | "deposit-withdraw" | "history" | "settings";
-    onTabSelect: (tab: "overview" | "transfer" | "deposit-withdraw" | "history" | "settings") => void;
+    onTabSelect: (
+        tab: "overview" | "transfer" | "deposit-withdraw" | "history" | "settings"
+    ) => void;
 }
 
 export function Sidebar({ activeTab, onTabSelect }: SidebarProps) {
+    const t = useTranslations("dashboard");
+
     const navItems = [
         {
             id: "overview" as const,
-            label: "Tổng quan",
+            label: t("overview"),
             icon: Home,
         },
         {
             id: "transfer" as const,
-            label: "Chuyển tiền",
+            label: t("transfer"),
             icon: ArrowLeftRight,
         },
         {
             id: "deposit-withdraw" as const,
-            label: "Nạp / Rút tiền",
+            label: t("depositWithdraw"),
             icon: CreditCard,
         },
         {
             id: "history" as const,
-            label: "Lịch sử giao dịch",
+            label: t("transactionHistory"),
             icon: Clock,
         },
         {
             id: "settings" as const,
-            label: "Cài đặt",
+            label: t("settings"),
             icon: Settings,
         },
     ];
@@ -87,7 +87,7 @@ export function Sidebar({ activeTab, onTabSelect }: SidebarProps) {
             <div className="p-4 border-t border-slate-100">
                 <div className="px-3 py-2 rounded-lg bg-slate-50 text-[11px] text-slate-400">
                     <p className="font-medium text-slate-600">Digital Wallet v1.0</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Hệ thống ví bảo mật</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5"> {t("secureWalletSystem")} </p>
                 </div>
             </div>
         </aside>

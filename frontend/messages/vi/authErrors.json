@@ -1,0 +1,16 @@
+{
+    "authErrors": {
+        "invalidInput": "Dữ liệu nhập không hợp lệ",
+        "invalidCredentials": "Email hoặc mật khẩu không đúng",
+        "loginSuccess": "Đăng nhập thành công!",
+        "backendConnection": "Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối.",
+        "serverConnection": "Lỗi kết nối máy chủ",
+        "registerFailed": "Đăng ký thất bại. Vui lòng thử lại.",
+        "otpSent": "Mã OTP đã được gửi đến email. Vui lòng kiểm tra hộp thư!",
+        "invalidOtpFormat": "Định dạng OTP không hợp lệ",
+        "invalidOtp": "Mã OTP không hợp lệ hoặc đã hết hạn",
+        "activationSuccess": "Kích hoạt tài khoản thành công!",
+        "logoutSuccess": "Đăng xuất thành công!",
+        "logoutFailed": "Đăng xuất thất bại"
+    }
+}

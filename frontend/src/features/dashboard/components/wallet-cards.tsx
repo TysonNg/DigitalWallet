@@ -1,19 +1,13 @@
 "use client";
 
-import {
-    Wallet,
-    PiggyBank,
-    Luggage,
-    MoreHorizontal,
-    Plus,
-    ArrowUpRight,
-    Send,
-} from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
+
+import { Wallet, PiggyBank, Luggage, MoreHorizontal, Plus, ArrowUpRight, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatVND } from "@/lib/utils";
 
 interface WalletCardsProps {
     mainBalance: number;
+    currency?: string;
     walletId: string;
     onDepositClick: () => void;
     onWithdrawClick: () => void;
@@ -22,10 +16,17 @@ interface WalletCardsProps {
 
 export function WalletCards({
     mainBalance,
+    currency = "VND",
     onDepositClick,
     onWithdrawClick,
     onTransferClick,
 }: WalletCardsProps) {
+    const t = useTranslations("dashboard");
+    const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
+    const common = useTranslations("common");
+    const formatVND = (value: number) =>
+        new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* 1. Ví chính */}
@@ -36,10 +37,14 @@ export function WalletCards({
                             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                                 <Wallet className="w-4 h-4 stroke-[1.75]" />
                             </div>
-                            <span className="font-semibold text-xs text-slate-700">Ví chính</span>
+                            <span className="font-semibold text-xs text-slate-700">
+                                {" "}
+                                {t("mainWallet")}{" "}
+                            </span>
                         </div>
                         <button
                             type="button"
+                            aria-label={common("moreOptions")}
                             className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-50 transition-colors cursor-pointer"
                         >
                             <MoreHorizontal className="w-4 h-4" />
@@ -60,7 +65,7 @@ export function WalletCards({
                         onClick={onDepositClick}
                         className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer"
                     >
-                        <Plus className="w-3.5 h-3.5 stroke-[2]" /> Nạp tiền
+                        <Plus className="w-3.5 h-3.5 stroke-[2]" /> {t("deposit")}{" "}
                     </Button>
 
                     <Button
@@ -69,7 +74,7 @@ export function WalletCards({
                         onClick={onWithdrawClick}
                         className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer"
                     >
-                        <ArrowUpRight className="w-3.5 h-3.5 stroke-[2]" /> Rút tiền
+                        <ArrowUpRight className="w-3.5 h-3.5 stroke-[2]" /> {t("withdraw")}{" "}
                     </Button>
 
                     <Button
@@ -78,7 +83,7 @@ export function WalletCards({
                         onClick={onTransferClick}
                         className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer"
                     >
-                        <Send className="w-3.5 h-3.5 stroke-[2]" /> Chuyển tiền
+                        <Send className="w-3.5 h-3.5 stroke-[2]" /> {t("transfer")}{" "}
                     </Button>
                 </div>
             </div>
@@ -92,7 +97,7 @@ export function WalletCards({
                                 <PiggyBank className="w-4 h-4 stroke-[1.75]" />
                             </div>
                             <span className="font-semibold text-xs text-slate-700">
-                                Ví tiết kiệm
+                                {t("savingsWallet")}{" "}
                             </span>
                         </div>
                         <button
@@ -105,14 +110,23 @@ export function WalletCards({
 
                     <div className="mt-2">
                         <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                            28.300.000 đ
+                            {formatVND(28300000)}
                         </h2>
                     </div>
                 </div>
 
                 <div className="mt-6 pt-2">
                     <p className="text-xs text-slate-500 font-normal">
-                        Lãi suất hiện tại <span className="font-semibold text-slate-800">3,5%/năm</span>
+                        {t("currentInterestRate")}{" "}
+                        <span className="font-semibold text-slate-800">
+                            {" "}
+                            {t("yearlyInterest", {
+                                rate: new Intl.NumberFormat(locale, {
+                                    style: "percent",
+                                    maximumFractionDigits: 1,
+                                }).format(0.035),
+                            })}{" "}
+                        </span>
                     </p>
                 </div>
             </div>
@@ -125,7 +139,10 @@ export function WalletCards({
                             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center">
                                 <Luggage className="w-4 h-4 stroke-[1.75]" />
                             </div>
-                            <span className="font-semibold text-xs text-slate-700">Ví du lịch</span>
+                            <span className="font-semibold text-xs text-slate-700">
+                                {" "}
+                                {t("travelWallet")}{" "}
+                            </span>
                         </div>
                         <button
                             type="button"
@@ -137,15 +154,13 @@ export function WalletCards({
 
                     <div className="mt-2">
                         <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                            5.720.000 đ
+                            {formatVND(5720000)}
                         </h2>
                     </div>
                 </div>
 
                 <div className="mt-6 pt-2">
-                    <p className="text-xs text-slate-500 font-normal">
-                        Dành cho những chuyến đi
-                    </p>
+                    <p className="text-xs text-slate-500 font-normal">{t("forYourTravels")} </p>
                 </div>
             </div>
         </div>

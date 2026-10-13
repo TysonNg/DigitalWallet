@@ -1,0 +1,16 @@
+{
+    "authErrors": {
+        "invalidInput": "Invalid input data",
+        "invalidCredentials": "Invalid email or password",
+        "loginSuccess": "Login successful!",
+        "backendConnection": "Unable to connect to backend server. Please check your connection.",
+        "serverConnection": "Server connection error",
+        "registerFailed": "Registration failed. Please try again.",
+        "otpSent": "An OTP verification code has been sent to your email. Please check your inbox!",
+        "invalidOtpFormat": "Invalid OTP format",
+        "invalidOtp": "Invalid or expired OTP code",
+        "activationSuccess": "Account activated successfully!",
+        "logoutSuccess": "Logged out successfully!",
+        "logoutFailed": "Error logging out"
+    }
+}

@@ -1,48 +1,66 @@
 import { z } from "zod";
+import defaultMessages from "../../../../messages/en/authValidation.json";
 
-export const loginSchema = z.object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-});
+type ValidationKey = keyof typeof defaultMessages.authValidation;
+export type AuthValidationTranslator = (key: ValidationKey) => string;
+
+const defaultTranslator: AuthValidationTranslator = (key) => defaultMessages.authValidation[key];
+
+export const createLoginSchema = (t: AuthValidationTranslator) =>
+    z.object({
+        email: z.string({ error: t("invalidType") }).email(t("email")),
+        password: z.string({ error: t("invalidType") }).min(6, t("loginPassword")),
+    });
+
+export const loginSchema = createLoginSchema(defaultTranslator);
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
-export const registerSchema = z
-    .object({
-        fullName: z.string().min(2, "Full name must be at least 2 characters").max(100, "Full name is too long"),
-        email: z.string().email("Invalid email address"),
-        phoneNumber: z
-            .string()
-            .regex(/^(0|\+84)[3|5|7|8|9][0-9]{8}$/, "Invalid phone number format"),
-        dateOfBirth: z.string().refine(
-            (dob) => {
-                const birth = new Date(dob);
-                const now = new Date();
-                const age = now.getFullYear() - birth.getFullYear();
-                return age >= 18;
-            },
-            { message: "User must be at least 18 years old to open a wallet" }
-        ),
-        password: z
-            .string()
-            .min(8, "Password must be at least 8 characters")
-            .regex(/[A-Z]/, "Password must contain at least 1 uppercase letter")
-            .regex(/[0-9]/, "Password must contain at least 1 number"),
-        confirmPassword: z.string().min(1, "Please confirm your password"),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-        message: "Passwords do not match",
-        path: ["confirmPassword"],
-    });
+export const createRegisterSchema = (t: AuthValidationTranslator) =>
+    z
+        .object({
+            fullName: z
+                .string({ error: t("invalidType") })
+                .min(2, t("fullNameMin"))
+                .max(100, t("fullNameMax")),
+            email: z.string({ error: t("invalidType") }).email(t("email")),
+            phoneNumber: z
+                .string({ error: t("invalidType") })
+                .regex(/^(0|\+84)[3|5|7|8|9][0-9]{8}$/, t("phone")),
+            dateOfBirth: z.string({ error: t("invalidType") }).refine(
+                (dob) => {
+                    const birth = new Date(dob);
+                    const now = new Date();
+                    const age = now.getFullYear() - birth.getFullYear();
+                    return age >= 18;
+                },
+                { message: t("age") }
+            ),
+            password: z
+                .string({ error: t("invalidType") })
+                .min(8, t("passwordMin"))
+                .regex(/[A-Z]/, t("passwordUppercase"))
+                .regex(/[0-9]/, t("passwordNumber")),
+            confirmPassword: z.string({ error: t("invalidType") }).min(1, t("confirmPassword")),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+            message: t("passwordMismatch"),
+            path: ["confirmPassword"],
+        });
+
+export const registerSchema = createRegisterSchema(defaultTranslator);
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
-export const verifyOtpSchema = z.object({
-    email: z.string().email("Invalid email address"),
-    otp: z
-        .string()
-        .length(6, "OTP must be exactly 6 digits")
-        .regex(/^[0-9]+$/, "OTP must contain only numbers"),
-});
+export const createVerifyOtpSchema = (t: AuthValidationTranslator) =>
+    z.object({
+        email: z.string({ error: t("invalidType") }).email(t("email")),
+        otp: z
+            .string({ error: t("invalidType") })
+            .length(6, t("otpLength"))
+            .regex(/^[0-9]+$/, t("otpNumber")),
+    });
+
+export const verifyOtpSchema = createVerifyOtpSchema(defaultTranslator);
 
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;

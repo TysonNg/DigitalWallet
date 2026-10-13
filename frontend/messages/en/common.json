@@ -1,0 +1,12 @@
+{
+    "common": {
+        "close": "Close",
+        "openMenu": "Open menu",
+        "clearSearch": "Clear search",
+        "profile": "Profile",
+        "copyWalletId": "Copy wallet ID",
+        "moreOptions": "More options",
+        "loading": "Processing",
+        "required": "Required"
+    }
+}

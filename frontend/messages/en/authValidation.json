@@ -1,0 +1,18 @@
+{
+    "authValidation": {
+        "email": "Invalid email address",
+        "loginPassword": "Password must be at least 6 characters",
+        "fullNameMin": "Full name must be at least 2 characters",
+        "fullNameMax": "Full name is too long",
+        "phone": "Invalid phone number format",
+        "age": "User must be at least 18 years old to open a wallet",
+        "passwordMin": "Password must be at least 8 characters",
+        "passwordUppercase": "Password must contain at least 1 uppercase letter",
+        "passwordNumber": "Password must contain at least 1 number",
+        "confirmPassword": "Please confirm your password",
+        "passwordMismatch": "Passwords do not match",
+        "otpLength": "OTP must be exactly 6 digits",
+        "otpNumber": "OTP must contain only numbers",
+        "invalidType": "Please enter a valid value"
+    }
+}

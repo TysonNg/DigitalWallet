@@ -1,8 +1,15 @@
 "use server";
 
+import { getTranslations, getLocale } from "next-intl/server";
+
 import { backendFetch, BackendError } from "@/server/backend-client";
 import { getSession } from "@/server/session";
-import { WalletDto, TransactionDto, PaymentGatewayType, PaymentOrderDto } from "../types/wallet.types";
+import {
+    WalletDto,
+    TransactionDto,
+    PaymentGatewayType,
+    PaymentOrderDto,
+} from "../types/wallet.types";
 import { revalidatePath } from "next/cache";
 
 export interface ActionResult<T> {
@@ -15,42 +22,48 @@ export interface ActionResult<T> {
  * Lấy thông tin ví của người dùng hiện tại từ Backend.
  */
 export async function getMyWalletAction(): Promise<ActionResult<WalletDto>> {
+    const t = await getTranslations("walletErrors");
+
     try {
         const session = await getSession();
         if (!session.isLoggedIn || !session.user) {
-            return { success: false, message: "Session has expired" };
+            return { success: false, message: t("yourSessionHasExpired") };
         }
 
         const res = await backendFetch<WalletDto>(`/wallet/user/${session.user.id}`);
         return {
             success: true,
-            message: "Retrieved wallet info successfully",
+            message: t("walletRetrievedSuccessfully"),
             data: res.data,
         };
     } catch (error) {
         if (error instanceof BackendError) {
             return { success: false, message: error.message };
         }
-        return { success: false, message: "Unable to connect to server" };
+        return { success: false, message: t("unableToConnectToTheServer") };
     }
 }
 
 /**
  * Lấy danh sách lịch sử giao dịch của ví.
  */
-export async function getWalletTransactionsAction(walletId: string): Promise<ActionResult<TransactionDto[]>> {
+export async function getWalletTransactionsAction(
+    walletId: string
+): Promise<ActionResult<TransactionDto[]>> {
+    const t = await getTranslations("walletErrors");
+
     try {
         const res = await backendFetch<TransactionDto[]>(`/wallet/${walletId}/transactions`);
         return {
             success: true,
-            message: "Retrieved transaction history successfully",
+            message: t("transactionHistoryRetrievedSuccessfully"),
             data: res.data,
         };
     } catch (error) {
         if (error instanceof BackendError) {
             return { success: false, message: error.message };
         }
-        return { success: false, message: "Unable to retrieve transaction history" };
+        return { success: false, message: t("unableToRetrieveTransactionHistory") };
     }
 }
 
@@ -61,9 +74,11 @@ export async function depositMoneyAction(
     walletId: string,
     amount: number
 ): Promise<ActionResult<WalletDto>> {
+    const t = await getTranslations("walletErrors");
+
     try {
         if (amount <= 0) {
-            return { success: false, message: "Deposit amount must be greater than 0" };
+            return { success: false, message: t("theDepositAmountMustBeGreaterThan0") };
         }
 
         let targetWalletId = walletId;
@@ -82,17 +97,17 @@ export async function depositMoneyAction(
             body: JSON.stringify({ walletId: targetWalletId, amount }),
         });
 
-        revalidatePath("/dashboard");
+        revalidatePath(`/${await getLocale()}/dashboard`);
         return {
             success: true,
-            message: "Deposit successful!",
+            message: t("depositSuccessful"),
             data: res.data,
         };
     } catch (error) {
         if (error instanceof BackendError) {
             return { success: false, message: error.message };
         }
-        return { success: false, message: "Deposit failed" };
+        return { success: false, message: t("depositFailed") };
     }
 }
 
@@ -103,9 +118,11 @@ export async function withdrawMoneyAction(
     walletId: string,
     amount: number
 ): Promise<ActionResult<WalletDto>> {
+    const t = await getTranslations("walletErrors");
+
     try {
         if (amount <= 0) {
-            return { success: false, message: "Withdrawal amount must be greater than 0" };
+            return { success: false, message: t("theWithdrawalAmountMustBeGreaterThan0") };
         }
 
         const res = await backendFetch<WalletDto>("/wallet/withdraw", {
@@ -116,14 +133,14 @@ export async function withdrawMoneyAction(
         revalidatePath("/dashboard");
         return {
             success: true,
-            message: "Withdrawal successful!",
+            message: t("withdrawalSuccessful"),
             data: res.data,
         };
     } catch (error) {
         if (error instanceof BackendError) {
             return { success: false, message: error.message };
         }
-        return { success: false, message: "Withdrawal failed" };
+        return { success: false, message: t("withdrawalFailed") };
     }
 }
 
@@ -136,15 +153,17 @@ export async function transferMoneyAction(
     amount: number,
     description: string
 ): Promise<ActionResult<WalletDto>> {
+    const t = await getTranslations("walletErrors");
+
     try {
         if (amount <= 0) {
-            return { success: false, message: "Transfer amount must be greater than 0" };
+            return { success: false, message: t("theTransferAmountMustBeGreaterThan0") };
         }
         if (!receiverWalletId || receiverWalletId.trim() === "") {
-            return { success: false, message: "Please enter recipient wallet ID" };
+            return { success: false, message: t("pleaseEnterTheRecipientWalletID") };
         }
         if (senderWalletId === receiverWalletId) {
-            return { success: false, message: "Cannot transfer money to your own wallet" };
+            return { success: false, message: t("youCannotTransferToYourOwnWallet") };
         }
 
         const idempotencyKey = crypto.randomUUID();
@@ -166,14 +185,14 @@ export async function transferMoneyAction(
         revalidatePath("/dashboard");
         return {
             success: true,
-            message: "Transfer successful!",
+            message: t("transferSuccessful"),
             data: res.data,
         };
     } catch (error) {
         if (error instanceof BackendError) {
             return { success: false, message: error.message };
         }
-        return { success: false, message: "Transfer failed" };
+        return { success: false, message: t("transferFailed") };
     }
 }
 
@@ -185,14 +204,16 @@ export async function createPaymentOrderAction(params: {
     amount: number;
     gateway: PaymentGatewayType;
 }): Promise<ActionResult<PaymentOrderDto>> {
+    const t = await getTranslations("walletErrors");
+
     try {
         const session = await getSession();
         if (!session.isLoggedIn || !session.user) {
-            return { success: false, message: "Phiên đăng nhập đã hết hạn" };
+            return { success: false, message: t("yourSessionHasExpired") };
         }
 
         if (params.amount < 1000) {
-            return { success: false, message: "Số tiền nạp tối thiểu là 1.000 đ" };
+            return { success: false, message: t("theMinimumDepositIsVND1000") };
         }
 
         let walletId = params.walletId;
@@ -215,14 +236,13 @@ export async function createPaymentOrderAction(params: {
 
         return {
             success: true,
-            message: "Tạo link thanh toán thành công!",
+            message: t("paymentLinkCreatedSuccessfully"),
             data: res.data,
         };
     } catch (error) {
         if (error instanceof BackendError) {
             return { success: false, message: error.message };
         }
-        return { success: false, message: "Không thể kết nối đến cổng thanh toán" };
+        return { success: false, message: t("unableToConnectToThePaymentGateway") };
     }
 }
-

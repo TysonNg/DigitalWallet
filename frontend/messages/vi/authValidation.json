@@ -1,0 +1,18 @@
+{
+    "authValidation": {
+        "email": "Địa chỉ email không hợp lệ",
+        "loginPassword": "Mật khẩu phải có ít nhất 6 ký tự",
+        "fullNameMin": "Họ và tên phải có ít nhất 2 ký tự",
+        "fullNameMax": "Họ và tên quá dài",
+        "phone": "Số điện thoại không hợp lệ",
+        "age": "Bạn phải đủ 18 tuổi để mở ví",
+        "passwordMin": "Mật khẩu phải có ít nhất 8 ký tự",
+        "passwordUppercase": "Mật khẩu phải có ít nhất 1 chữ hoa",
+        "passwordNumber": "Mật khẩu phải có ít nhất 1 chữ số",
+        "confirmPassword": "Vui lòng xác nhận mật khẩu",
+        "passwordMismatch": "Mật khẩu không khớp",
+        "otpLength": "OTP phải có đúng 6 chữ số",
+        "otpNumber": "OTP chỉ được chứa chữ số",
+        "invalidType": "Vui lòng nhập giá trị hợp lệ"
+    }
+}
