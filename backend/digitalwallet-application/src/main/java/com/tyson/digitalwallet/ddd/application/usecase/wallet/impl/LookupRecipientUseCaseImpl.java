@@ -1,5 +1,7 @@
 package com.tyson.digitalwallet.ddd.application.usecase.wallet.impl;
 
+import com.tyson.digitalwallet.ddd.application.exception.AppException;
+import com.tyson.digitalwallet.ddd.application.exception.ErrorCode;
 import com.tyson.digitalwallet.ddd.application.exception.UserNotActiveException;
 import com.tyson.digitalwallet.ddd.application.exception.UserNotFoundException;
 import com.tyson.digitalwallet.ddd.application.exception.WalletNotFoundException;
@@ -40,8 +42,8 @@ public class LookupRecipientUseCaseImpl implements LookupRecipientUseCase {
     @Transactional(readOnly = true)
     public RecipientLookupResponse lookup(UUID currentUserId, String identifier) {
         if (identifier == null || identifier.isBlank()) {
-            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.INVALID_RECIPIENT_IDENTIFIER,
+            throw new AppException(
+                    ErrorCode.INVALID_RECIPIENT_IDENTIFIER,
                     "Recipient identifier must not be blank"
             );
         }
@@ -60,8 +62,8 @@ public class LookupRecipientUseCaseImpl implements LookupRecipientUseCase {
 
         // 2. Kiểm tra không được chuyển cho chính mình (kiểm tra sau khi lấy được thông tin)
         if (currentUserId != null && response.userId().equals(currentUserId)) {
-            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.CANNOT_TRANSFER_TO_SELF,
+            throw new AppException(
+                    ErrorCode.CANNOT_TRANSFER_TO_SELF,
                     "Cannot transfer money to yourself"
             );
         }
@@ -106,8 +108,8 @@ public class LookupRecipientUseCaseImpl implements LookupRecipientUseCase {
         }
 
         if (recipientWallet.getStatus() != WalletStatus.ACTIVE) {
-            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.WALLET_NOT_ACTIVE,
+            throw new AppException(
+                    ErrorCode.WALLET_NOT_ACTIVE,
                     "Recipient wallet is currently not active"
             );
         }

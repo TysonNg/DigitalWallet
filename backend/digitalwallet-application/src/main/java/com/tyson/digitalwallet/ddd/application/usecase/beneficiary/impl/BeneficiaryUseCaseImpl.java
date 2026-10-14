@@ -1,5 +1,7 @@
 package com.tyson.digitalwallet.ddd.application.usecase.beneficiary.impl;
 
+import com.tyson.digitalwallet.ddd.application.exception.AppException;
+import com.tyson.digitalwallet.ddd.application.exception.ErrorCode;
 import com.tyson.digitalwallet.ddd.application.exception.UserNotFoundException;
 import com.tyson.digitalwallet.ddd.application.exception.WalletNotFoundException;
 import com.tyson.digitalwallet.ddd.application.usecase.beneficiary.BeneficiaryUseCase;
@@ -70,22 +72,22 @@ public class BeneficiaryUseCaseImpl implements BeneficiaryUseCase {
         UUID beneficiaryWalletId = command.beneficiaryWalletId();
 
         if (userId == null || beneficiaryUserId == null || beneficiaryWalletId == null) {
-            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.INVALID_RECIPIENT_IDENTIFIER,
+            throw new AppException(
+                    ErrorCode.INVALID_RECIPIENT_IDENTIFIER,
                     "Beneficiary information is incomplete"
             );
         }
 
         if (userId.equals(beneficiaryUserId)) {
-            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.CANNOT_ADD_SELF_AS_BENEFICIARY,
+            throw new AppException(
+                    ErrorCode.CANNOT_ADD_SELF_AS_BENEFICIARY,
                     "Cannot add yourself as a beneficiary"
             );
         }
 
         if (beneficiaryRepository.existsByUserIdAndBeneficiaryUserId(userId, beneficiaryUserId)) {
-            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.BENEFICIARY_ALREADY_EXISTS,
+            throw new AppException(
+                    ErrorCode.BENEFICIARY_ALREADY_EXISTS,
                     "Recipient is already in your beneficiaries"
             );
         }
@@ -118,14 +120,14 @@ public class BeneficiaryUseCaseImpl implements BeneficiaryUseCase {
     @Transactional
     public BeneficiaryResponse updateBeneficiary(UpdateBeneficiaryCommand command) {
         Beneficiary beneficiary = beneficiaryRepository.findById(command.beneficiaryId())
-                .orElseThrow(() -> new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                        com.tyson.digitalwallet.ddd.application.exception.ErrorCode.BENEFICIARY_NOT_FOUND,
+                .orElseThrow(() -> new AppException(
+                        ErrorCode.BENEFICIARY_NOT_FOUND,
                         "Beneficiary contact not found"
                 ));
 
         if (!beneficiary.getUserId().equals(command.userId())) {
-            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.FORBIDDEN_ACCESS,
+            throw new AppException(
+                    ErrorCode.FORBIDDEN_ACCESS,
                     "You are not authorized to update this beneficiary"
             );
         }
@@ -152,14 +154,14 @@ public class BeneficiaryUseCaseImpl implements BeneficiaryUseCase {
     @Transactional
     public void deleteBeneficiary(UUID beneficiaryId, UUID userId) {
         Beneficiary beneficiary = beneficiaryRepository.findById(beneficiaryId)
-                .orElseThrow(() -> new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                        com.tyson.digitalwallet.ddd.application.exception.ErrorCode.BENEFICIARY_NOT_FOUND,
+                .orElseThrow(() -> new AppException(
+                        ErrorCode.BENEFICIARY_NOT_FOUND,
                         "Beneficiary contact not found"
                 ));
 
         if (!beneficiary.getUserId().equals(userId)) {
-            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.FORBIDDEN_ACCESS,
+            throw new AppException(
+                    ErrorCode.FORBIDDEN_ACCESS,
                     "You are not authorized to delete this beneficiary"
             );
         }
