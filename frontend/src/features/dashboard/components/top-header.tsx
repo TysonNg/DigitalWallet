@@ -6,17 +6,19 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { useRouter } from "@/i18n/navigation";
 import { useState, useRef, useEffect } from "react";
 import { Search, Bell, ChevronDown, LogOut, Copy, Check, X } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { User } from "@/features/auth/types/auth.types";
 import { logoutAction } from "@/features/auth/actions/auth.actions";
 import { toast } from "sonner";
+import { Settings } from "lucide-react";
 
 import { useNotificationsQuery, useMarkAllReadMutation } from "../hooks/use-notifications-query";
 
 interface TopHeaderProps {
     user: User;
     walletId?: string;
-    searchQuery: string;
-    onSearchChange: (query: string) => void;
+    searchQuery?: string;
+    onSearchChange?: (query: string) => void;
 }
 
 export function TopHeader({ user, walletId, searchQuery, onSearchChange }: TopHeaderProps) {
@@ -84,6 +86,23 @@ export function TopHeader({ user, walletId, searchQuery, onSearchChange }: TopHe
         }
     };
 
+    const [internalSearch, setInternalSearch] = useState("");
+    const effectiveSearch = searchQuery !== undefined ? searchQuery : internalSearch;
+
+    const handleSearchChange = (val: string) => {
+        if (onSearchChange) {
+            onSearchChange(val);
+        } else {
+            setInternalSearch(val);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" && effectiveSearch.trim()) {
+            router.push(`/dashboard/history?search=${encodeURIComponent(effectiveSearch.trim())}`);
+        }
+    };
+
     return (
         <header className="sticky top-0 z-30 w-full h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 flex items-center justify-between gap-4">
             {/* Search Bar */}
@@ -94,15 +113,16 @@ export function TopHeader({ user, walletId, searchQuery, onSearchChange }: TopHe
                         type="text"
                         aria-label={t("searchTransactionsRecipients")}
                         placeholder={t("searchTransactionsRecipients")}
-                        value={searchQuery}
-                        onChange={(e) => onSearchChange(e.target.value)}
+                        value={effectiveSearch}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         className="w-full bg-slate-50 hover:bg-slate-100/60 focus:bg-white text-xs text-slate-800 placeholder-slate-400 pl-8.5 pr-8 py-1.5 rounded-lg border border-slate-200/90 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 transition-all"
                     />
-                    {searchQuery && (
+                    {effectiveSearch && (
                         <button
                             type="button"
                             aria-label={common("clearSearch")}
-                            onClick={() => onSearchChange("")}
+                            onClick={() => handleSearchChange("")}
                             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                         >
                             <X className="w-3.5 h-3.5" />
@@ -220,7 +240,15 @@ export function TopHeader({ user, walletId, searchQuery, onSearchChange }: TopHe
                                 )}
                             </div>
 
-                            <div className="pt-1 border-t border-slate-100">
+                            <div className="pt-1 border-t border-slate-100 space-y-0.5">
+                                <Link
+                                    href="/dashboard/settings"
+                                    onClick={() => setIsProfileOpen(false)}
+                                    className="w-full flex items-center space-x-2 px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-50 rounded-md transition-colors cursor-pointer font-medium"
+                                >
+                                    <Settings className="w-3.5 h-3.5 stroke-[1.75] text-slate-500" />
+                                    <span>{t("settings")}</span>
+                                </Link>
                                 <button
                                     type="button"
                                     onClick={handleLogout}

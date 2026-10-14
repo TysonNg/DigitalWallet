@@ -45,5 +45,36 @@ payment:
   stripe:
     secret-key: ${STRIPE_SECRET_KEY:}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+
+resilience4j:
+    circuitbreaker:
+        instances:
+            backendA:
+                registerHealthIndicator: true
+                slidingWindowSize: 100
+            backendB:
+                registerHealthIndicator: true
+                slidingWindowSize: 10
+                permittedNumberOfCallsInHalfOpenState: 3
+                slidingWindowType: TIME_BASED
+                minimumNumberOfCalls: 20
+                waitDurationInOpenState: 50s
+                failureRateThreshold: 50
+                eventConsumerBufferSize: 10
+                recordFailurePredicate: io.github.robwin.exception.RecordFailurePredicate
+    ratelimiter:
+        instances:
+            backendA:
+                limitForPeriod: 10
+                limitRefreshPeriod: 1s
+                timeoutDuration: 0
+                registerHealthIndicator: true
+                eventConsumerBufferSize: 100
+            backendB:
+                limitForPeriod: 6
+                limitRefreshPeriod: 500ms
+                timeoutDuration: 3s
+management:
+    
 server:
   port: 3006

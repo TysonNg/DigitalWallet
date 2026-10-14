@@ -3,15 +3,16 @@
 import { useTranslations, useLocale } from "next-intl";
 
 import { Wallet, PiggyBank, Luggage, MoreHorizontal, Plus, ArrowUpRight, Send } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 
 interface WalletCardsProps {
     mainBalance: number;
     currency?: string;
     walletId: string;
-    onDepositClick: () => void;
-    onWithdrawClick: () => void;
-    onTransferClick: () => void;
+    onDepositClick?: () => void;
+    onWithdrawClick?: () => void;
+    onTransferClick?: () => void;
 }
 
 export function WalletCards({
@@ -59,32 +60,59 @@ export function WalletCards({
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mt-6">
-                    <Button
-                        size="sm"
-                        variant="primary"
-                        onClick={onDepositClick}
-                        className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                        <Plus className="w-3.5 h-3.5 stroke-[2]" /> {t("deposit")}{" "}
-                    </Button>
+                    {onDepositClick ? (
+                        <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={onDepositClick}
+                            className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                            <Plus className="w-3.5 h-3.5 stroke-[2]" /> {t("deposit")}
+                        </Button>
+                    ) : (
+                        <Link
+                            href="/dashboard/deposit-withdraw?tab=deposit"
+                            className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium shadow-xs"
+                        >
+                            <Plus className="w-3.5 h-3.5 stroke-[2]" /> {t("deposit")}
+                        </Link>
+                    )}
 
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={onWithdrawClick}
-                        className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                        <ArrowUpRight className="w-3.5 h-3.5 stroke-[2]" /> {t("withdraw")}{" "}
-                    </Button>
+                    {onWithdrawClick ? (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={onWithdrawClick}
+                            className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                            <ArrowUpRight className="w-3.5 h-3.5 stroke-[2]" /> {t("withdraw")}
+                        </Button>
+                    ) : (
+                        <Link
+                            href="/dashboard/deposit-withdraw?tab=withdraw"
+                            className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors font-medium"
+                        >
+                            <ArrowUpRight className="w-3.5 h-3.5 stroke-[2]" /> {t("withdraw")}
+                        </Link>
+                    )}
 
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={onTransferClick}
-                        className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                        <Send className="w-3.5 h-3.5 stroke-[2]" /> {t("transfer")}{" "}
-                    </Button>
+                    {onTransferClick ? (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={onTransferClick}
+                            className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                            <Send className="w-3.5 h-3.5 stroke-[2]" /> {t("transfer")}
+                        </Button>
+                    ) : (
+                        <Link
+                            href="/dashboard/transfer"
+                            className="text-xs h-8.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors font-medium"
+                        >
+                            <Send className="w-3.5 h-3.5 stroke-[2]" /> {t("transfer")}
+                        </Link>
+                    )}
                 </div>
             </div>
 

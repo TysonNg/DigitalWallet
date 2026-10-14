@@ -1,6 +1,7 @@
 import { getSession } from "@/server/session";
 import { redirect } from "@/i18n/navigation";
 import { getLocale } from "next-intl/server";
+import { DashboardShell } from "@/features/dashboard/components/dashboard-shell";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
     const session = await getSession();
@@ -13,9 +14,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
             },
             locale: await getLocale(),
         });
+        return null;
     }
 
-    return <>{children}</>;
+    return <DashboardShell user={session.user as any}>{children}</DashboardShell>;
 }
 
 export const metadata = { robots: { index: false, follow: false } };
