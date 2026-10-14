@@ -7,7 +7,9 @@ public enum ErrorStatus {
     BAD_REQUEST(400),
     UNAUTHORIZED(401),
     FORBIDDEN(403),
-    INTERNAL_ERROR(500);
+    TOO_MANY_REQUESTS(429),
+    INTERNAL_ERROR(500),
+    SERVICE_UNAVAILABLE(503);
 
     private int code;
 

@@ -13,6 +13,8 @@ import com.tyson.digitalwallet.ddd.controller.dto.request.auth.LoginDto;
 import com.tyson.digitalwallet.ddd.controller.dto.request.auth.RegisterRequestDto;
 import com.tyson.digitalwallet.ddd.controller.dto.request.auth.VerifyOtpRequestDto;
 import com.tyson.digitalwallet.ddd.controller.dto.response.auth.AuthResponseDto;
+import com.tyson.digitalwallet.ddd.controller.ratelimit.RateLimit;
+import com.tyson.digitalwallet.ddd.controller.ratelimit.RateLimitType;
 import com.tyson.digitalwallet.ddd.controller.util.AuthCookieManager;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -52,6 +54,7 @@ public class AuthController {
         this.authCookieManager = authCookieManager;
     }
 
+    @RateLimit(name = "authRateLimiter", type = RateLimitType.IP)
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponseDto>> login(@Valid @RequestBody LoginDto loginDto) {
         AuthResponse response = loginUseCase.login(loginDto.toCommand());
@@ -62,12 +65,14 @@ public class AuthController {
                 .body(ApiResponse.okBody("Login successfully!", AuthResponseDto.from(response)));
     }
 
+    @RateLimit(name = "authRateLimiter", type = RateLimitType.IP)
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Void>> register(@RequestBody RegisterRequestDto requestDto) {
         registerUseCase.register(requestDto.toCommand());
         return ApiResponse.ok("An OTP verification code has been sent to your email. Please check your inbox!", null);
     }
 
+    @RateLimit(name = "authRateLimiter", type = RateLimitType.IP)
     @PostMapping("/register/verify")
     public ResponseEntity<ApiResponse<AuthResponseDto>> verifyOtp(@RequestBody VerifyOtpRequestDto requestDto) {
         AuthResponse response = registerUseCase.verifyOtp(requestDto.toCommand());

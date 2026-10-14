@@ -10,6 +10,8 @@ import com.tyson.digitalwallet.ddd.controller.common.ApiResponse;
 import com.tyson.digitalwallet.ddd.controller.dto.request.payment.CreatePaymentOrderRequestDto;
 import com.tyson.digitalwallet.ddd.controller.dto.response.payment.PaymentOrderResponseDto;
 import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentGatewayType;
+import com.tyson.digitalwallet.ddd.controller.ratelimit.RateLimit;
+import com.tyson.digitalwallet.ddd.controller.ratelimit.RateLimitType;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +43,7 @@ public class PaymentController {
         this.processPaymentWebhookUseCase = processPaymentWebhookUseCase;
     }
 
+    @RateLimit(name = "transferRateLimiter", type = RateLimitType.USER_OR_IP)
     @PostMapping("/create-order")
     public ResponseEntity<ApiResponse<PaymentOrderResponseDto>> createOrder(
             @RequestBody @Valid CreatePaymentOrderRequestDto requestDto, Principal principal

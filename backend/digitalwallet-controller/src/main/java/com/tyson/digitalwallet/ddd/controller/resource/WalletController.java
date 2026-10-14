@@ -18,6 +18,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.LookupRecipientUseCase;
+import com.tyson.digitalwallet.ddd.controller.ratelimit.RateLimit;
+import com.tyson.digitalwallet.ddd.controller.ratelimit.RateLimitType;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.security.Principal;
 import java.util.List;
@@ -75,6 +77,7 @@ public class WalletController {
         throw new SecurityException("Direct deposits are disabled. Use a payment gateway to fund your wallet.");
     }
 
+    @RateLimit(name = "transferRateLimiter", type = RateLimitType.USER_OR_IP)
     @PostMapping("/withdraw")
     public ResponseEntity<ApiResponse<WalletResponseDto>> withdraw(
             @RequestBody @Valid WithdrawRequestDto request, Principal principal) {
@@ -83,6 +86,7 @@ public class WalletController {
         return ApiResponse.ok("Withdraw successfully", WalletResponseDto.from(response));
     }
 
+    @RateLimit(name = "transferRateLimiter", type = RateLimitType.USER_OR_IP)
     @PostMapping("/transfer")
     public ResponseEntity<ApiResponse<WalletResponseDto>> transfer(
             @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKeyHeader,
@@ -105,6 +109,7 @@ public class WalletController {
         return ApiResponse.ok("Get transactions successfully", list);
     }
 
+    @RateLimit(name = "lookupRateLimiter", type = RateLimitType.USER_OR_IP)
     @GetMapping("/lookup")
     public ResponseEntity<ApiResponse<com.tyson.digitalwallet.ddd.controller.dto.response.wallet.RecipientLookupResponseDto>> lookupRecipient(
             @RequestParam("identifier") String identifier,

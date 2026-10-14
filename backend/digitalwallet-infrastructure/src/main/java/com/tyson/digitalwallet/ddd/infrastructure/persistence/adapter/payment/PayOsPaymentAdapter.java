@@ -6,6 +6,8 @@ import com.tyson.digitalwallet.ddd.domain.service.payment.command.CreatePaymentL
 import com.tyson.digitalwallet.ddd.domain.service.payment.port.PaymentGatewayPort;
 import com.tyson.digitalwallet.ddd.domain.service.payment.result.PaymentLinkResult;
 import com.tyson.digitalwallet.ddd.domain.service.payment.result.PaymentWebhookResult;
+import com.tyson.digitalwallet.ddd.domain.exception.PaymentGatewayUnavailableException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +56,7 @@ public class PayOsPaymentAdapter implements PaymentGatewayPort {
     }
 
     @Override
+    @CircuitBreaker(name = "payosPayment", fallbackMethod = "createPaymentLinkFallback")
     public PaymentLinkResult createPaymentLink(CreatePaymentLinkCommand command) {
         if (payOS == null) {
             throw new IllegalStateException("PayOS credentials are not configured in application properties.");
@@ -92,6 +95,17 @@ public class PayOsPaymentAdapter implements PaymentGatewayPort {
             log.error("Failed to create PayOS payment link: {}", e.getMessage(), e);
             throw new RuntimeException("Could not create PayOS payment link: " + e.getMessage(), e);
         }
+    }
+
+    public PaymentLinkResult createPaymentLinkFallback(CreatePaymentLinkCommand command, Throwable t) {
+        log.error("PayOS circuit breaker fallback triggered for order [{}]: {}", command.orderId(), t.getMessage());
+        if (t instanceof PaymentGatewayUnavailableException) {
+            throw (PaymentGatewayUnavailableException) t;
+        }
+        throw new PaymentGatewayUnavailableException(
+                "Cổng thanh toán VietQR (PayOS) tạm thời gián đoạn. Vui lòng thử lại sau ít phút hoặc sử dụng phương thức thanh toán thẻ quốc tế.",
+                t
+        );
     }
 
     @Override

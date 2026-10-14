@@ -47,34 +47,46 @@ payment:
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
 
 resilience4j:
-    circuitbreaker:
-        instances:
-            backendA:
-                registerHealthIndicator: true
-                slidingWindowSize: 100
-            backendB:
-                registerHealthIndicator: true
-                slidingWindowSize: 10
-                permittedNumberOfCallsInHalfOpenState: 3
-                slidingWindowType: TIME_BASED
-                minimumNumberOfCalls: 20
-                waitDurationInOpenState: 50s
-                failureRateThreshold: 50
-                eventConsumerBufferSize: 10
-                recordFailurePredicate: io.github.robwin.exception.RecordFailurePredicate
-    ratelimiter:
-        instances:
-            backendA:
-                limitForPeriod: 10
-                limitRefreshPeriod: 1s
-                timeoutDuration: 0
-                registerHealthIndicator: true
-                eventConsumerBufferSize: 100
-            backendB:
-                limitForPeriod: 6
-                limitRefreshPeriod: 500ms
-                timeoutDuration: 3s
-management:
+  ratelimiter:
+    instances:
+      authRateLimiter:
+        limitForPeriod: 5
+        limitRefreshPeriod: 1m
+        timeoutDuration: 0
+        registerHealthIndicator: true
+      transferRateLimiter:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1m
+        timeoutDuration: 0
+        registerHealthIndicator: true
+      lookupRateLimiter:
+        limitForPeriod: 20
+        limitRefreshPeriod: 1m
+        timeoutDuration: 0
+        registerHealthIndicator: true
+  circuitbreaker:
+    instances:
+      payosPayment:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        registerHealthIndicator: true
+      stripePayment:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        registerHealthIndicator: true
+      mailSender:
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 60
+        waitDurationInOpenState: 15s
+        permittedNumberOfCallsInHalfOpenState: 2
+        registerHealthIndicator: true
     
 server:
   port: 3006
