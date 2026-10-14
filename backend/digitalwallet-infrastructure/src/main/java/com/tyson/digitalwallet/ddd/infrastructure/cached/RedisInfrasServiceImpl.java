@@ -73,9 +73,23 @@ public class RedisInfrasServiceImpl implements RedisInfrasService {
         try {
             return objectMapper.readValue(json, clazz);
         } catch (JsonProcessingException e) {
-            log.error("Failed to deserialize JSON to class {} for key: {}", clazz.getSimpleName(), key, e);
-            throw new RuntimeException("Redis deserialization error", e);
+            log.warn("Failed to deserialize JSON to class {} for key: {}. Invalidating cache key.", clazz.getSimpleName(), key, e);
+            delete(key);
+            return null;
         }
+    }
+
+    @Override
+    public <T> T getOrSet(String key, long timeout, TimeUnit unit, Class<T> clazz, java.util.function.Supplier<T> dbFallback) {
+        T cached = getObject(key, clazz);
+        if (cached != null) {
+            return cached;
+        }
+        T result = dbFallback.get();
+        if (result != null) {
+            setObject(key, result, timeout, unit);
+        }
+        return result;
     }
 
     // ================= Key operations =================

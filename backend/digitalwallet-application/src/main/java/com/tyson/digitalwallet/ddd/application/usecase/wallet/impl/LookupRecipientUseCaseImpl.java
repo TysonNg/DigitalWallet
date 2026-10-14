@@ -11,21 +11,29 @@ import com.tyson.digitalwallet.ddd.domain.model.enums.UserStatus;
 import com.tyson.digitalwallet.ddd.domain.model.enums.WalletStatus;
 import com.tyson.digitalwallet.ddd.domain.repository.UserRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
+import com.tyson.digitalwallet.ddd.domain.service.cache.CacheService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class LookupRecipientUseCaseImpl implements LookupRecipientUseCase {
 
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
+    private final CacheService cacheService;
 
-    public LookupRecipientUseCaseImpl(UserRepository userRepository, WalletRepository walletRepository) {
+    public LookupRecipientUseCaseImpl(
+            UserRepository userRepository,
+            WalletRepository walletRepository,
+            CacheService cacheService
+    ) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
+        this.cacheService = cacheService;
     }
 
     @Override
@@ -39,6 +47,29 @@ public class LookupRecipientUseCaseImpl implements LookupRecipientUseCase {
         }
 
         String query = identifier.trim();
+        String cacheKey = "cache:recipient:" + query.toLowerCase();
+
+        // 1. Tìm từ cache hoặc query DB qua helper getOrSet (TTL 10 phút)
+        RecipientLookupResponse response = cacheService.getOrSet(
+                cacheKey,
+                10,
+                TimeUnit.MINUTES,
+                RecipientLookupResponse.class,
+                () -> queryRecipientFromDb(query)
+        );
+
+        // 2. Kiểm tra không được chuyển cho chính mình (kiểm tra sau khi lấy được thông tin)
+        if (currentUserId != null && response.userId().equals(currentUserId)) {
+            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.CANNOT_TRANSFER_TO_SELF,
+                    "Cannot transfer money to yourself"
+            );
+        }
+
+        return response;
+    }
+
+    private RecipientLookupResponse queryRecipientFromDb(String query) {
         User recipientUser = null;
         Wallet recipientWallet = null;
 
@@ -63,20 +94,12 @@ public class LookupRecipientUseCaseImpl implements LookupRecipientUseCase {
                     .orElseThrow(() -> new UserNotFoundException("Recipient not found with identifier: " + query));
         }
 
-        // 3. Kiểm tra không được chuyển cho chính mình
-        if (currentUserId != null && recipientUser.getId().equals(currentUserId)) {
-            throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                    com.tyson.digitalwallet.ddd.application.exception.ErrorCode.CANNOT_TRANSFER_TO_SELF,
-                    "Cannot transfer money to yourself"
-            );
-        }
-
-        // 4. Kiểm tra trạng thái tài khoản người nhận
+        // 3. Kiểm tra trạng thái tài khoản người nhận
         if (recipientUser.getStatus() != UserStatus.ACTIVE) {
             throw new UserNotActiveException("Recipient account is not active");
         }
 
-        // 5. Kiểm tra ví người nhận nếu chưa tìm thấy ở bước 1
+        // 4. Kiểm tra ví người nhận nếu chưa tìm thấy ở bước 1
         if (recipientWallet == null) {
             recipientWallet = walletRepository.findByUserId(recipientUser.getId())
                     .orElseThrow(() -> new WalletNotFoundException("Recipient does not have an active wallet"));

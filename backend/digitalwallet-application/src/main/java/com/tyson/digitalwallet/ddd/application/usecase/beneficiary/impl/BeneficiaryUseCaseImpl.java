@@ -11,11 +11,15 @@ import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 import com.tyson.digitalwallet.ddd.domain.repository.BeneficiaryRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.UserRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
+import com.tyson.digitalwallet.ddd.domain.service.cache.CacheService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class BeneficiaryUseCaseImpl implements BeneficiaryUseCase {
@@ -23,23 +27,39 @@ public class BeneficiaryUseCaseImpl implements BeneficiaryUseCase {
     private final BeneficiaryRepository beneficiaryRepository;
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
+    private final CacheService cacheService;
 
     public BeneficiaryUseCaseImpl(
             BeneficiaryRepository beneficiaryRepository,
             UserRepository userRepository,
-            WalletRepository walletRepository
+            WalletRepository walletRepository,
+            CacheService cacheService
     ) {
         this.beneficiaryRepository = beneficiaryRepository;
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
+        this.cacheService = cacheService;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<BeneficiaryResponse> getBeneficiaries(UUID userId) {
-        return beneficiaryRepository.findAllByUserId(userId).stream()
-                .map(BeneficiaryResponse::from)
-                .toList();
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+
+        String cacheKey = "cache:beneficiary:" + userId;
+        BeneficiaryResponse[] cached = cacheService.getOrSet(
+                cacheKey,
+                60,
+                TimeUnit.MINUTES,
+                BeneficiaryResponse[].class,
+                () -> beneficiaryRepository.findAllByUserId(userId).stream()
+                        .map(BeneficiaryResponse::from)
+                        .toArray(BeneficiaryResponse[]::new)
+        );
+
+        return cached != null ? Arrays.asList(cached) : Collections.emptyList();
     }
 
     @Override
@@ -88,6 +108,9 @@ public class BeneficiaryUseCaseImpl implements BeneficiaryUseCase {
         saved.setPhoneNumber(targetUser.getPhoneNumber());
         saved.setEmail(targetUser.getEmail());
 
+        // Invalidate cache
+        cacheService.delete("cache:beneficiary:" + userId);
+
         return BeneficiaryResponse.from(saved);
     }
 
@@ -119,6 +142,9 @@ public class BeneficiaryUseCaseImpl implements BeneficiaryUseCase {
             });
         }
 
+        // Invalidate cache
+        cacheService.delete("cache:beneficiary:" + command.userId());
+
         return BeneficiaryResponse.from(updated);
     }
 
@@ -139,5 +165,8 @@ public class BeneficiaryUseCaseImpl implements BeneficiaryUseCase {
         }
 
         beneficiaryRepository.delete(beneficiary);
+
+        // Invalidate cache
+        cacheService.delete("cache:beneficiary:" + userId);
     }
 }
