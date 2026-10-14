@@ -36,10 +36,6 @@ public record ApiResponse<T>(
         );
     }
 
-    public static ResponseEntity<ApiResponse<Void>> error(ErrorStatus status, String message) {
-        return error(status, message, status.name());
-    }
-
     public static ResponseEntity<ApiResponse<Void>> error(ErrorStatus status, String message, String errorCode) {
         return ResponseEntity.status(status.getCode()).body(
                 new ApiResponse<>(false, status.getCode(), message, errorCode, null, Instant.now())
