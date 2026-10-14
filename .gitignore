@@ -44,3 +44,11 @@ frontend/out/
 
 ### Mac OS ###
 .DS_Store
+
+
+### Environment Files ###
+.env
+.env.local
+.env.*.local
+deploy/.env
+*.backup
