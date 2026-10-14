@@ -1,4 +1,4 @@
-package com.tyson.digitalwallet.ddd.infrastructure.persistence.adapter.payment;
+package com.tyson.digitalwallet.ddd.infrastructure.adapter.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentGatewayType;

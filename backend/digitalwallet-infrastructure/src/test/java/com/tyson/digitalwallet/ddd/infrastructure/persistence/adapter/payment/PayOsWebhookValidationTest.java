@@ -2,6 +2,7 @@ package com.tyson.digitalwallet.ddd.infrastructure.persistence.adapter.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentOrderStatus;
+import com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.PayOsPaymentAdapter;
 import vn.payos.crypto.CryptoProviderImpl;
 import vn.payos.model.webhooks.Webhook;
 import vn.payos.model.webhooks.WebhookData;

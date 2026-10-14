@@ -1,4 +1,4 @@
-package com.tyson.digitalwallet.ddd.infrastructure.persistence.config;
+package com.tyson.digitalwallet.ddd.infrastructure.config;
 
 import com.tyson.digitalwallet.ddd.domain.repository.NotificationRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.PaymentOrderRepository;

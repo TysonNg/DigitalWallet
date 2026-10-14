@@ -1,4 +1,4 @@
-package com.tyson.digitalwallet.ddd.infrastructure.persistence.security;
+package com.tyson.digitalwallet.ddd.infrastructure.security;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;

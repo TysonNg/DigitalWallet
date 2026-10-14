@@ -1,6 +1,7 @@
 package com.tyson.digitalwallet.ddd.infrastructure.persistence.adapter.payment;
 
 import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentOrderStatus;
+import com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter;
 import org.junit.Test;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;

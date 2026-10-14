@@ -1,4 +1,4 @@
-package com.tyson.digitalwallet.ddd.infrastructure.persistence.security;
+package com.tyson.digitalwallet.ddd.infrastructure.security;
 
 import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 import com.tyson.digitalwallet.ddd.domain.service.security.TokenProvider;

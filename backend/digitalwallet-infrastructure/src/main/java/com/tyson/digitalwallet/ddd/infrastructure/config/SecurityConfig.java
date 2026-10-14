@@ -1,7 +1,7 @@
-package com.tyson.digitalwallet.ddd.infrastructure.persistence.config;
+package com.tyson.digitalwallet.ddd.infrastructure.config;
 
-import com.tyson.digitalwallet.ddd.infrastructure.persistence.security.CustomAuthenticationEntryPoint;
-import com.tyson.digitalwallet.ddd.infrastructure.persistence.security.JwtAuthenticationFilter;
+import com.tyson.digitalwallet.ddd.infrastructure.security.CustomAuthenticationEntryPoint;
+import com.tyson.digitalwallet.ddd.infrastructure.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

@@ -1,4 +1,4 @@
-package com.tyson.digitalwallet.ddd.infrastructure.persistence.adapter;
+package com.tyson.digitalwallet.ddd.infrastructure.adapter;
 
 import com.tyson.digitalwallet.ddd.domain.model.entity.Notification;
 import com.tyson.digitalwallet.ddd.domain.service.sender.NotificationSender;

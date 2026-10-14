@@ -1,7 +1,7 @@
-package com.tyson.digitalwallet.ddd.infrastructure.persistence.security;
+package com.tyson.digitalwallet.ddd.infrastructure.security;
 
 import com.tyson.digitalwallet.ddd.domain.service.security.OtpStorage;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.tyson.digitalwallet.ddd.infrastructure.cached.RedisInfrasService;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
@@ -12,22 +12,22 @@ public class OtpStorageImpl implements OtpStorage {
     private static final String OTP_PREFIX = "otp:register:";
     private static final String PENDING_PREFIX = "pending:register:";
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisInfrasService redisInfrasService;
 
-    public OtpStorageImpl(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public OtpStorageImpl(RedisInfrasService redisInfrasService) {
+        this.redisInfrasService = redisInfrasService;
     }
 
     @Override
     public void saveOtp(String email, String otp, long expirationMinutes) {
         String key = OTP_PREFIX + email;
-        redisTemplate.opsForValue().set(key, otp, expirationMinutes, TimeUnit.MINUTES);
+        redisInfrasService.set(key, otp, expirationMinutes, TimeUnit.MINUTES);
     }
 
     @Override
     public String getOtp(String email) {
         String key = OTP_PREFIX + email;
-        return redisTemplate.opsForValue().get(key);
+        return redisInfrasService.get(key);
     }
 
     @Override
@@ -39,24 +39,24 @@ public class OtpStorageImpl implements OtpStorage {
     @Override
     public void deleteOtp(String email) {
         String key = OTP_PREFIX + email;
-        redisTemplate.delete(key);
+        redisInfrasService.delete(key);
     }
 
     @Override
     public void savePendingRegistration(String email, String dataJson, long expirationMinutes) {
         String key = PENDING_PREFIX + email;
-        redisTemplate.opsForValue().set(key, dataJson, expirationMinutes, TimeUnit.MINUTES);
+        redisInfrasService.set(key, dataJson, expirationMinutes, TimeUnit.MINUTES);
     }
 
     @Override
     public String getPendingRegistration(String email) {
         String key = PENDING_PREFIX + email;
-        return redisTemplate.opsForValue().get(key);
+        return redisInfrasService.get(key);
     }
 
     @Override
     public void deletePendingRegistration(String email) {
         String key = PENDING_PREFIX + email;
-        redisTemplate.delete(key);
+        redisInfrasService.delete(key);
     }
 }
