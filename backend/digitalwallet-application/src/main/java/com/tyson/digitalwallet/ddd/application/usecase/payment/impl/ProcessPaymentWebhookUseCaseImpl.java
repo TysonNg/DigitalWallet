@@ -5,9 +5,11 @@ import com.tyson.digitalwallet.ddd.application.usecase.payment.command.ProcessPa
 import com.tyson.digitalwallet.ddd.application.usecase.payment.resolver.PaymentGatewayResolver;
 import com.tyson.digitalwallet.ddd.domain.event.MoneyDepositEvent;
 import com.tyson.digitalwallet.ddd.domain.model.entity.PaymentOrder;
+import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentGatewayType;
 import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentOrderStatus;
 import com.tyson.digitalwallet.ddd.domain.repository.PaymentOrderRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
+import com.tyson.digitalwallet.ddd.domain.service.lock.DistributedLockService;
 import com.tyson.digitalwallet.ddd.domain.service.payment.PaymentService;
 import com.tyson.digitalwallet.ddd.domain.service.payment.port.PaymentGatewayPort;
 import com.tyson.digitalwallet.ddd.domain.service.payment.result.PaymentWebhookResult;
@@ -17,9 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUseCase {
@@ -32,6 +35,8 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
     private final WalletService walletService;
     private final WalletRepository walletRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final DistributedLockService lockService;
+    private final TransactionTemplate transactionTemplate;
 
     public ProcessPaymentWebhookUseCaseImpl(
         PaymentGatewayResolver gatewayResolver,
@@ -39,7 +44,9 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
         PaymentService paymentService,
         WalletService walletService,
         WalletRepository walletRepository,
-        ApplicationEventPublisher eventPublisher
+        ApplicationEventPublisher eventPublisher,
+        DistributedLockService lockService,
+        TransactionTemplate transactionTemplate
     ) {
         this.gatewayResolver = gatewayResolver;
         this.paymentOrderRepository = paymentOrderRepository;
@@ -47,10 +54,11 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
         this.walletService = walletService;
         this.walletRepository = walletRepository;
         this.eventPublisher = eventPublisher;
+        this.lockService = lockService;
+        this.transactionTemplate = transactionTemplate;
     }
 
     @Override
-    @Transactional
     public void processWebhook(ProcessPaymentWebhookCommand command) {
         PaymentGatewayPort gateway = gatewayResolver.resolve(command.gateway());
         PaymentWebhookResult result = gateway.verifyWebhook(command.rawPayload(), command.headers());
@@ -66,16 +74,27 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
             return;
         }
 
+        String lockKey = "lock:payment:webhook:" + gatewayOrderId;
+        lockService.executeWithLock(lockKey, 3, 10, TimeUnit.SECONDS, (Runnable) () -> {
+            transactionTemplate.execute(status -> {
+                doProcessWebhookInternal(result, command.gateway(), gatewayOrderId);
+                return null;
+            });
+        });
+    }
+
+    private void doProcessWebhookInternal(PaymentWebhookResult result, com.tyson.digitalwallet.ddd.domain.model.enums.PaymentGatewayType gatewayType, String gatewayOrderId) {
+
         // Khóa bi quan (Pessimistic Lock) dòng PaymentOrder để chống xử lý đồng thời
         PaymentOrder order = paymentOrderRepository.findByGatewayOrderIdWithLock(gatewayOrderId)
                 .orElse(null);
 
         if (order == null) {
-            log.warn("Payment order not found for gatewayOrderId: {} (gateway: {})", gatewayOrderId, command.gateway());
+            log.warn("Payment order not found for gatewayOrderId: {} (gateway: {})", gatewayOrderId, gatewayType);
             return;
         }
 
-        if (order.getGateway() != command.gateway()) {
+        if (order.getGateway() != gatewayType) {
             log.warn("Payment gateway mismatch for order {}", order.getId());
             return;
         }
