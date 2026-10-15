@@ -1,11 +1,11 @@
-package com.tyson.digitalwallet.ddd.domain.service.lock;
+package com.tyson.digitalwallet.ddd.application.port.lock;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
  * Port (Interface) cung cấp dịch vụ khóa phân tán trong hệ thống.
- * Được định nghĩa ở tầng Domain để các UseCase tại tầng Application có thể sử dụng tường minh
+ * Được định nghĩa ở tầng Application để các UseCase tại tầng Application có thể sử dụng tường minh
  * mà không phụ thuộc vào thư viện cụ thể ở hạ tầng (Redisson/Redis).
  */
 public interface DistributedLockService {

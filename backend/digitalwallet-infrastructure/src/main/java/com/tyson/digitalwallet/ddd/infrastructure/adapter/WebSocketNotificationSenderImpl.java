@@ -1,7 +1,7 @@
 package com.tyson.digitalwallet.ddd.infrastructure.adapter;
 
 import com.tyson.digitalwallet.ddd.domain.model.entity.Notification;
-import com.tyson.digitalwallet.ddd.domain.service.sender.NotificationSender;
+import com.tyson.digitalwallet.ddd.application.port.sender.NotificationSender;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 

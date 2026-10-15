@@ -1,4 +1,4 @@
-package com.tyson.digitalwallet.ddd.domain.service.security;
+package com.tyson.digitalwallet.ddd.application.port.security;
 
 public interface PasswordHasher {
     String hash(String rawPassword);

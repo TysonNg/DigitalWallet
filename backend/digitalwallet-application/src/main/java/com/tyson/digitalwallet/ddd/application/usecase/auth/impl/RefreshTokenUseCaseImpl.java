@@ -8,8 +8,8 @@ import com.tyson.digitalwallet.ddd.application.usecase.auth.command.RefreshToken
 import com.tyson.digitalwallet.ddd.application.usecase.auth.response.AuthResponse;
 import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 import com.tyson.digitalwallet.ddd.domain.repository.UserRepository;
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenProvider;
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenStorage;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenProvider;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenStorage;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;

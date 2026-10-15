@@ -3,8 +3,8 @@ package com.tyson.digitalwallet.ddd.application.usecase.auth.impl;
 import com.tyson.digitalwallet.ddd.application.exception.InvalidCredentialsException;
 import com.tyson.digitalwallet.ddd.application.exception.SessionExpiredException;
 import com.tyson.digitalwallet.ddd.application.usecase.auth.CheckSessionUseCase;
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenProvider;
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenStorage;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenProvider;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenStorage;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;

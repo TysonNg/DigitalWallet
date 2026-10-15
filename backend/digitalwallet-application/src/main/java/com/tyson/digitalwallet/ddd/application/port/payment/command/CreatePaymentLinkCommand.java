@@ -1,4 +1,4 @@
-package com.tyson.digitalwallet.ddd.domain.service.payment.command;
+package com.tyson.digitalwallet.ddd.application.port.payment.command;
 
 import java.math.BigDecimal;
 import java.util.UUID;

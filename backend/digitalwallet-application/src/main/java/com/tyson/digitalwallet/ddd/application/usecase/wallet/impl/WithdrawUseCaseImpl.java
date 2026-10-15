@@ -4,7 +4,7 @@ import com.tyson.digitalwallet.ddd.application.usecase.wallet.WithdrawUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.WithdrawCommand;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
 import com.tyson.digitalwallet.ddd.domain.event.MoneyWithdrawnEvent;
-import com.tyson.digitalwallet.ddd.domain.service.lock.DistributedLockService;
+import com.tyson.digitalwallet.ddd.application.port.lock.DistributedLockService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.result.WithdrawResult;
 import org.springframework.context.ApplicationEventPublisher;

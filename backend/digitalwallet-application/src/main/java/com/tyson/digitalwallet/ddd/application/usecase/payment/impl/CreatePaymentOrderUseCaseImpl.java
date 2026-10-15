@@ -9,9 +9,9 @@ import com.tyson.digitalwallet.ddd.domain.model.entity.PaymentOrder;
 import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
 import com.tyson.digitalwallet.ddd.domain.service.payment.PaymentService;
-import com.tyson.digitalwallet.ddd.domain.service.payment.command.CreatePaymentLinkCommand;
-import com.tyson.digitalwallet.ddd.domain.service.payment.port.PaymentGatewayPort;
-import com.tyson.digitalwallet.ddd.domain.service.payment.result.PaymentLinkResult;
+import com.tyson.digitalwallet.ddd.application.port.payment.command.CreatePaymentLinkCommand;
+import com.tyson.digitalwallet.ddd.application.port.payment.PaymentGatewayPort;
+import com.tyson.digitalwallet.ddd.application.port.payment.result.PaymentLinkResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

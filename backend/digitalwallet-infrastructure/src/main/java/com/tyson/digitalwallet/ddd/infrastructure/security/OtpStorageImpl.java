@@ -1,6 +1,6 @@
 package com.tyson.digitalwallet.ddd.infrastructure.security;
 
-import com.tyson.digitalwallet.ddd.domain.service.security.OtpStorage;
+import com.tyson.digitalwallet.ddd.application.port.security.OtpStorage;
 import com.tyson.digitalwallet.ddd.infrastructure.cached.RedisInfrasService;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 public class OtpStorageImpl implements OtpStorage {
 
     private static final String OTP_PREFIX = "otp:register:";
-    private static final String PENDING_PREFIX = "pending:register:";
 
     private final RedisInfrasService redisInfrasService;
 
@@ -39,24 +38,6 @@ public class OtpStorageImpl implements OtpStorage {
     @Override
     public void deleteOtp(String email) {
         String key = OTP_PREFIX + email;
-        redisInfrasService.delete(key);
-    }
-
-    @Override
-    public void savePendingRegistration(String email, String dataJson, long expirationMinutes) {
-        String key = PENDING_PREFIX + email;
-        redisInfrasService.set(key, dataJson, expirationMinutes, TimeUnit.MINUTES);
-    }
-
-    @Override
-    public String getPendingRegistration(String email) {
-        String key = PENDING_PREFIX + email;
-        return redisInfrasService.get(key);
-    }
-
-    @Override
-    public void deletePendingRegistration(String email) {
-        String key = PENDING_PREFIX + email;
         redisInfrasService.delete(key);
     }
 }

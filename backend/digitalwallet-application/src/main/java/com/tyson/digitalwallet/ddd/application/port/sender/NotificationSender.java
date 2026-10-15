@@ -1,4 +1,4 @@
-package com.tyson.digitalwallet.ddd.domain.service.sender;
+package com.tyson.digitalwallet.ddd.application.port.sender;
 
 import com.tyson.digitalwallet.ddd.domain.model.entity.Notification;
 

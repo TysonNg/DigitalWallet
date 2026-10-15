@@ -1,7 +1,7 @@
 package com.tyson.digitalwallet.ddd.infrastructure.distributed.redisson.impl;
 
 import com.tyson.digitalwallet.ddd.domain.exception.DistributedLockException;
-import com.tyson.digitalwallet.ddd.domain.service.lock.DistributedLockService;
+import com.tyson.digitalwallet.ddd.application.port.lock.DistributedLockService;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;

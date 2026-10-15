@@ -3,7 +3,7 @@ package com.tyson.digitalwallet.ddd.infrastructure.persistence.adapter.payment;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tyson.digitalwallet.ddd.domain.exception.PaymentGatewayUnavailableException;
 import com.tyson.digitalwallet.ddd.domain.exception.ServiceUnavailableException;
-import com.tyson.digitalwallet.ddd.domain.service.payment.command.CreatePaymentLinkCommand;
+import com.tyson.digitalwallet.ddd.application.port.payment.command.CreatePaymentLinkCommand;
 import com.tyson.digitalwallet.ddd.infrastructure.adapter.MailSenderImpl;
 import com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.PayOsPaymentAdapter;
 import com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter;

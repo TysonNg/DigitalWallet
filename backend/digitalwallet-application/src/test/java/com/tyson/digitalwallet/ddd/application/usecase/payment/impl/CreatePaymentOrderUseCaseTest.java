@@ -11,8 +11,8 @@ import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentOrderStatus;
 import com.tyson.digitalwallet.ddd.domain.model.enums.WalletStatus;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
 import com.tyson.digitalwallet.ddd.domain.service.payment.PaymentService;
-import com.tyson.digitalwallet.ddd.domain.service.payment.port.PaymentGatewayPort;
-import com.tyson.digitalwallet.ddd.domain.service.payment.result.PaymentLinkResult;
+import com.tyson.digitalwallet.ddd.application.port.payment.PaymentGatewayPort;
+import com.tyson.digitalwallet.ddd.application.port.payment.result.PaymentLinkResult;
 import org.junit.Before;
 import org.junit.Test;
 

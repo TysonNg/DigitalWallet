@@ -9,7 +9,7 @@ import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
 import com.tyson.digitalwallet.ddd.domain.model.enums.WalletStatus;
 import com.tyson.digitalwallet.ddd.domain.repository.IdempotencyKeyRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
-import com.tyson.digitalwallet.ddd.domain.service.lock.DistributedLockService;
+import com.tyson.digitalwallet.ddd.application.port.lock.DistributedLockService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.result.TransferResult;
 import org.junit.Before;

@@ -1,7 +1,7 @@
 package com.tyson.digitalwallet.ddd.application.usecase.auth.listener;
 
 import com.tyson.digitalwallet.ddd.domain.event.UserRegisteredEvent;
-import com.tyson.digitalwallet.ddd.domain.service.sender.MailSender;
+import com.tyson.digitalwallet.ddd.application.port.sender.MailSender;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;

@@ -1,7 +1,7 @@
 package com.tyson.digitalwallet.ddd.infrastructure.adapter;
 
 import com.tyson.digitalwallet.ddd.domain.exception.ServiceUnavailableException;
-import com.tyson.digitalwallet.ddd.domain.service.sender.MailSender;
+import com.tyson.digitalwallet.ddd.application.port.sender.MailSender;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

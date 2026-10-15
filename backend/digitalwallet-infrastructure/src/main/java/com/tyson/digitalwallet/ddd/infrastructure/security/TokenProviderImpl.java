@@ -1,7 +1,7 @@
 package com.tyson.digitalwallet.ddd.infrastructure.security;
 
 import com.tyson.digitalwallet.ddd.domain.model.entity.User;
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenProvider;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenProvider;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;

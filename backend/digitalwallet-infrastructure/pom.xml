@@ -18,6 +18,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.tyson.digitalwallet</groupId>
+            <artifactId>digitalwallet-application</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- Source: https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

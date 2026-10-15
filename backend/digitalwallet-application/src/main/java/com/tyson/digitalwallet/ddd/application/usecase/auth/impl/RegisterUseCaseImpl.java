@@ -1,7 +1,5 @@
 package com.tyson.digitalwallet.ddd.application.usecase.auth.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tyson.digitalwallet.ddd.application.exception.ExistEmailException;
 import com.tyson.digitalwallet.ddd.application.exception.InvalidOtpException;
 import com.tyson.digitalwallet.ddd.application.usecase.auth.RegisterUseCase;
@@ -12,28 +10,25 @@ import com.tyson.digitalwallet.ddd.application.usecase.auth.response.AuthRespons
 import com.tyson.digitalwallet.ddd.domain.event.UserRegisteredEvent;
 import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 import com.tyson.digitalwallet.ddd.domain.repository.UserRepository;
-import com.tyson.digitalwallet.ddd.domain.service.security.OtpStorage;
-import com.tyson.digitalwallet.ddd.domain.service.security.PasswordHasher;
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenProvider;
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenStorage;
-import com.tyson.digitalwallet.ddd.domain.service.sender.MailSender;
-import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
-import com.tyson.digitalwallet.ddd.domain.model.enums.WalletStatus;
+import com.tyson.digitalwallet.ddd.application.port.security.OtpStorage;
+import com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenProvider;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenStorage;
+import com.tyson.digitalwallet.ddd.application.usecase.auth.port.PendingRegistrationStore;
+import com.tyson.digitalwallet.ddd.application.usecase.auth.port.RegistrationOtpSender;
+import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Period;
-import java.util.Map;
-import java.util.UUID;
 
 @Service
 public class RegisterUseCaseImpl implements RegisterUseCase {
+
+    private static final long OTP_EXPIRATION_MINUTES = 5;
 
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
@@ -42,8 +37,9 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
     private final TokenStorage tokenStorage;
     private final TokenProvider tokenProvider;
     private final OtpStorage otpStorage;
-    private final MailSender mailSender;
-    private final ObjectMapper objectMapper;
+    private final RegistrationOtpSender otpSender;
+    private final PendingRegistrationStore pendingRegistrations;
+    private final WalletService walletService;
 
     public RegisterUseCaseImpl(
             UserRepository userRepository,
@@ -53,8 +49,9 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
             TokenStorage tokenStorage,
             TokenProvider tokenProvider,
             OtpStorage otpStorage,
-            MailSender mailSender,
-            ObjectMapper objectMapper
+            RegistrationOtpSender otpSender,
+            PendingRegistrationStore pendingRegistrations,
+            WalletService walletService
     ) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
@@ -63,8 +60,9 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
         this.tokenStorage = tokenStorage;
         this.tokenProvider = tokenProvider;
         this.otpStorage = otpStorage;
-        this.mailSender = mailSender;
-        this.objectMapper = objectMapper;
+        this.otpSender = otpSender;
+        this.pendingRegistrations = pendingRegistrations;
+        this.walletService = walletService;
     }
 
     @Override
@@ -85,7 +83,7 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
         }
 
         // Sinh mã OTP 6 số ngẫu nhiên
-        String otp = String.format("%06d", new SecureRandom().nextInt(1_000_000));
+        String otp = otpSender.generateOtp();
 
         // Băm mật khẩu trước khi lưu tạm vào Redis
         String hashedPassword = passwordHasher.hash(password);
@@ -98,25 +96,9 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
                 hashedPassword
         );
 
-        try {
-            String pendingJson = objectMapper.writeValueAsString(pendingRegistration);
-            // Lưu OTP và dữ liệu đăng ký tạm vào Redis (hết hạn trong 5 phút)
-            otpStorage.savePendingRegistration(registerCommand.email(), pendingJson, 5);
-            otpStorage.saveOtp(registerCommand.email(), otp, 5);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to store pending registration data", e);
-        }
-
-        // Gửi email chứa mã OTP
-        mailSender.sendTemplate(
-                registerCommand.email(),
-                "Account Registration OTP - Digital Wallet",
-                "mail/otp-email",
-                Map.of(
-                        "fullName", registerCommand.fullName() != null ? registerCommand.fullName() : "Valued Customer",
-                        "otpCode", otp
-                )
-        );
+        pendingRegistrations.save(pendingRegistration, OTP_EXPIRATION_MINUTES);
+        otpStorage.saveOtp(registerCommand.email(), otp, OTP_EXPIRATION_MINUTES);
+        otpSender.send(registerCommand.email(), registerCommand.fullName(), otp);
     }
 
     @Override
@@ -129,17 +111,9 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
             throw new InvalidOtpException("Invalid or expired OTP!");
         }
 
-        String pendingJson = otpStorage.getPendingRegistration(email);
-        if (pendingJson == null) {
-            throw new InvalidOtpException("Registration session has expired. Please register again!");
-        }
-
-        PendingRegistration pending;
-        try {
-            pending = objectMapper.readValue(pendingJson, PendingRegistration.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to process registration data", e);
-        }
+        PendingRegistration pending = pendingRegistrations.findByEmail(email)
+                .orElseThrow(() -> new InvalidOtpException(
+                        "Registration session has expired. Please register again!"));
 
         User user = User.create(
                 pending.fullName(),
@@ -157,21 +131,12 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
 
         // Tự động khởi tạo Ví VND cho người dùng mới
         if (!walletRepository.existsByUserId(savedUser.getId())) {
-            Wallet wallet = new Wallet(
-                    UUID.randomUUID(),
-                    savedUser.getId(),
-                    BigDecimal.ZERO,
-                    "VND",
-                    WalletStatus.ACTIVE,
-                    LocalDateTime.now(),
-                    LocalDateTime.now()
-            );
-            walletRepository.saveWallet(wallet);
+            walletService.createWallet(savedUser.getId(), "VND");
         }
 
         // Xóa OTP và dữ liệu tạm khỏi Redis sau khi đã dùng xong
         otpStorage.deleteOtp(email);
-        otpStorage.deletePendingRegistration(email);
+        pendingRegistrations.delete(email);
 
         // Tạo mã phiên duy nhất (sessionId)
         String sessionId = java.util.UUID.randomUUID().toString();

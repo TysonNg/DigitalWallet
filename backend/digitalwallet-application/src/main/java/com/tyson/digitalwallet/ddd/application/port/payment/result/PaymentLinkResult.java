@@ -1,4 +1,4 @@
-package com.tyson.digitalwallet.ddd.domain.service.payment.result;
+package com.tyson.digitalwallet.ddd.application.port.payment.result;
 
 public record PaymentLinkResult(
         String gatewayOrderId,

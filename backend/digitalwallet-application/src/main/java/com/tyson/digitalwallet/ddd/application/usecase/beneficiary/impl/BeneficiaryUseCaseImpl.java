@@ -13,7 +13,7 @@ import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 import com.tyson.digitalwallet.ddd.domain.repository.BeneficiaryRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.UserRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
-import com.tyson.digitalwallet.ddd.domain.service.cache.CacheService;
+import com.tyson.digitalwallet.ddd.application.port.cache.CacheService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

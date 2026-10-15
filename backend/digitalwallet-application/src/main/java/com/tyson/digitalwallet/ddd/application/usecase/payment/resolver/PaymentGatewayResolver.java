@@ -1,7 +1,7 @@
 package com.tyson.digitalwallet.ddd.application.usecase.payment.resolver;
 
 import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentGatewayType;
-import com.tyson.digitalwallet.ddd.domain.service.payment.port.PaymentGatewayPort;
+import com.tyson.digitalwallet.ddd.application.port.payment.PaymentGatewayPort;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;

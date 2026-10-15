@@ -6,7 +6,7 @@ import com.tyson.digitalwallet.ddd.domain.event.MoneyWithdrawnEvent;
 import com.tyson.digitalwallet.ddd.domain.model.entity.Notification;
 import com.tyson.digitalwallet.ddd.domain.model.enums.NotificationType;
 import com.tyson.digitalwallet.ddd.domain.repository.NotificationRepository;
-import com.tyson.digitalwallet.ddd.domain.service.sender.NotificationSender;
+import com.tyson.digitalwallet.ddd.application.port.sender.NotificationSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;

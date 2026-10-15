@@ -1,7 +1,7 @@
 package com.tyson.digitalwallet.ddd.infrastructure.config;
 
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenProvider;
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenStorage;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenProvider;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenStorage;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;

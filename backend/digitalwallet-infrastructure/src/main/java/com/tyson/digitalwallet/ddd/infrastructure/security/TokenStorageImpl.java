@@ -1,6 +1,6 @@
 package com.tyson.digitalwallet.ddd.infrastructure.security;
 
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenStorage;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenStorage;
 import com.tyson.digitalwallet.ddd.infrastructure.cached.RedisInfrasService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

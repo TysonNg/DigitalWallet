@@ -2,10 +2,10 @@ package com.tyson.digitalwallet.ddd.infrastructure.adapter.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentGatewayType;
-import com.tyson.digitalwallet.ddd.domain.service.payment.command.CreatePaymentLinkCommand;
-import com.tyson.digitalwallet.ddd.domain.service.payment.port.PaymentGatewayPort;
-import com.tyson.digitalwallet.ddd.domain.service.payment.result.PaymentLinkResult;
-import com.tyson.digitalwallet.ddd.domain.service.payment.result.PaymentWebhookResult;
+import com.tyson.digitalwallet.ddd.application.port.payment.command.CreatePaymentLinkCommand;
+import com.tyson.digitalwallet.ddd.application.port.payment.PaymentGatewayPort;
+import com.tyson.digitalwallet.ddd.application.port.payment.result.PaymentLinkResult;
+import com.tyson.digitalwallet.ddd.application.port.payment.result.PaymentWebhookResult;
 import com.tyson.digitalwallet.ddd.domain.exception.PaymentGatewayUnavailableException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;

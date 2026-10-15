@@ -8,9 +8,9 @@ import com.tyson.digitalwallet.ddd.application.usecase.auth.response.AuthRespons
 import com.tyson.digitalwallet.ddd.domain.event.UserLoggedInEvent;
 import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 import com.tyson.digitalwallet.ddd.domain.repository.UserRepository;
-import com.tyson.digitalwallet.ddd.domain.service.security.PasswordHasher;
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenProvider;
-import com.tyson.digitalwallet.ddd.domain.service.security.TokenStorage;
+import com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenProvider;
+import com.tyson.digitalwallet.ddd.application.port.security.TokenStorage;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
