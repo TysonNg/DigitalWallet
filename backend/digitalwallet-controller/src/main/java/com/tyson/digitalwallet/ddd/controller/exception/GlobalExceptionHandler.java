@@ -8,6 +8,7 @@ import com.tyson.digitalwallet.ddd.application.exception.InvalidOtpException;
 import com.tyson.digitalwallet.ddd.application.exception.SessionExpiredException;
 import com.tyson.digitalwallet.ddd.controller.common.ApiResponse;
 import com.tyson.digitalwallet.ddd.controller.enums.ErrorStatus;
+import com.tyson.digitalwallet.ddd.domain.exception.DistributedLockException;
 import com.tyson.digitalwallet.ddd.domain.exception.PaymentGatewayUnavailableException;
 import com.tyson.digitalwallet.ddd.domain.exception.ServiceUnavailableException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
@@ -66,6 +67,15 @@ public class GlobalExceptionHandler {
                 ErrorStatus.SERVICE_UNAVAILABLE,
                 ex.getMessage(),
                 ErrorCode.SERVICE_UNAVAILABLE.getCode()
+        );
+    }
+
+    @ExceptionHandler(DistributedLockException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDistributedLockException(DistributedLockException ex) {
+        return ApiResponse.error(
+                ErrorStatus.TOO_MANY_REQUESTS,
+                ex.getMessage(),
+                "TRANSACTION_IN_PROGRESS"
         );
     }
 

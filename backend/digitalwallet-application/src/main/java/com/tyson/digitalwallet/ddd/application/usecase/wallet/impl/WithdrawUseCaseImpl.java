@@ -3,6 +3,7 @@ package com.tyson.digitalwallet.ddd.application.usecase.wallet.impl;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.WithdrawUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.WithdrawCommand;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
+import com.tyson.digitalwallet.ddd.domain.annotation.DistributedLock;
 import com.tyson.digitalwallet.ddd.domain.event.MoneyWithdrawnEvent;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.result.WithdrawResult;
@@ -27,6 +28,12 @@ public class WithdrawUseCaseImpl implements WithdrawUseCase {
     }
 
     @Override
+    @DistributedLock(
+            key = "'lock:wallet:withdraw:' + #command.walletId()",
+            waitTime = 0,
+            leaseTime = 10,
+            message = "Giao dịch rút tiền đang được xử lý, vui lòng chờ trong giây lát"
+    )
     @Transactional
     public WalletResponse withdraw(WithdrawCommand command) {
         WithdrawResult result = walletService.withdraw(command.walletId(), command.amount());

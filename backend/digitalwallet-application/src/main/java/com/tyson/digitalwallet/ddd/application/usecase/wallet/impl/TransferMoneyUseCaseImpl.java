@@ -5,6 +5,7 @@ import com.tyson.digitalwallet.ddd.application.usecase.wallet.TransferMoneyUseCa
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.TransferMoneyCommand;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
 import com.tyson.digitalwallet.ddd.application.util.RequestHashUtil;
+import com.tyson.digitalwallet.ddd.domain.annotation.DistributedLock;
 import com.tyson.digitalwallet.ddd.domain.event.MoneyTransferEvent;
 import com.tyson.digitalwallet.ddd.domain.model.entity.IdempotencyKey;
 import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
@@ -42,6 +43,12 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
     }
 
     @Override
+    @DistributedLock(
+            key = "'lock:wallet:transfer:' + #command.senderWalletId()",
+            waitTime = 0,
+            leaseTime = 10,
+            message = "Giao dịch trước đó của bạn đang được xử lý, vui lòng chờ trong giây lát"
+    )
     @Transactional
     public WalletResponse transfer(TransferMoneyCommand command) {
         UUID senderWalletId = command.senderWalletId();
