@@ -5,17 +5,17 @@ import com.tyson.digitalwallet.ddd.application.usecase.wallet.TransferMoneyUseCa
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.TransferMoneyCommand;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
 import com.tyson.digitalwallet.ddd.application.util.RequestHashUtil;
-import com.tyson.digitalwallet.ddd.domain.annotation.DistributedLock;
 import com.tyson.digitalwallet.ddd.domain.event.MoneyTransferEvent;
 import com.tyson.digitalwallet.ddd.domain.model.entity.IdempotencyKey;
 import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
 import com.tyson.digitalwallet.ddd.domain.repository.IdempotencyKeyRepository;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
-import com.tyson.digitalwallet.ddd.domain.service.wallet.result.TransferResult;
+import com.tyson.digitalwallet.ddd.domain.service.lock.DistributedLockService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
+import com.tyson.digitalwallet.ddd.domain.service.wallet.result.TransferResult;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -29,34 +29,45 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
     private final WalletRepository walletRepository;
     private final IdempotencyKeyRepository idempotencyKeyRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final DistributedLockService lockService;
+    private final TransactionTemplate transactionTemplate;
 
     public TransferMoneyUseCaseImpl(
             WalletService walletService,
             WalletRepository walletRepository,
             IdempotencyKeyRepository idempotencyKeyRepository,
-            ApplicationEventPublisher eventPublisher
+            ApplicationEventPublisher eventPublisher,
+            DistributedLockService lockService,
+            TransactionTemplate transactionTemplate
     ) {
         this.walletService = walletService;
         this.walletRepository = walletRepository;
         this.idempotencyKeyRepository = idempotencyKeyRepository;
         this.eventPublisher = eventPublisher;
+        this.lockService = lockService;
+        this.transactionTemplate = transactionTemplate;
     }
 
     @Override
-    @DistributedLock(
-            key = "'lock:wallet:transfer:' + #command.senderWalletId()",
-            waitTime = 0,
-            leaseTime = 10,
-            message = "Giao dịch trước đó của bạn đang được xử lý, vui lòng chờ trong giây lát"
-    )
-    @Transactional
     public WalletResponse transfer(TransferMoneyCommand command) {
+        UUID senderWalletId = command.senderWalletId();
+        if (senderWalletId == null) {
+            throw new IllegalArgumentException("Sender wallet ID must not be null");
+        }
+
+        String lockKey = "lock:wallet:transfer:" + senderWalletId;
+        return lockService.executeWithLock(lockKey, () ->
+                transactionTemplate.execute(status -> doTransferInternal(command))
+        );
+    }
+
+    private WalletResponse doTransferInternal(TransferMoneyCommand command) {
         UUID senderWalletId = command.senderWalletId();
         UUID receiverWalletId = command.receiverWalletId();
         BigDecimal amount = command.amount();
 
-        if (senderWalletId == null || receiverWalletId == null) {
-            throw new IllegalArgumentException("Sender and receiver wallet IDs must not be null");
+        if (receiverWalletId == null) {
+            throw new IllegalArgumentException("Receiver wallet ID must not be null");
         }
 
         if (senderWalletId.equals(receiverWalletId)) {
