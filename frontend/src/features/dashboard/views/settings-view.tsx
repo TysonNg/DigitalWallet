@@ -18,6 +18,7 @@ import {
     EyeOff,
 } from "lucide-react";
 import { User } from "@/features/auth/types/auth.types";
+import { changePasswordAction } from "@/features/auth/actions/auth.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,7 +42,7 @@ export function SettingsView({ user }: SettingsViewProps) {
     const [passwordError, setPasswordError] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    const handlePasswordSubmit = (e: React.FormEvent) => {
+    const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setPasswordError(null);
 
@@ -55,14 +56,35 @@ export function SettingsView({ user }: SettingsViewProps) {
             return;
         }
 
+        if (currentPassword === newPassword) {
+            setPasswordError("Mật khẩu mới không được trùng với mật khẩu hiện tại");
+            return;
+        }
+
         setIsSaving(true);
-        setTimeout(() => {
-            setIsSaving(false);
-            toast.success("Cập nhật mật khẩu thành công!");
+        try {
+            const res = await changePasswordAction({
+                currentPassword,
+                newPassword,
+            });
+
+            if (!res.success) {
+                setPasswordError(res.message);
+                toast.error(res.message);
+                return;
+            }
+
+            toast.success(res.message || "Cập nhật mật khẩu thành công!");
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
-        }, 800);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Đã xảy ra lỗi khi đổi mật khẩu";
+            setPasswordError(message);
+            toast.error("Không thể đổi mật khẩu. Vui lòng thử lại!");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (

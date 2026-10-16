@@ -112,6 +112,19 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void changePassword(String newHashedPassword) {
+        if (status == UserStatus.CLOSED) {
+            throw new IllegalStateException(
+                    "User is already closed. You can't change your password!"
+            );
+        }
+        if (newHashedPassword == null || newHashedPassword.isBlank()) {
+            throw new IllegalArgumentException("Hashed password cannot be blank");
+        }
+        this.password = newHashedPassword;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public String getPassword() {
         return password;
     }

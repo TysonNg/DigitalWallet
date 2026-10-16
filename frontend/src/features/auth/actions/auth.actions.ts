@@ -1,7 +1,7 @@
 "use server";
 
 import { getTranslations } from "next-intl/server";
-import { BackendError, getFreshAccessToken } from "@/server/backend-client";
+import { BackendError, getFreshAccessToken, backendFetch } from "@/server/backend-client";
 import { env } from "@/lib/env";
 import { getSession } from "@/server/session";
 import {
@@ -271,3 +271,69 @@ export async function getAccessTokenAction(): Promise<string | null> {
         throw error;
     }
 }
+
+/**
+ * BFF Server Action: Đổi mật khẩu người dùng
+ * Gọi sang Spring Boot POST /users/change-password
+ */
+export async function changePasswordAction(input: {
+    currentPassword: string;
+    newPassword: string;
+}): Promise<ActionResponse<null>> {
+    let t: (key: string) => string = (k) => k;
+    let apiErrors: ((key: string) => string) | null = null;
+    try {
+        const [authErr, errs] = await Promise.all([
+            getTranslations("authErrors"),
+            getTranslations("apiErrors"),
+        ]);
+        t = authErr;
+        apiErrors = errs;
+    } catch {
+        // Fallback for test environments without Next.js server context
+    }
+
+    if (!input.currentPassword || !input.newPassword) {
+        return {
+            success: false,
+            message: t("invalidInput") || "Dữ liệu nhập không hợp lệ",
+        };
+    }
+
+    if (input.newPassword.length < 6) {
+        return {
+            success: false,
+            message: "Mật khẩu mới phải có ít nhất 6 ký tự",
+        };
+    }
+
+    try {
+        const res = await backendFetch<null>("/users/change-password", {
+            method: "POST",
+            body: JSON.stringify({
+                currentPassword: input.currentPassword,
+                newPassword: input.newPassword,
+            }),
+        });
+
+        return {
+            success: true,
+            message: res.message || "Đổi mật khẩu thành công!",
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            const translated = error.errorCode && (apiErrors as any).has?.(error.errorCode)
+                ? apiErrors(error.errorCode as any)
+                : error.message;
+            return {
+                success: false,
+                message: translated || error.message,
+            };
+        }
+        return {
+            success: false,
+            message: "Không thể kết nối tới máy chủ. Vui lòng thử lại sau.",
+        };
+    }
+}
+
