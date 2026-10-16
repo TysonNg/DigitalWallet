@@ -31,4 +31,6 @@ public interface CacheService {
     boolean expire(String key, long timeout, TimeUnit unit);
 
     Long getExpire(String key, TimeUnit unit);
+
+    Long increment(String key, long delta);
 }

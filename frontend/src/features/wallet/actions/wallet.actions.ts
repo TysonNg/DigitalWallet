@@ -117,7 +117,8 @@ export async function depositMoneyAction(
  */
 export async function withdrawMoneyAction(
     walletId: string,
-    amount: number
+    amount: number,
+    pin?: string
 ): Promise<ActionResult<WalletDto>> {
     const t = await getTranslations("walletErrors");
 
@@ -128,7 +129,11 @@ export async function withdrawMoneyAction(
 
         const res = await backendFetch<WalletDto>("/wallet/withdraw", {
             method: "POST",
-            body: JSON.stringify({ walletId, amount }),
+            body: JSON.stringify({
+                walletId,
+                amount,
+                pin: pin?.trim() || undefined,
+            }),
         });
 
         revalidatePath("/dashboard");
@@ -152,7 +157,8 @@ export async function transferMoneyAction(
     senderWalletId: string,
     receiverWalletId: string,
     amount: number,
-    description: string
+    description: string,
+    pin?: string
 ): Promise<ActionResult<WalletDto>> {
     const t = await getTranslations("walletErrors");
 
@@ -177,6 +183,7 @@ export async function transferMoneyAction(
                 amount,
                 description: description.trim() || "Wallet transfer",
                 idempotencyKey,
+                pin: pin?.trim() || undefined,
             }),
             headers: {
                 "Idempotency-Key": idempotencyKey,
@@ -384,5 +391,121 @@ export async function deleteBeneficiaryAction(
             return { success: false, message: error.message, errorCode: error.errorCode };
         }
         return { success: false, message: "Xoá người thụ hưởng thất bại" };
+    }
+}
+
+/**
+ * Thiết lập mã PIN giao dịch cho ví (6 chữ số).
+ */
+export async function setupWalletPinAction(
+    pin: string,
+    walletId?: string
+): Promise<ActionResult<void>> {
+    let tSuccess = "Thiết lập mã PIN giao dịch thành công!";
+    let tFail = "Thiết lập mã PIN thất bại";
+    try {
+        const t = await getTranslations("walletErrors");
+        tSuccess = t("pinSetupSuccess") || tSuccess;
+        tFail = t("pinSetupFailed") || tFail;
+    } catch {
+        // Fallback for tests without Next.js async storage
+    }
+
+    try {
+        if (!/^[0-9]{6}$/.test(pin)) {
+            return {
+                success: false,
+                message: "Mã PIN phải bao gồm đúng 6 chữ số",
+                errorCode: "VALIDATION_ERROR",
+            };
+        }
+
+        await backendFetch<void>("/wallet/pin/setup", {
+            method: "POST",
+            body: JSON.stringify({
+                walletId: walletId || undefined,
+                pin,
+            }),
+        });
+
+        try {
+            revalidatePath("/dashboard");
+            revalidatePath("/dashboard/settings");
+        } catch {
+            // Ignore in tests
+        }
+
+        return {
+            success: true,
+            message: tSuccess,
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            return { success: false, message: error.message, errorCode: error.errorCode };
+        }
+        return { success: false, message: tFail };
+    }
+}
+
+/**
+ * Đổi mã PIN giao dịch cho ví.
+ */
+export async function changeWalletPinAction(
+    oldPin: string,
+    newPin: string,
+    walletId?: string
+): Promise<ActionResult<void>> {
+    let tSuccess = "Đổi mã PIN giao dịch thành công!";
+    let tFail = "Đổi mã PIN thất bại";
+    try {
+        const t = await getTranslations("walletErrors");
+        tSuccess = t("pinChangeSuccess") || tSuccess;
+        tFail = t("pinChangeFailed") || tFail;
+    } catch {
+        // Fallback for tests without Next.js async storage
+    }
+
+    try {
+        if (!/^[0-9]{6}$/.test(oldPin) || !/^[0-9]{6}$/.test(newPin)) {
+            return {
+                success: false,
+                message: "Mã PIN phải bao gồm đúng 6 chữ số",
+                errorCode: "VALIDATION_ERROR",
+            };
+        }
+
+        if (oldPin === newPin) {
+            return {
+                success: false,
+                message: "Mã PIN mới không được trùng với mã PIN hiện tại",
+                errorCode: "NEW_PASSWORD_SAME_AS_OLD",
+            };
+        }
+
+        await backendFetch<void>("/wallet/pin/change", {
+            method: "POST",
+            body: JSON.stringify({
+                walletId: walletId || undefined,
+                oldPin,
+                newPin,
+            }),
+        });
+
+        try {
+            revalidatePath("/dashboard");
+            revalidatePath("/dashboard/settings");
+        } catch {
+            // Ignore in tests
+        }
+
+        return {
+            success: true,
+            message: tSuccess,
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            return { success: false, message: error.message, errorCode: error.errorCode };
+        }
+        return { success: false, message: tFail };
     }
 }

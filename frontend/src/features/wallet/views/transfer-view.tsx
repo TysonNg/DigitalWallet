@@ -29,6 +29,7 @@ import {
 } from "../hooks/use-wallet";
 import { lookupRecipientAction } from "../actions/wallet.actions";
 import { BeneficiaryDto, RecipientLookupDto } from "../types/wallet.types";
+import { PinModal } from "../components/pin-modal";
 import { toast } from "sonner";
 
 const PRESET_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000, 5000000];
@@ -71,6 +72,8 @@ export function TransferView() {
         recipientName: string;
         receiverWalletId: string;
     } | null>(null);
+
+    const [isPinModalOpen, setIsPinModalOpen] = useState<boolean>(false);
 
     // Filter beneficiaries on side widget
     const [beneficiaryFilter, setBeneficiaryFilter] = useState<string>("");
@@ -160,6 +163,51 @@ export function TransferView() {
                 (verifiedRecipient.userId && b.beneficiaryUserId === verifiedRecipient.userId)
         );
 
+    const executeTransfer = async (pin?: string) => {
+        const targetWalletId = receiverWalletId.trim();
+
+        try {
+            await transferMutation.mutateAsync({
+                senderWalletId,
+                receiverWalletId: targetWalletId,
+                amount,
+                description: description.trim() || t("defaultTransferDescription"),
+                pin,
+            });
+
+            if (saveBeneficiary && verifiedRecipient && verifiedRecipient.userId) {
+                try {
+                    await addBeneficiaryMutation.mutateAsync({
+                        beneficiaryUserId: verifiedRecipient.userId,
+                        beneficiaryWalletId: targetWalletId,
+                        nickname: beneficiaryNickname.trim() || undefined,
+                    });
+                } catch {
+                    // Ignored if already added
+                }
+            }
+
+            setLastTransferSuccess({
+                amount,
+                recipientName: verifiedRecipient?.fullName || targetWalletId,
+                receiverWalletId: targetWalletId,
+            });
+
+            setIsPinModalOpen(false);
+            toast.success(t("transferSuccess", { amount: formatVND(amount) }));
+        } catch (err: unknown) {
+            let msg = t("anErrorOccurredWhileTransferringMoney");
+            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
+                msg = apiErr(err.errorCode as any);
+            } else if (err instanceof Error) {
+                msg = err.message;
+            }
+            setError(msg);
+            toast.error(msg);
+            throw new Error(msg);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -186,43 +234,12 @@ export function TransferView() {
             return;
         }
 
-        try {
-            await transferMutation.mutateAsync({
-                senderWalletId,
-                receiverWalletId: targetWalletId,
-                amount,
-                description: description.trim() || t("defaultTransferDescription"),
-            });
-
-            if (saveBeneficiary && verifiedRecipient && verifiedRecipient.userId) {
-                try {
-                    await addBeneficiaryMutation.mutateAsync({
-                        beneficiaryUserId: verifiedRecipient.userId,
-                        beneficiaryWalletId: targetWalletId,
-                        nickname: beneficiaryNickname.trim() || undefined,
-                    });
-                } catch {
-                    // Ignored if already added
-                }
-            }
-
-            setLastTransferSuccess({
-                amount,
-                recipientName: verifiedRecipient?.fullName || targetWalletId,
-                receiverWalletId: targetWalletId,
-            });
-
-            toast.success(t("transferSuccess", { amount: formatVND(amount) }));
-        } catch (err: unknown) {
-            let msg = t("anErrorOccurredWhileTransferringMoney");
-            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
-                msg = apiErr(err.errorCode as any);
-            } else if (err instanceof Error) {
-                msg = err.message;
-            }
-            setError(msg);
-            toast.error(msg);
+        if (myWallet?.hasPin) {
+            setIsPinModalOpen(true);
+            return;
         }
+
+        await executeTransfer();
     };
 
     const handleResetForm = () => {
@@ -586,6 +603,19 @@ export function TransferView() {
                     </div>
                 </div>
             </div>
+
+            <PinModal
+                isOpen={isPinModalOpen}
+                onClose={() => setIsPinModalOpen(false)}
+                onConfirm={executeTransfer}
+                amount={amount}
+                currency={currency}
+                isLoading={transferMutation.isPending}
+                title="Xác thực mã PIN chuyển tiền"
+                description={`Nhập mã PIN 6 số để xác nhận chuyển tiền đến ${
+                    verifiedRecipient?.fullName || receiverWalletId
+                }`}
+            />
         </main>
     );
 }

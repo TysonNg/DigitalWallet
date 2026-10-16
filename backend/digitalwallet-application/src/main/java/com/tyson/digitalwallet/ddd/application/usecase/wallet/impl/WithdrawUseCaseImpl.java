@@ -7,6 +7,8 @@ import com.tyson.digitalwallet.ddd.domain.event.MoneyWithdrawnEvent;
 import com.tyson.digitalwallet.ddd.application.port.lock.DistributedLockService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.result.WithdrawResult;
+import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
+import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -18,9 +20,12 @@ import java.util.UUID;
 public class WithdrawUseCaseImpl implements WithdrawUseCase {
 
     private final WalletService walletService;
+    private final WalletRepository walletRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final DistributedLockService lockService;
     private final TransactionTemplate transactionTemplate;
+    private final com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher passwordHasher;
+    private final com.tyson.digitalwallet.ddd.application.usecase.wallet.pin.WalletPinAttemptService pinAttemptService;
 
     public WithdrawUseCaseImpl(
             WalletService walletService,
@@ -28,10 +33,26 @@ public class WithdrawUseCaseImpl implements WithdrawUseCase {
             DistributedLockService lockService,
             TransactionTemplate transactionTemplate
     ) {
+        this(walletService, null, eventPublisher, lockService, transactionTemplate, null, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public WithdrawUseCaseImpl(
+            WalletService walletService,
+            WalletRepository walletRepository,
+            ApplicationEventPublisher eventPublisher,
+            DistributedLockService lockService,
+            TransactionTemplate transactionTemplate,
+            com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher passwordHasher,
+            com.tyson.digitalwallet.ddd.application.usecase.wallet.pin.WalletPinAttemptService pinAttemptService
+    ) {
         this.walletService = walletService;
+        this.walletRepository = walletRepository;
         this.eventPublisher = eventPublisher;
         this.lockService = lockService;
         this.transactionTemplate = transactionTemplate;
+        this.passwordHasher = passwordHasher;
+        this.pinAttemptService = pinAttemptService;
     }
 
     @Override
@@ -48,6 +69,27 @@ public class WithdrawUseCaseImpl implements WithdrawUseCase {
     }
 
     private WalletResponse doWithdrawInternal(WithdrawCommand command) {
+        if (walletRepository != null && passwordHasher != null && pinAttemptService != null) {
+            Wallet wallet = walletRepository.findById(command.walletId()).orElse(null);
+            if (wallet != null && wallet.hasPin()) {
+                pinAttemptService.assertNotLocked(command.walletId());
+                if (command.pin() == null || command.pin().isBlank()) {
+                    throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                            com.tyson.digitalwallet.ddd.application.exception.ErrorCode.INVALID_WALLET_PIN,
+                            "Mã PIN là bắt buộc để thực hiện rút tiền"
+                    );
+                }
+                if (!passwordHasher.matches(command.pin(), wallet.getPinHash())) {
+                    int remaining = pinAttemptService.recordFailedAttempt(command.walletId());
+                    throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                            com.tyson.digitalwallet.ddd.application.exception.ErrorCode.INVALID_WALLET_PIN,
+                            "Mã PIN không chính xác. Bạn còn " + remaining + " lần thử"
+                    );
+                }
+                pinAttemptService.resetAttempts(command.walletId());
+            }
+        }
+
         WithdrawResult result = walletService.withdraw(command.walletId(), command.amount());
 
         eventPublisher.publishEvent(new MoneyWithdrawnEvent(

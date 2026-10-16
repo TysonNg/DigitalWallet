@@ -23,6 +23,7 @@ public class WalletMapper {
                 domain.getBalance(),
                 domain.getCurrency(),
                 domain.getStatus(),
+                domain.getPinHash(),
                 domain.getCreated_at(),
                 domain.getUpdated_at(),
                 userEntity
@@ -40,6 +41,7 @@ public class WalletMapper {
                 walletEntity.getBalance(),
                 walletEntity.getCurrency(),
                 walletEntity.getStatus(),
+                walletEntity.getPinHash(),
                 walletEntity.getCreatedAt(),
                 walletEntity.getUpdatedAt()
         );

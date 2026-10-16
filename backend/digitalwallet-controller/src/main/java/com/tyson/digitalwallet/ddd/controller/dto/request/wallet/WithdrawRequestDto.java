@@ -9,9 +9,10 @@ import java.util.UUID;
 
 public record WithdrawRequestDto(
         @NotNull UUID walletId,
-        @NotNull @DecimalMin(value = "0.01", message = "Withdraw amount must be greater than 0") BigDecimal amount
+        @NotNull @DecimalMin(value = "0.01", message = "Withdraw amount must be greater than 0") BigDecimal amount,
+        String pin
 ) {
     public WithdrawCommand toCommand() {
-        return new WithdrawCommand(walletId, amount);
+        return new WithdrawCommand(walletId, amount, pin);
     }
 }

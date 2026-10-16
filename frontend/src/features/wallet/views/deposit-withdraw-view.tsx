@@ -25,8 +25,10 @@ import {
     useWithdrawMutation,
     useCreatePaymentOrderMutation,
     useMyWalletQuery,
+    ActionError,
 } from "../hooks/use-wallet";
 import { PaymentGatewayType } from "../types/wallet.types";
+import { PinModal } from "../components/pin-modal";
 import { toast } from "sonner";
 
 const PRESET_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000, 5000000];
@@ -37,6 +39,7 @@ type PaymentMethodType = "PAYOS" | "STRIPE" | "MOCK";
 export function DepositWithdrawView() {
     const t = useTranslations("wallet");
     const dashT = useTranslations("dashboard");
+    const apiErr = useTranslations("apiErrors");
     const common = useTranslations("common");
     const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
     const router = useRouter();
@@ -61,6 +64,7 @@ export function DepositWithdrawView() {
     // Withdraw form state
     const [withdrawAmount, setWithdrawAmount] = useState<number>(200000);
     const [withdrawError, setWithdrawError] = useState<string | null>(null);
+    const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const bankNumber = "1029384756";
     const bankName = "MB Bank (Ngân hàng Quân Đội)";
 
@@ -120,6 +124,29 @@ export function DepositWithdrawView() {
     };
 
     // Handle Withdraw
+    const executeWithdraw = async (pin?: string) => {
+        try {
+            await withdrawMutation.mutateAsync({
+                walletId,
+                amount: withdrawAmount,
+                pin,
+            });
+            setIsPinModalOpen(false);
+            toast.success(t("withdrawalRequestSuccessful", { amount: formatVND(withdrawAmount) }));
+            setWithdrawAmount(200000);
+        } catch (err: unknown) {
+            let msg = t("withdrawalFailed");
+            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
+                msg = apiErr(err.errorCode as any);
+            } else if (err instanceof Error) {
+                msg = err.message;
+            }
+            setWithdrawError(msg);
+            toast.error(msg);
+            throw new Error(msg);
+        }
+    };
+
     const handleWithdrawSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setWithdrawError(null);
@@ -134,18 +161,12 @@ export function DepositWithdrawView() {
             return;
         }
 
-        try {
-            await withdrawMutation.mutateAsync({
-                walletId,
-                amount: withdrawAmount,
-            });
-            toast.success(t("withdrawalRequestSuccessful", { amount: formatVND(withdrawAmount) }));
-            setWithdrawAmount(200000);
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : t("withdrawalFailed");
-            setWithdrawError(msg);
-            toast.error(msg);
+        if (myWallet?.hasPin) {
+            setIsPinModalOpen(true);
+            return;
         }
+
+        await executeWithdraw();
     };
 
     const isDepositLoading = depositMutation.isPending || createOrderMutation.isPending;
@@ -490,6 +511,17 @@ export function DepositWithdrawView() {
                     </form>
                 </div>
             )}
+
+            <PinModal
+                isOpen={isPinModalOpen}
+                onClose={() => setIsPinModalOpen(false)}
+                onConfirm={executeWithdraw}
+                amount={withdrawAmount}
+                currency={currency}
+                isLoading={withdrawMutation.isPending}
+                title="Xác thực mã PIN rút tiền"
+                description="Nhập mã PIN 6 số để xác nhận rút tiền về tài khoản ngân hàng liên kết"
+            />
         </main>
     );
 }

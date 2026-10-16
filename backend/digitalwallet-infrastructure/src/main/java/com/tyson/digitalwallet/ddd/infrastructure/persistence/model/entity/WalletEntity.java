@@ -18,10 +18,15 @@ public class WalletEntity {
     }
 
     public WalletEntity(UUID id, BigDecimal balance, String currency, WalletStatus status, LocalDateTime createdAt, LocalDateTime updatedAt, UserEntity user) {
+        this(id, balance, currency, status, null, createdAt, updatedAt, user);
+    }
+
+    public WalletEntity(UUID id, BigDecimal balance, String currency, WalletStatus status, String pinHash, LocalDateTime createdAt, LocalDateTime updatedAt, UserEntity user) {
         this.id = id;
         this.balance = balance;
         this.currency = currency;
         this.status = status;
+        this.pinHash = pinHash;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.user = user;
@@ -64,6 +69,9 @@ public class WalletEntity {
             fetch = FetchType.LAZY
     )
     private List<TransactionEntity> receivedTransactions;
+
+    @Column(name = "pin_hash",length = 255)
+    private String pinHash;
 
     public UUID getId() {
         return id;
@@ -119,5 +127,13 @@ public class WalletEntity {
 
     public void setUser(UserEntity user) {
         this.user = user;
+    }
+
+    public String getPinHash() {
+        return pinHash;
+    }
+
+    public void setPinHash(String pinHash) {
+        this.pinHash = pinHash;
     }
 }

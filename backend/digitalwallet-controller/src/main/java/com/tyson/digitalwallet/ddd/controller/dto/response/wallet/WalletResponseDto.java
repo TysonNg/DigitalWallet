@@ -10,6 +10,7 @@ public record WalletResponseDto(
         UUID id,
         BigDecimal balance,
         String currency,
+        boolean hasPin,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -18,6 +19,7 @@ public record WalletResponseDto(
                 r.id(),
                 r.balance(),
                 r.currency(),
+                r.hasPin(),
                 r.created_at(),
                 r.updated_at()
         );

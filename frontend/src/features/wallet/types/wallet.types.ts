@@ -4,6 +4,7 @@ export interface WalletDto {
     balance: number;
     currency: string;
     status: "ACTIVE" | "LOCKED" | "SUSPENDED";
+    hasPin?: boolean;
 }
 
 export type TransactionType = "DEPOSIT" | "WITHDRAW" | "TRANSFER" | "TRANSFER_IN" | "TRANSFER_OUT";

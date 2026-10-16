@@ -11,6 +11,8 @@ import {
     withdrawMoneyAction,
     transferMoneyAction,
     createPaymentOrderAction,
+    setupWalletPinAction,
+    changeWalletPinAction,
     getBeneficiariesAction,
     addBeneficiaryAction,
     updateBeneficiaryAction,
@@ -78,6 +80,16 @@ export function useDepositMutation() {
     });
 }
 
+export class ActionError extends Error {
+    errorCode?: string;
+
+    constructor(message: string, errorCode?: string) {
+        super(message);
+        this.name = "ActionError";
+        this.errorCode = errorCode;
+    }
+}
+
 /**
  * Hook Mutation: Rút tiền từ ví
  */
@@ -87,10 +99,18 @@ export function useWithdrawMutation() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({ walletId, amount }: { walletId: string; amount: number }) => {
-            const res = await withdrawMoneyAction(walletId, amount);
+        mutationFn: async ({
+            walletId,
+            amount,
+            pin,
+        }: {
+            walletId: string;
+            amount: number;
+            pin?: string;
+        }) => {
+            const res = await withdrawMoneyAction(walletId, amount, pin);
             if (!res.success) {
-                throw new Error(res.message || t("withdrawalFailed"));
+                throw new ActionError(res.message || t("withdrawalFailed"), res.errorCode);
             }
             return res;
         },
@@ -98,16 +118,6 @@ export function useWithdrawMutation() {
             queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
         },
     });
-}
-
-export class ActionError extends Error {
-    errorCode?: string;
-
-    constructor(message: string, errorCode?: string) {
-        super(message);
-        this.name = "ActionError";
-        this.errorCode = errorCode;
-    }
 }
 
 /**
@@ -124,20 +134,73 @@ export function useTransferMutation() {
             receiverWalletId,
             amount,
             description,
+            pin,
         }: {
             senderWalletId: string;
             receiverWalletId: string;
             amount: number;
             description: string;
+            pin?: string;
         }) => {
             const res = await transferMoneyAction(
                 senderWalletId,
                 receiverWalletId,
                 amount,
-                description
+                description,
+                pin
             );
             if (!res.success) {
                 throw new ActionError(res.message || t("transferFailed"), res.errorCode);
+            }
+            return res;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+        },
+    });
+}
+
+/**
+ * Hook Mutation: Thiết lập mã PIN ví
+ */
+export function useSetupPinMutation() {
+    const t = useTranslations("walletErrors");
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ pin, walletId }: { pin: string; walletId?: string }) => {
+            const res = await setupWalletPinAction(pin, walletId);
+            if (!res.success) {
+                throw new ActionError(res.message || t("pinSetupFailed"), res.errorCode);
+            }
+            return res;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+        },
+    });
+}
+
+/**
+ * Hook Mutation: Đổi mã PIN ví
+ */
+export function useChangePinMutation() {
+    const t = useTranslations("walletErrors");
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            oldPin,
+            newPin,
+            walletId,
+        }: {
+            oldPin: string;
+            newPin: string;
+            walletId?: string;
+        }) => {
+            const res = await changeWalletPinAction(oldPin, newPin, walletId);
+            if (!res.success) {
+                throw new ActionError(res.message || t("pinChangeFailed"), res.errorCode);
             }
             return res;
         },

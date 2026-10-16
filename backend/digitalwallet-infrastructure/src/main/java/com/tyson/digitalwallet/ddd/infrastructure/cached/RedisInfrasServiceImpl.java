@@ -113,4 +113,9 @@ public class RedisInfrasServiceImpl implements RedisInfrasService {
     public Long getExpire(String key, TimeUnit unit) {
         return redisTemplate.getExpire(key, unit);
     }
+
+    @Override
+    public Long increment(String key, long delta) {
+        return redisTemplate.opsForValue().increment(key, delta);
+    }
 }

@@ -19,6 +19,11 @@
         "EMAIL_ALREADY_EXISTS": "This email has already been registered",
         "INVALID_OLD_PASSWORD": "The current password is incorrect",
         "NEW_PASSWORD_SAME_AS_OLD": "New password cannot be the same as the current password",
+        "WALLET_PIN_NOT_SET": "Wallet transaction PIN has not been set up. Please configure your PIN in Settings.",
+        "INVALID_WALLET_PIN": "Incorrect wallet PIN",
+        "WALLET_PIN_LOCKED": "Wallet PIN is temporarily locked due to 5 consecutive failed attempts. Please try again in 15 minutes.",
+        "WEAK_WALLET_PIN": "The PIN is too simple. Please avoid sequential or repeating digits.",
+        "WALLET_ALREADY_HAS_PIN": "Wallet already has a PIN. Please use change PIN instead.",
         "VALIDATION_ERROR": "Invalid input data",
         "INTERNAL_SERVER_ERROR": "Internal server error, please try again later"
     },
@@ -333,6 +338,10 @@
         "unableToCreateAPaymentLink": "Unable to create a payment link",
         "theMinimumDepositIsVND1000": "The minimum deposit is VND 1,000",
         "paymentLinkCreatedSuccessfully": "Payment link created successfully!",
-        "unableToConnectToThePaymentGateway": "Unable to connect to the payment gateway"
+        "unableToConnectToThePaymentGateway": "Unable to connect to the payment gateway",
+        "pinSetupSuccess": "Wallet transaction PIN configured successfully!",
+        "pinSetupFailed": "Failed to set up wallet PIN",
+        "pinChangeSuccess": "Wallet transaction PIN updated successfully!",
+        "pinChangeFailed": "Failed to change wallet PIN"
     }
 }

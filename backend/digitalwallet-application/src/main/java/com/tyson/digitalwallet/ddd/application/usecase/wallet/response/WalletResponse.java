@@ -13,9 +13,14 @@ public record WalletResponse(
         BigDecimal balance,
         String currency,
         WalletStatus status,
+        boolean hasPin,
         LocalDateTime created_at,
         LocalDateTime updated_at
 ) {
+    public WalletResponse(UUID id, UUID userId, BigDecimal balance, String currency, WalletStatus status, LocalDateTime created_at, LocalDateTime updated_at) {
+        this(id, userId, balance, currency, status, false, created_at, updated_at);
+    }
+
     public static WalletResponse from(Wallet wallet) {
         if (wallet == null) {
             return null;
@@ -26,6 +31,7 @@ public record WalletResponse(
                 wallet.getBalance(),
                 wallet.getCurrency(),
                 wallet.getStatus(),
+                wallet.hasPin(),
                 wallet.getCreated_at(),
                 wallet.getUpdated_at()
         );

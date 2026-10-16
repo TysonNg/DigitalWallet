@@ -5,6 +5,10 @@ import java.util.UUID;
 
 public record WithdrawCommand(
         UUID walletId,
-        BigDecimal amount
+        BigDecimal amount,
+        String pin
 ) {
+    public WithdrawCommand(UUID walletId, BigDecimal amount) {
+        this(walletId, amount, null);
+    }
 }

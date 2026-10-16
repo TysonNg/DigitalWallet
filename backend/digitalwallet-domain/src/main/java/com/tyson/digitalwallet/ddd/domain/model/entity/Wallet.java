@@ -14,7 +14,7 @@ public class Wallet {
     private WalletStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
+    private String pinHash;
 
     public UUID getUserId() {
         return userId;
@@ -24,14 +24,49 @@ public class Wallet {
         this.userId = userId;
     }
 
-    public Wallet(UUID id, UUID userId ,BigDecimal balance, String currency, WalletStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Wallet(UUID id, UUID userId, BigDecimal balance, String currency, WalletStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(id, userId, balance, currency, status, null, createdAt, updatedAt);
+    }
+
+    public Wallet(UUID id, UUID userId, BigDecimal balance, String currency, WalletStatus status, String pinHash, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
         this.balance = balance;
         this.currency = currency;
         this.status = status;
+        this.pinHash = pinHash;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public String getPinHash() {
+        return pinHash;
+    }
+
+    public boolean hasPin() {
+        return pinHash != null && !pinHash.isBlank();
+    }
+
+    public void setupPin(String newPinHash) {
+        if (hasPin()) {
+            throw new IllegalStateException("Wallet already has a PIN. Use changePin instead.");
+        }
+        if (newPinHash == null || newPinHash.isBlank()) {
+            throw new IllegalArgumentException("PIN hash cannot be blank");
+        }
+        this.pinHash = newPinHash;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void changePin(String newPinHash) {
+        if (!hasPin()) {
+            throw new IllegalStateException("Wallet does not have a PIN yet. Use setupPin first.");
+        }
+        if (newPinHash == null || newPinHash.isBlank()) {
+            throw new IllegalArgumentException("PIN hash cannot be blank");
+        }
+        this.pinHash = newPinHash;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public UUID getId() {

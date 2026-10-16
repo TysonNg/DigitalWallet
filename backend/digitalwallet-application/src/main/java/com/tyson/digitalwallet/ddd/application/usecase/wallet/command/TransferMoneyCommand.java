@@ -8,14 +8,25 @@ public record TransferMoneyCommand(
         UUID receiverWalletId,
         BigDecimal amount,
         String description,
-        String idempotencyKey
+        String idempotencyKey,
+        String pin
 ) {
+    public TransferMoneyCommand(
+            UUID senderWalletId,
+            UUID receiverWalletId,
+            BigDecimal amount,
+            String description,
+            String idempotencyKey
+    ) {
+        this(senderWalletId, receiverWalletId, amount, description, idempotencyKey, null);
+    }
+
     public TransferMoneyCommand(
             UUID senderWalletId,
             UUID receiverWalletId,
             BigDecimal amount,
             String description
     ) {
-        this(senderWalletId, receiverWalletId, amount, description, null);
+        this(senderWalletId, receiverWalletId, amount, description, null, null);
     }
 }

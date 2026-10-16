@@ -34,18 +34,32 @@ public class WalletController {
     private final TransferMoneyUseCase transferMoneyUseCase;
     private final GetTransactionsUseCase getTransactionsUseCase;
     private final LookupRecipientUseCase lookupRecipientUseCase;
+    private final com.tyson.digitalwallet.ddd.application.usecase.wallet.SetupWalletPinUseCase setupWalletPinUseCase;
+    private final com.tyson.digitalwallet.ddd.application.usecase.wallet.ChangeWalletPinUseCase changeWalletPinUseCase;
+
+    public WalletController(CreateWalletUseCase createWalletUseCase, WithdrawUseCase withdrawUseCase,
+                            GetWalletUseCase getWalletUseCase, TransferMoneyUseCase transferMoneyUseCase,
+                            GetTransactionsUseCase getTransactionsUseCase,
+                            LookupRecipientUseCase lookupRecipientUseCase) {
+        this(createWalletUseCase, withdrawUseCase, getWalletUseCase, transferMoneyUseCase,
+                getTransactionsUseCase, lookupRecipientUseCase, null, null);
+    }
 
     @Autowired
     public WalletController(CreateWalletUseCase createWalletUseCase, WithdrawUseCase withdrawUseCase,
                             GetWalletUseCase getWalletUseCase, TransferMoneyUseCase transferMoneyUseCase,
                             GetTransactionsUseCase getTransactionsUseCase,
-                            LookupRecipientUseCase lookupRecipientUseCase) {
+                            LookupRecipientUseCase lookupRecipientUseCase,
+                            com.tyson.digitalwallet.ddd.application.usecase.wallet.SetupWalletPinUseCase setupWalletPinUseCase,
+                            com.tyson.digitalwallet.ddd.application.usecase.wallet.ChangeWalletPinUseCase changeWalletPinUseCase) {
         this.createWalletUseCase = createWalletUseCase;
         this.withdrawUseCase = withdrawUseCase;
         this.getWalletUseCase = getWalletUseCase;
         this.transferMoneyUseCase = transferMoneyUseCase;
         this.getTransactionsUseCase = getTransactionsUseCase;
         this.lookupRecipientUseCase = lookupRecipientUseCase;
+        this.setupWalletPinUseCase = setupWalletPinUseCase;
+        this.changeWalletPinUseCase = changeWalletPinUseCase;
     }
 
     @PostMapping
@@ -95,9 +109,39 @@ public class WalletController {
         String idempotencyKey = (idempotencyKeyHeader != null && !idempotencyKeyHeader.isBlank())
                 ? idempotencyKeyHeader : request.idempotencyKey();
         var command = new com.tyson.digitalwallet.ddd.application.usecase.wallet.command.TransferMoneyCommand(
-                request.senderWalletId(), request.receiverWalletId(), request.amount(), request.description(), idempotencyKey);
+                request.senderWalletId(), request.receiverWalletId(), request.amount(), request.description(), idempotencyKey, request.pin());
         WalletResponse response = transferMoneyUseCase.transfer(command);
         return ApiResponse.ok("Transferred successfully", WalletResponseDto.from(response));
+    }
+
+    @PostMapping("/pin/setup")
+    public ResponseEntity<ApiResponse<Void>> setupPin(
+            @RequestBody @Valid com.tyson.digitalwallet.ddd.controller.dto.request.wallet.SetupPinRequestDto request,
+            Principal principal) {
+        UUID userId = WalletAccess.currentUser(principal);
+        UUID walletId = request.walletId();
+        if (walletId != null) {
+            WalletAccess.requireOwner(principal, walletId, getWalletUseCase);
+        }
+        setupWalletPinUseCase.setupPin(new com.tyson.digitalwallet.ddd.application.usecase.wallet.command.SetupWalletPinCommand(
+                userId, walletId, request.pin()
+        ));
+        return ApiResponse.ok("Thiết lập mã PIN thành công", null);
+    }
+
+    @PostMapping("/pin/change")
+    public ResponseEntity<ApiResponse<Void>> changePin(
+            @RequestBody @Valid com.tyson.digitalwallet.ddd.controller.dto.request.wallet.ChangePinRequestDto request,
+            Principal principal) {
+        UUID userId = WalletAccess.currentUser(principal);
+        UUID walletId = request.walletId();
+        if (walletId != null) {
+            WalletAccess.requireOwner(principal, walletId, getWalletUseCase);
+        }
+        changeWalletPinUseCase.changePin(new com.tyson.digitalwallet.ddd.application.usecase.wallet.command.ChangeWalletPinCommand(
+                userId, walletId, request.oldPin(), request.newPin()
+        ));
+        return ApiResponse.ok("Đổi mã PIN thành công", null);
     }
 
     @GetMapping("/{id}/transactions")

@@ -322,7 +322,8 @@ export async function changePasswordAction(input: {
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            const translated = error.errorCode && (apiErrors as any).has?.(error.errorCode)
+            const hasTranslation = error.errorCode && apiErrors && (apiErrors as any).has?.(error.errorCode);
+            const translated = hasTranslation && apiErrors
                 ? apiErrors(error.errorCode as any)
                 : error.message;
             return {

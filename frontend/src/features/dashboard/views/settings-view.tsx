@@ -23,6 +23,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import {
+    useMyWalletQuery,
+    useSetupPinMutation,
+    useChangePinMutation,
+    ActionError,
+} from "@/features/wallet/hooks/use-wallet";
 import { toast } from "sonner";
 
 interface SettingsViewProps {
@@ -31,7 +37,26 @@ interface SettingsViewProps {
 
 export function SettingsView({ user }: SettingsViewProps) {
     const t = useTranslations("dashboard");
+    const apiErr = useTranslations("apiErrors");
     const common = useTranslations("common");
+
+    const { data: myWallet, refetch: refetchWallet } = useMyWalletQuery();
+    const setupPinMutation = useSetupPinMutation();
+    const changePinMutation = useChangePinMutation();
+
+    // Setup PIN form state
+    const [setupPin, setSetupPin] = useState("");
+    const [setupPinConfirm, setSetupPinConfirm] = useState("");
+    const [setupPinError, setSetupPinError] = useState<string | null>(null);
+    const [isSavingPin, setIsSavingPin] = useState(false);
+
+    // Change PIN form state
+    const [changeOldPin, setChangeOldPin] = useState("");
+    const [changeNewPin, setChangeNewPin] = useState("");
+    const [changeNewPinConfirm, setChangeNewPinConfirm] = useState("");
+    const [changePinError, setChangePinError] = useState<string | null>(null);
+    const [isChangingPin, setIsChangingPin] = useState(false);
+    const [showChangePinForm, setShowChangePinForm] = useState(false);
 
     // Change password form state
     const [currentPassword, setCurrentPassword] = useState("");
@@ -84,6 +109,117 @@ export function SettingsView({ user }: SettingsViewProps) {
             toast.error("Không thể đổi mật khẩu. Vui lòng thử lại!");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const validateWeakPin = (pin: string) => {
+        if (!/^[0-9]{6}$/.test(pin)) {
+            return "Mã PIN phải bao gồm đúng 6 chữ số";
+        }
+        if (/^(.)\1{5}$/.test(pin)) {
+            return "Mã PIN không được chứa 6 chữ số giống nhau (ví dụ: 111111)";
+        }
+        if (
+            [
+                "012345",
+                "123456",
+                "234567",
+                "345678",
+                "456789",
+                "567890",
+                "987654",
+                "876543",
+                "765432",
+                "654321",
+                "543210",
+            ].includes(pin)
+        ) {
+            return "Mã PIN không được là chuỗi số liên tiếp đơn giản";
+        }
+        return null;
+    };
+
+    const handleSetupPinSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSetupPinError(null);
+
+        const weakError = validateWeakPin(setupPin);
+        if (weakError) {
+            setSetupPinError(weakError);
+            return;
+        }
+
+        if (setupPin !== setupPinConfirm) {
+            setSetupPinError("Mã PIN xác nhận không khớp");
+            return;
+        }
+
+        setIsSavingPin(true);
+        try {
+            await setupPinMutation.mutateAsync({ pin: setupPin });
+            toast.success("Thiết lập mã PIN giao dịch thành công!");
+            setSetupPin("");
+            setSetupPinConfirm("");
+            refetchWallet();
+        } catch (err: unknown) {
+            let msg = "Thiết lập mã PIN thất bại";
+            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
+                msg = apiErr(err.errorCode as any);
+            } else if (err instanceof Error) {
+                msg = err.message;
+            }
+            setSetupPinError(msg);
+            toast.error(msg);
+        } finally {
+            setIsSavingPin(false);
+        }
+    };
+
+    const handleChangePinSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setChangePinError(null);
+
+        if (!/^[0-9]{6}$/.test(changeOldPin)) {
+            setChangePinError("Mã PIN hiện tại phải gồm đúng 6 chữ số");
+            return;
+        }
+
+        const weakError = validateWeakPin(changeNewPin);
+        if (weakError) {
+            setChangePinError(weakError);
+            return;
+        }
+
+        if (changeNewPin !== changeNewPinConfirm) {
+            setChangePinError("Mã PIN mới xác nhận không khớp");
+            return;
+        }
+
+        if (changeOldPin === changeNewPin) {
+            setChangePinError("Mã PIN mới không được trùng với mã PIN hiện tại");
+            return;
+        }
+
+        setIsChangingPin(true);
+        try {
+            await changePinMutation.mutateAsync({ oldPin: changeOldPin, newPin: changeNewPin });
+            toast.success("Đổi mã PIN giao dịch thành công!");
+            setChangeOldPin("");
+            setChangeNewPin("");
+            setChangeNewPinConfirm("");
+            setShowChangePinForm(false);
+            refetchWallet();
+        } catch (err: unknown) {
+            let msg = "Đổi mã PIN thất bại";
+            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
+                msg = apiErr(err.errorCode as any);
+            } else if (err instanceof Error) {
+                msg = err.message;
+            }
+            setChangePinError(msg);
+            toast.error(msg);
+        } finally {
+            setIsChangingPin(false);
         }
     };
 
@@ -271,6 +407,216 @@ export function SettingsView({ user }: SettingsViewProps) {
                             </Button>
                         </div>
                     </form>
+                </div>
+
+                {/* 3. Wallet Transaction PIN Card */}
+                <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-7 shadow-xs space-y-6 md:col-span-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <Shield className="w-5 h-5 stroke-[1.75]" />
+                            </div>
+                            <div>
+                                <h2 className="text-sm font-bold text-slate-900">
+                                    Mã PIN Giao Dịch Ví (Transaction PIN)
+                                </h2>
+                                <p className="text-xs text-slate-500">
+                                    Mã PIN 6 số bảo vệ số dư khi thực hiện giao dịch chuyển tiền hoặc rút tiền
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            {myWallet?.hasPin ? (
+                                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 font-semibold bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                    Đã kích hoạt bảo vệ
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 text-xs text-amber-700 font-semibold bg-amber-50 px-3 py-1 rounded-full border border-amber-200/80">
+                                    <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                                    Chưa thiết lập mã PIN
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {!myWallet?.hasPin ? (
+                        /* Setup PIN Form */
+                        <form onSubmit={handleSetupPinSubmit} className="space-y-4 max-w-lg">
+                            <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 text-xs text-blue-800 space-y-1">
+                                <p className="font-semibold">Bảo vệ ví của bạn</p>
+                                <p className="text-blue-700/90">
+                                    Thiết lập mã PIN 6 số để xác thực các giao dịch nhạy cảm. Tránh các số dễ đoán như 123456 hoặc 000000.
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700">
+                                        Mã PIN mới (6 chữ số)
+                                    </Label>
+                                    <Input
+                                        type="password"
+                                        inputMode="numeric"
+                                        maxLength={6}
+                                        value={setupPin}
+                                        onChange={(e) => setSetupPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                        placeholder="••••••"
+                                        className="text-xs font-mono tracking-widest"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700">
+                                        Xác nhận mã PIN
+                                    </Label>
+                                    <Input
+                                        type="password"
+                                        inputMode="numeric"
+                                        maxLength={6}
+                                        value={setupPinConfirm}
+                                        onChange={(e) => setSetupPinConfirm(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                        placeholder="••••••"
+                                        className="text-xs font-mono tracking-widest"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {setupPinError && (
+                                <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-600 flex items-center space-x-2">
+                                    <AlertCircle className="w-4 h-4 shrink-0" />
+                                    <span>{setupPinError}</span>
+                                </div>
+                            )}
+
+                            <div>
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    disabled={isSavingPin || setupPin.length !== 6 || setupPinConfirm.length !== 6}
+                                    className="text-xs font-semibold h-10 rounded-xl px-5 cursor-pointer shadow-xs"
+                                >
+                                    {isSavingPin ? "Đang thiết lập..." : "Kích hoạt mã PIN ví"}
+                                </Button>
+                            </div>
+                        </form>
+                    ) : (
+                        /* Change PIN Section */
+                        <div className="space-y-4 max-w-lg">
+                            {!showChangePinForm ? (
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                    <div>
+                                        <p className="text-xs font-semibold text-slate-800">
+                                            Mã PIN đang hoạt động
+                                        </p>
+                                        <p className="text-[11px] text-slate-500 mt-0.5">
+                                            Mỗi giao dịch chuyển tiền và rút tiền đều yêu cầu xác thực bằng mã PIN này.
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setShowChangePinForm(true)}
+                                        className="text-xs h-9 rounded-xl cursor-pointer shrink-0"
+                                    >
+                                        Đổi mã PIN
+                                    </Button>
+                                </div>
+                            ) : (
+                                <form onSubmit={handleChangePinSubmit} className="space-y-4">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold text-slate-700">
+                                            Mã PIN hiện tại
+                                        </Label>
+                                        <Input
+                                            type="password"
+                                            inputMode="numeric"
+                                            maxLength={6}
+                                            value={changeOldPin}
+                                            onChange={(e) => setChangeOldPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                            placeholder="••••••"
+                                            className="text-xs font-mono tracking-widest max-w-xs"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-semibold text-slate-700">
+                                                Mã PIN mới (6 chữ số)
+                                            </Label>
+                                            <Input
+                                                type="password"
+                                                inputMode="numeric"
+                                                maxLength={6}
+                                                value={changeNewPin}
+                                                onChange={(e) => setChangeNewPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                                placeholder="••••••"
+                                                className="text-xs font-mono tracking-widest"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-semibold text-slate-700">
+                                                Xác nhận mã PIN mới
+                                            </Label>
+                                            <Input
+                                                type="password"
+                                                inputMode="numeric"
+                                                maxLength={6}
+                                                value={changeNewPinConfirm}
+                                                onChange={(e) => setChangeNewPinConfirm(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                                placeholder="••••••"
+                                                className="text-xs font-mono tracking-widest"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {changePinError && (
+                                        <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-600 flex items-center space-x-2">
+                                            <AlertCircle className="w-4 h-4 shrink-0" />
+                                            <span>{changePinError}</span>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center gap-3 pt-1">
+                                        <Button
+                                            type="submit"
+                                            variant="primary"
+                                            disabled={
+                                                isChangingPin ||
+                                                changeOldPin.length !== 6 ||
+                                                changeNewPin.length !== 6 ||
+                                                changeNewPinConfirm.length !== 6
+                                            }
+                                            className="text-xs font-semibold h-10 rounded-xl px-5 cursor-pointer shadow-xs"
+                                        >
+                                            {isChangingPin ? "Đang lưu..." : "Lưu thay đổi mã PIN"}
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => {
+                                                setShowChangePinForm(false);
+                                                setChangePinError(null);
+                                                setChangeOldPin("");
+                                                setChangeNewPin("");
+                                                setChangeNewPinConfirm("");
+                                            }}
+                                            className="text-xs h-10 rounded-xl cursor-pointer"
+                                        >
+                                            Hủy
+                                        </Button>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </main>

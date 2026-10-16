@@ -21,6 +21,10 @@
         "unableToCreateAPaymentLink": "Không thể tạo đường dẫn thanh toán",
         "theMinimumDepositIsVND1000": "Số tiền nạp tối thiểu là 1.000 đ",
         "paymentLinkCreatedSuccessfully": "Tạo link thanh toán thành công!",
-        "unableToConnectToThePaymentGateway": "Không thể kết nối đến cổng thanh toán"
+        "unableToConnectToThePaymentGateway": "Không thể kết nối đến cổng thanh toán",
+        "pinSetupSuccess": "Thiết lập mã PIN giao dịch thành công!",
+        "pinSetupFailed": "Thiết lập mã PIN thất bại",
+        "pinChangeSuccess": "Đổi mã PIN giao dịch thành công!",
+        "pinChangeFailed": "Đổi mã PIN thất bại"
     }
 }

@@ -22,7 +22,9 @@ public record TransferMoneyRequestDto(
         @Size(max = 255, message = "Description must not exceed 255 characters")
         String description,
 
-        String idempotencyKey
+        String idempotencyKey,
+
+        String pin
 ) {
     public TransferMoneyCommand toCommand() {
         return new TransferMoneyCommand(
@@ -30,7 +32,8 @@ public record TransferMoneyRequestDto(
                 receiverWalletId,
                 amount,
                 description,
-                idempotencyKey
+                idempotencyKey,
+                pin
         );
     }
 }

@@ -21,6 +21,10 @@
         "unableToCreateAPaymentLink": "Unable to create a payment link",
         "theMinimumDepositIsVND1000": "The minimum deposit is VND 1,000",
         "paymentLinkCreatedSuccessfully": "Payment link created successfully!",
-        "unableToConnectToThePaymentGateway": "Unable to connect to the payment gateway"
+        "unableToConnectToThePaymentGateway": "Unable to connect to the payment gateway",
+        "pinSetupSuccess": "Wallet transaction PIN configured successfully!",
+        "pinSetupFailed": "Failed to set up wallet PIN",
+        "pinChangeSuccess": "Wallet transaction PIN updated successfully!",
+        "pinChangeFailed": "Failed to change wallet PIN"
     }
 }
