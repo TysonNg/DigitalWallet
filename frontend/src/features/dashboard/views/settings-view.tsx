@@ -112,29 +112,9 @@ export function SettingsView({ user }: SettingsViewProps) {
         }
     };
 
-    const validateWeakPin = (pin: string) => {
+    const validatePinFormat = (pin: string) => {
         if (!/^[0-9]{6}$/.test(pin)) {
             return "Mã PIN phải bao gồm đúng 6 chữ số";
-        }
-        if (/^(.)\1{5}$/.test(pin)) {
-            return "Mã PIN không được chứa 6 chữ số giống nhau (ví dụ: 111111)";
-        }
-        if (
-            [
-                "012345",
-                "123456",
-                "234567",
-                "345678",
-                "456789",
-                "567890",
-                "987654",
-                "876543",
-                "765432",
-                "654321",
-                "543210",
-            ].includes(pin)
-        ) {
-            return "Mã PIN không được là chuỗi số liên tiếp đơn giản";
         }
         return null;
     };
@@ -143,9 +123,9 @@ export function SettingsView({ user }: SettingsViewProps) {
         e.preventDefault();
         setSetupPinError(null);
 
-        const weakError = validateWeakPin(setupPin);
-        if (weakError) {
-            setSetupPinError(weakError);
+        const formatError = validatePinFormat(setupPin);
+        if (formatError) {
+            setSetupPinError(formatError);
             return;
         }
 
@@ -184,9 +164,9 @@ export function SettingsView({ user }: SettingsViewProps) {
             return;
         }
 
-        const weakError = validateWeakPin(changeNewPin);
-        if (weakError) {
-            setChangePinError(weakError);
+        const formatError = validatePinFormat(changeNewPin);
+        if (formatError) {
+            setChangePinError(formatError);
             return;
         }
 
@@ -447,7 +427,7 @@ export function SettingsView({ user }: SettingsViewProps) {
                             <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 text-xs text-blue-800 space-y-1">
                                 <p className="font-semibold">Bảo vệ ví của bạn</p>
                                 <p className="text-blue-700/90">
-                                    Thiết lập mã PIN 6 số để xác thực các giao dịch nhạy cảm. Tránh các số dễ đoán như 123456 hoặc 000000.
+                                    Thiết lập mã PIN 6 số tùy chọn để xác thực các giao dịch chuyển tiền và rút tiền nhạy cảm.
                                 </p>
                             </div>
 

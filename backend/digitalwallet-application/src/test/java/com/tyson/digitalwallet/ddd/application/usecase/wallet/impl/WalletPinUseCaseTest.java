@@ -51,7 +51,23 @@ public class WalletPinUseCaseTest {
     }
 
     @Test
-    public void setupPinFailsIfWeakPin() {
+    public void setupPinAllowsCustomAndRepeatingDigits() {
+        UUID userId = UUID.randomUUID();
+        UUID walletId = UUID.randomUUID();
+        Wallet wallet = new Wallet(walletId, userId, BigDecimal.valueOf(1000000), "VND", WalletStatus.ACTIVE, null, LocalDateTime.now(), LocalDateTime.now());
+
+        when(walletRepository.findById(walletId)).thenReturn(Optional.of(wallet));
+        when(passwordHasher.hash("111111")).thenReturn("hashed_pin_111111");
+
+        setupUseCase.setupPin(new SetupWalletPinCommand(userId, walletId, "111111"));
+
+        assertTrue(wallet.hasPin());
+        assertEquals("hashed_pin_111111", wallet.getPinHash());
+        verify(walletRepository).saveWallet(wallet);
+    }
+
+    @Test
+    public void setupPinFailsIfInvalidFormat() {
         UUID userId = UUID.randomUUID();
         UUID walletId = UUID.randomUUID();
         Wallet wallet = new Wallet(walletId, userId, BigDecimal.valueOf(1000000), "VND", WalletStatus.ACTIVE, null, LocalDateTime.now(), LocalDateTime.now());
@@ -59,10 +75,10 @@ public class WalletPinUseCaseTest {
         when(walletRepository.findById(walletId)).thenReturn(Optional.of(wallet));
 
         AppException ex = assertThrows(AppException.class, () ->
-                setupUseCase.setupPin(new SetupWalletPinCommand(userId, walletId, "111111"))
+                setupUseCase.setupPin(new SetupWalletPinCommand(userId, walletId, "12345"))
         );
 
-        assertEquals(ErrorCode.WEAK_WALLET_PIN, ex.getErrorCode());
+        assertEquals(ErrorCode.INVALID_CREDENTIALS, ex.getErrorCode());
         verify(walletRepository, never()).saveWallet(any());
     }
 
