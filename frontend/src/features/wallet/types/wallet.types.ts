@@ -6,7 +6,7 @@ export interface WalletDto {
     status: "ACTIVE" | "LOCKED" | "SUSPENDED";
 }
 
-export type TransactionType = "DEPOSIT" | "WITHDRAW" | "TRANSFER";
+export type TransactionType = "DEPOSIT" | "WITHDRAW" | "TRANSFER" | "TRANSFER_IN" | "TRANSFER_OUT";
 export type TransactionStatus = "PENDING" | "SUCCESS" | "FAILED";
 
 export interface TransactionDto {

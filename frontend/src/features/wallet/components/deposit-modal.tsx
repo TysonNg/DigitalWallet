@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 import { X, ArrowDownLeft, Check, QrCode, CreditCard, Building2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import {
     useDepositMutation,
@@ -135,13 +135,12 @@ export function DepositModal({
                     <div>
                         <Label htmlFor="deposit-amount"> {t("depositAmount")} </Label>
                         <div className="relative mt-1">
-                            <Input
+                            <MoneyInput
                                 id="deposit-amount"
-                                type="number"
                                 min={10000}
                                 step={10000}
-                                value={amount || ""}
-                                onChange={(e) => setAmount(Number(e.target.value))}
+                                value={amount}
+                                onValueChange={setAmount}
                                 className="text-base font-bold text-slate-900 pr-12"
                                 placeholder="0"
                                 required

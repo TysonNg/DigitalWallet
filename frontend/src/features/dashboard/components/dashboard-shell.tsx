@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Menu, X } from "lucide-react";
 import { User } from "@/features/auth/types/auth.types";
+import type { NotificationItem } from "../types/notification.types";
 import { queryKeys } from "@/lib/query-keys";
 import { useMyWalletQuery } from "@/features/wallet/hooks/use-wallet";
 import { useNotificationSocket } from "../hooks/use-notification-socket";
@@ -49,7 +50,19 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
 
     // Lắng nghe thông báo realtime qua WebSocket STOMP xuyên suốt toàn bộ ứng dụng
     useNotificationSocket({
-        onNotificationReceived: () => {
+        userId: user.id,
+        onConnected: () => {
+            void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) });
+            void queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+        },
+        onNotificationReceived: (notification) => {
+            queryClient.setQueryData<NotificationItem[]>(
+                queryKeys.notifications.user(user.id),
+                (previous = []) => [
+                    notification,
+                    ...previous.filter((item) => item.id !== notification.id),
+                ]
+            );
             queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
             queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
         },

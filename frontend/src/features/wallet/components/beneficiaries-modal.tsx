@@ -43,6 +43,7 @@ export function BeneficiariesModal({
     onSelectBeneficiary,
 }: BeneficiariesModalProps) {
     const t = useTranslations("wallet");
+    const walletErrors = useTranslations("walletErrors");
     const apiErr = useTranslations("apiErrors");
     const common = useTranslations("common");
 
@@ -152,7 +153,7 @@ export function BeneficiariesModal({
             setEditingId(null);
             refetch();
         } catch (err: unknown) {
-            toast.error(resolveErrorMessage(err, t("walletErrors.unableToConnectToTheServer")));
+            toast.error(resolveErrorMessage(err, walletErrors("unableToConnectToTheServer")));
         }
     };
 
@@ -163,7 +164,7 @@ export function BeneficiariesModal({
             setDeletingId(null);
             refetch();
         } catch (err: unknown) {
-            toast.error(resolveErrorMessage(err, t("walletErrors.unableToConnectToTheServer")));
+            toast.error(resolveErrorMessage(err, walletErrors("unableToConnectToTheServer")));
         }
     };
 
@@ -186,9 +187,7 @@ export function BeneficiariesModal({
                             <h3 className="text-base font-bold text-slate-900 tracking-tight">
                                 {t("beneficiariesTitle")}
                             </h3>
-                            <p className="text-xs text-slate-500">
-                                {t("beneficiariesSubtitle")}
-                            </p>
+                            <p className="text-xs text-slate-500">{t("beneficiariesSubtitle")}</p>
                         </div>
                     </div>
                     <button
@@ -364,7 +363,7 @@ export function BeneficiariesModal({
                                                     <Input
                                                         value={editNicknameValue}
                                                         onChange={(e) =>
-                                                             setEditNicknameValue(e.target.value)
+                                                            setEditNicknameValue(e.target.value)
                                                         }
                                                         placeholder={t("nicknamePlaceholder")}
                                                         className="h-7 text-xs py-0 px-2 font-medium"

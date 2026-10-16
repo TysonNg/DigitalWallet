@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import {
     useTransferMutation,
@@ -234,11 +235,7 @@ export function TransferModal({
             onClose();
         } catch (err: unknown) {
             let msg = t("anErrorOccurredWhileTransferringMoney");
-            if (
-                err instanceof ActionError &&
-                err.errorCode &&
-                apiErr.has(err.errorCode as any)
-            ) {
+            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
                 msg = apiErr(err.errorCode as any);
             } else if (err instanceof Error) {
                 msg = err.message;
@@ -435,14 +432,13 @@ export function TransferModal({
                             {t("transferAmount")}
                         </Label>
                         <div className="relative mt-1">
-                            <Input
+                            <MoneyInput
                                 id="transfer-amount"
-                                type="number"
                                 min={10000}
                                 max={currentBalance}
                                 step={10000}
-                                value={amount || ""}
-                                onChange={(e) => setAmount(Number(e.target.value))}
+                                value={amount}
+                                onValueChange={setAmount}
                                 className="text-base font-bold text-slate-900 pr-12"
                                 placeholder="0"
                                 required

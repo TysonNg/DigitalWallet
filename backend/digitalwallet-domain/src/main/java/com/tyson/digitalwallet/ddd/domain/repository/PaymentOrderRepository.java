@@ -2,6 +2,7 @@ package com.tyson.digitalwallet.ddd.domain.repository;
 
 import com.tyson.digitalwallet.ddd.domain.model.entity.PaymentOrder;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,4 +21,6 @@ public interface PaymentOrderRepository {
     List<PaymentOrder> findByUserId(UUID userId);
 
     List<PaymentOrder> findByWalletId(UUID walletId);
+
+    List<PaymentOrder> findPendingOrdersCreatedBefore(LocalDateTime threshold);
 }

@@ -7,16 +7,29 @@ import { toast } from "sonner";
 import { getAccessTokenAction } from "@/features/auth/actions/auth.actions";
 import { NotificationItem } from "../types/notification.types";
 
+import { normalizeNotification, notificationSocketUrl } from "../notification-client";
+
 interface UseNotificationSocketProps {
+    userId: string;
+    onConnected?: () => void;
     onNotificationReceived?: (notification: NotificationItem) => void;
 }
 
-export function useNotificationSocket({ onNotificationReceived }: UseNotificationSocketProps = {}) {
+export function useNotificationSocket({
+    userId,
+    onConnected,
+    onNotificationReceived,
+}: UseNotificationSocketProps) {
     const t = useTranslations("dashboard");
     const translationRef = useRef(t);
     useEffect(() => {
         translationRef.current = t;
     }, [t]);
+    const connectedRef = useRef(onConnected);
+    useEffect(() => {
+        connectedRef.current = onConnected;
+    }, [onConnected]);
+
     const callbackRef = useRef(onNotificationReceived);
     useEffect(() => {
         callbackRef.current = onNotificationReceived;
@@ -28,7 +41,10 @@ export function useNotificationSocket({ onNotificationReceived }: UseNotificatio
         let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
         function connect() {
-            const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3006/api/v1/ws";
+            const wsUrl = notificationSocketUrl(
+                window.location.origin,
+                process.env.NEXT_PUBLIC_WS_URL
+            );
 
             // 3. Khởi tạo Client STOMP
             client = new Client({
@@ -54,10 +70,12 @@ export function useNotificationSocket({ onNotificationReceived }: UseNotificatio
                 heartbeatIncoming: 4000,
                 heartbeatOutgoing: 4000,
                 onConnect: () => {
+                    connectedRef.current?.();
                     // Subscribe vào hàng đợi thông báo cá nhân của người dùng
                     client?.subscribe("/user/queue/notifications", (message) => {
                         try {
-                            const notification: NotificationItem = JSON.parse(message.body);
+                            const notification = normalizeNotification(JSON.parse(message.body));
+                            if (notification.userId !== userId) return;
 
                             // Hiển thị Toast thông báo realtime bằng Sonner
                             toast.success(
@@ -95,5 +113,5 @@ export function useNotificationSocket({ onNotificationReceived }: UseNotificatio
                 client.deactivate();
             }
         };
-    }, []);
+    }, [userId]);
 }

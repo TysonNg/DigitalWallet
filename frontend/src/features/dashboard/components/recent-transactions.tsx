@@ -5,7 +5,10 @@ import { useTranslations, useLocale } from "next-intl";
 import { ArrowDownLeft, ArrowUpRight, CreditCard, ArrowRight, SearchX } from "lucide-react";
 import { TransactionDto } from "@/features/wallet/types/wallet.types";
 
+import { transactionDirection, transactionDate } from "../dashboard-data";
+
 interface RecentTransactionsProps {
+    walletId: string;
     currency?: string;
     searchQuery?: string;
     realTransactions?: TransactionDto[];
@@ -22,6 +25,7 @@ interface DisplayTx {
 }
 
 export function RecentTransactions({
+    walletId,
     currency = "VND",
     searchQuery = "",
     realTransactions = [],
@@ -31,113 +35,53 @@ export function RecentTransactions({
     const formatVND = (value: number) =>
         new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
 
-    const DEFAULT_TRANSACTIONS: DisplayTx[] = [
-        {
-            id: "tx-1",
-            title: t("receivedFromTrnVnNam"),
-            date: t("todayAt", {
-                time: new Intl.DateTimeFormat(locale, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone: "Asia/Ho_Chi_Minh",
-                }).format(new Date(Date.UTC(2026, 3, 24, 7, 32))),
-            }),
-            amount: 500000,
-            isPositive: true,
-            iconType: "receive",
-            status: t("successful"),
-        },
-        {
-            id: "tx-2",
-            title: t("transferredToSavingsWallet"),
-            date: t("todayAt", {
-                time: new Intl.DateTimeFormat(locale, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone: "Asia/Ho_Chi_Minh",
-                }).format(new Date(Date.UTC(2026, 3, 24, 3, 15))),
-            }),
-            amount: -2000000,
-            isPositive: false,
-            iconType: "transfer",
-            status: t("successful"),
-        },
-        {
-            id: "tx-3",
-            title: t("shopeePayment"),
-            date: t("yesterdayAt", {
-                time: new Intl.DateTimeFormat(locale, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone: "Asia/Ho_Chi_Minh",
-                }).format(new Date(Date.UTC(2026, 3, 24, 13, 18))),
-            }),
-            amount: -320000,
-            isPositive: false,
-            iconType: "payment",
-            status: t("successful"),
-        },
-        {
-            id: "tx-4",
-            title: t("withdrawToBank"),
-            date: new Date("2026-04-22T16:05:00+07:00").toLocaleString(locale, {
+    const mappedReal: DisplayTx[] = [...realTransactions]
+        .sort(
+            (a, b) =>
+                transactionDate(b.createdAt).getTime() - transactionDate(a.createdAt).getTime()
+        )
+        .map((tx) => {
+            const isPos = transactionDirection(tx, walletId) > 0;
+            const iconType: DisplayTx["iconType"] =
+                tx.type === "DEPOSIT"
+                    ? "deposit"
+                    : tx.type === "WITHDRAW"
+                      ? "withdraw"
+                      : isPos
+                        ? "receive"
+                        : "transfer";
+            const dateStr = transactionDate(tx.createdAt).toLocaleString(locale, {
                 timeZone: "Asia/Ho_Chi_Minh",
-            }),
-            amount: -1000000,
-            isPositive: false,
-            iconType: "withdraw",
-            status: t("successful"),
-        },
-        {
-            id: "tx-5",
-            title: t("depositFromVietcombank"),
-            date: new Date("2026-04-21T11:20:00+07:00").toLocaleString(locale, {
-                timeZone: "Asia/Ho_Chi_Minh",
-            }),
-            amount: 3000000,
-            isPositive: true,
-            iconType: "deposit",
-            status: t("successful"),
-        },
-    ];
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+            });
 
-    const mappedReal: DisplayTx[] = realTransactions.map((tx) => {
-        const isPos = tx.type === "DEPOSIT" || (tx.type === "TRANSFER" && tx.amount > 0);
-        const iconType: DisplayTx["iconType"] =
-            tx.type === "DEPOSIT" ? "deposit" : tx.type === "WITHDRAW" ? "withdraw" : "transfer";
-        const dateStr = new Date(tx.createdAt).toLocaleString(locale, {
-            timeZone: "Asia/Ho_Chi_Minh",
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
+            return {
+                id: tx.id,
+                title:
+                    tx.description ||
+                    (tx.type === "DEPOSIT"
+                        ? t("depositIntoWallet")
+                        : tx.type === "WITHDRAW"
+                          ? t("withdrawFromWallet")
+                          : t("walletTransfer")),
+                date: dateStr,
+                amount: isPos ? Math.abs(tx.amount) : -Math.abs(tx.amount),
+                isPositive: isPos,
+                iconType,
+                status:
+                    tx.status === "SUCCESS"
+                        ? t("successful")
+                        : tx.status === "PENDING"
+                          ? t("pending")
+                          : t("failed"),
+            };
         });
 
-        return {
-            id: tx.id,
-            title:
-                tx.description ||
-                (tx.type === "DEPOSIT"
-                    ? t("depositIntoWallet")
-                    : tx.type === "WITHDRAW"
-                      ? t("withdrawFromWallet")
-                      : t("walletTransfer")),
-            date: dateStr,
-            amount: isPos ? Math.abs(tx.amount) : -Math.abs(tx.amount),
-            isPositive: isPos,
-            iconType,
-            status:
-                tx.status === "SUCCESS"
-                    ? t("successful")
-                    : tx.status === "PENDING"
-                      ? t("pending")
-                      : t("failed"),
-        };
-    });
-
-    const allTransactions =
-        mappedReal.length > 0 ? [...mappedReal, ...DEFAULT_TRANSACTIONS] : DEFAULT_TRANSACTIONS;
+    const allTransactions = mappedReal;
 
     const filtered = allTransactions.filter(
         (tx) =>

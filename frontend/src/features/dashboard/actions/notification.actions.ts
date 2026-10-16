@@ -1,34 +1,25 @@
 "use server";
 
 import { backendFetch } from "@/server/backend-client";
-import { NotificationItem } from "../types/notification.types";
+import { getSession } from "@/server/session";
+import { loadNotifications, readAllNotifications } from "../notification-client";
 
-/**
- * Lấy danh sách thông báo của người dùng từ Spring Boot Backend
- */
 export async function getNotificationsAction() {
     try {
-        const res = await backendFetch<NotificationItem[]>("/notifications");
-        return {
-            success: true,
-            data: res.data || [],
-        };
+        const session = await getSession();
+        if (!session.isLoggedIn || !session.user) return { success: false, data: [] };
+        const data = await loadNotifications(session.user.id, backendFetch);
+        return { success: true, data };
     } catch {
-        return {
-            success: false,
-            data: [] as NotificationItem[],
-        };
+        return { success: false, data: [] };
     }
 }
 
-/**
- * Đánh dấu toàn bộ thông báo là đã đọc
- */
 export async function markAllNotificationsReadAction() {
     try {
-        await backendFetch("/notifications/read-all", {
-            method: "PUT",
-        });
+        const session = await getSession();
+        if (!session.isLoggedIn || !session.user) return { success: false };
+        await readAllNotifications(session.user.id, backendFetch);
         return { success: true };
     } catch {
         return { success: false };

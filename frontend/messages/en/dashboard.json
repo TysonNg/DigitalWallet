@@ -76,6 +76,12 @@
         "walletLoading": "Loading your wallet?",
         "walletUnavailable": "Unable to load your wallet. Please retry.",
         "walletRetry": "Retry",
-        "walletLogin": "Log in again"
+        "walletLogin": "Log in again",
+        "dataUnavailable": "No data available",
+        "transactionsUnavailable": "Unable to load transactions. Please try again.",
+        "transactionsLoading": "Loading transactions?",
+        "notificationsLoadError": "Unable to load notifications. Please try again.",
+        "notificationsReadError": "Unable to mark notifications as read.",
+        "notificationsLoading": "Loading notifications..."
     }
 }

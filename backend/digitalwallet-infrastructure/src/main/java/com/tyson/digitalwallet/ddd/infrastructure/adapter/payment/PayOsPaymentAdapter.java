@@ -2,6 +2,7 @@ package com.tyson.digitalwallet.ddd.infrastructure.adapter.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentGatewayType;
+import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentOrderStatus;
 import com.tyson.digitalwallet.ddd.application.port.payment.command.CreatePaymentLinkCommand;
 import com.tyson.digitalwallet.ddd.application.port.payment.PaymentGatewayPort;
 import com.tyson.digitalwallet.ddd.application.port.payment.result.PaymentLinkResult;
@@ -134,6 +135,32 @@ public class PayOsPaymentAdapter implements PaymentGatewayPort {
         } catch (Exception e) {
             log.error("Failed to verify PayOS webhook: {}", e.getMessage(), e);
             return PaymentWebhookResult.invalid("Invalid PayOS webhook signature or payload: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public PaymentOrderStatus queryOrderStatus(String gatewayOrderId) {
+        if (payOS == null || gatewayOrderId == null || gatewayOrderId.isBlank()) {
+            return PaymentOrderStatus.PENDING;
+        }
+
+        try {
+            long orderCode = Long.parseLong(gatewayOrderId);
+            vn.payos.model.v2.paymentRequests.PaymentLink paymentLink = payOS.paymentRequests().get(orderCode);
+            if (paymentLink == null || paymentLink.getStatus() == null) {
+                return PaymentOrderStatus.PENDING;
+            }
+
+            return switch (paymentLink.getStatus()) {
+                case PAID -> PaymentOrderStatus.SUCCESS;
+                case CANCELLED -> PaymentOrderStatus.CANCELLED;
+                case EXPIRED -> PaymentOrderStatus.EXPIRED;
+                case FAILED -> PaymentOrderStatus.FAILED;
+                default -> PaymentOrderStatus.PENDING;
+            };
+        } catch (Exception e) {
+            log.error("Failed to query PayOS order status for gatewayOrderId {}: {}", gatewayOrderId, e.getMessage(), e);
+            return PaymentOrderStatus.PENDING;
         }
     }
 }

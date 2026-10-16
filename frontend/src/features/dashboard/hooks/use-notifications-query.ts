@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import {
@@ -11,11 +12,16 @@ import { NotificationItem } from "../types/notification.types";
 /**
  * Hook truy vấn danh sách thông báo
  */
-export function useNotificationsQuery() {
+export function useNotificationsQuery(userId: string) {
+    const t = useTranslations("dashboard");
+
     return useQuery<NotificationItem[]>({
-        queryKey: queryKeys.notifications.all,
+        queryKey: queryKeys.notifications.user(userId),
+        enabled: Boolean(userId),
+        refetchInterval: 30000,
         queryFn: async () => {
             const res = await getNotificationsAction();
+            if (!res.success) throw new Error(t("notificationsLoadError"));
             return res.data ?? [];
         },
     });
@@ -25,13 +31,15 @@ export function useNotificationsQuery() {
  * Hook Mutation: Đánh dấu tất cả thông báo là đã đọc
  */
 export function useMarkAllReadMutation() {
+    const t = useTranslations("dashboard");
+
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async () => {
             const res = await markAllNotificationsReadAction();
             if (!res.success) {
-                throw new Error("Failed to mark notifications as read");
+                throw new Error(t("notificationsReadError"));
             }
             return res;
         },

@@ -5,45 +5,24 @@ import { useTranslations, useLocale } from "next-intl";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface AllocationChartProps {
-    mainBalance?: number;
+    mainBalance: number;
     currency?: string;
 }
 
-export function AllocationChart({
-    mainBalance = 12450000,
-    currency = "VND",
-}: AllocationChartProps) {
+export function AllocationChart({ mainBalance, currency = "VND" }: AllocationChartProps) {
     const t = useTranslations("dashboard");
     const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
     const formatVND = (value: number) =>
         new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
 
-    const savingsBalance = 28300000;
-    const travelBalance = 5720000;
-    const totalAssets = mainBalance + savingsBalance + travelBalance;
+    const totalAssets = mainBalance;
 
     const mainPercent = new Intl.NumberFormat(locale, {
         maximumFractionDigits: 1,
         minimumFractionDigits: 1,
-    }).format((mainBalance / totalAssets) * 100);
-    const savingsPercent = new Intl.NumberFormat(locale, {
-        maximumFractionDigits: 1,
-        minimumFractionDigits: 1,
-    }).format((savingsBalance / totalAssets) * 100);
-    const travelPercent = new Intl.NumberFormat(locale, {
-        maximumFractionDigits: 1,
-        minimumFractionDigits: 1,
-    }).format((travelBalance / totalAssets) * 100);
-
+    }).format(totalAssets > 0 ? 100 : 0);
     const data = [
         { name: t("mainWallet"), value: mainBalance, color: "#2563eb", percent: mainPercent },
-        {
-            name: t("savingsWallet"),
-            value: savingsBalance,
-            color: "#38bdf8",
-            percent: savingsPercent,
-        },
-        { name: t("travelWallet"), value: travelBalance, color: "#93c5fd", percent: travelPercent },
     ];
 
     return (
@@ -112,38 +91,6 @@ export function AllocationChart({
                             <span className="text-slate-400 font-medium">{mainPercent}%</span>
                             <span className="font-semibold text-slate-900 min-w-20 text-right">
                                 {formatVND(mainBalance)}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center space-x-2">
-                            <span className="w-2 h-2 rounded-full bg-sky-400 inline-block" />
-                            <span className="text-slate-600 font-medium">
-                                {" "}
-                                {t("savingsWallet")}{" "}
-                            </span>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                            <span className="text-slate-400 font-medium">{savingsPercent}%</span>
-                            <span className="font-semibold text-slate-900 min-w-20 text-right">
-                                {formatVND(savingsBalance)}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center space-x-2">
-                            <span className="w-2 h-2 rounded-full bg-blue-300 inline-block" />
-                            <span className="text-slate-600 font-medium">
-                                {" "}
-                                {t("travelWallet")}{" "}
-                            </span>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                            <span className="text-slate-400 font-medium">{travelPercent}%</span>
-                            <span className="font-semibold text-slate-900 min-w-20 text-right">
-                                {formatVND(travelBalance)}
                             </span>
                         </div>
                     </div>

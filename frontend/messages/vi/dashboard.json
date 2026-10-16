@@ -76,6 +76,12 @@
         "walletLoading": "Đang tải thông tin ví…",
         "walletUnavailable": "Không tải được thông tin ví. Vui lòng thử lại.",
         "walletRetry": "Thử lại",
-        "walletLogin": "Đăng nhập lại"
+        "walletLogin": "Đăng nhập lại",
+        "dataUnavailable": "Chưa có dữ liệu",
+        "transactionsUnavailable": "Không thể tải giao dịch. Vui lòng thử lại.",
+        "transactionsLoading": "Đang tải giao dịch…",
+        "notificationsLoadError": "Không thể tải thông báo. Vui lòng thử lại.",
+        "notificationsReadError": "Không thể đánh dấu thông báo đã đọc.",
+        "notificationsLoading": "Đang tải thông báo..."
     }
 }

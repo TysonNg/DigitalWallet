@@ -5,44 +5,31 @@ import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
-const DATA_30_DAYS = [
-    { date: "25/03", inAmount: 1.2, outAmount: 4.0 },
-    { date: "28/03", inAmount: 1.5, outAmount: 2.6 },
-    { date: "31/03", inAmount: 7.5, outAmount: 4.1 },
-    { date: "03/04", inAmount: 2.7, outAmount: 1.9 },
-    { date: "06/04", inAmount: 3.1, outAmount: 1.8 },
-    { date: "09/04", inAmount: 3.5, outAmount: 1.6 },
-    { date: "12/04", inAmount: 3.8, outAmount: 4.1 },
-    { date: "15/04", inAmount: 1.3, outAmount: 3.1 },
-    { date: "18/04", inAmount: 4.1, outAmount: 3.0 },
-    { date: "21/04", inAmount: 6.4, outAmount: 2.6 },
-    { date: "24/04", inAmount: 3.1, outAmount: 2.7 },
-];
+import type { TransactionDto } from "@/features/wallet/types/wallet.types";
+import { activityData } from "../dashboard-data";
 
-const DATA_7_DAYS = [
-    { date: "18/04", inAmount: 4.1, outAmount: 3.0 },
-    { date: "19/04", inAmount: 2.2, outAmount: 1.8 },
-    { date: "20/04", inAmount: 1.9, outAmount: 2.1 },
-    { date: "21/04", inAmount: 6.4, outAmount: 2.6 },
-    { date: "22/04", inAmount: 2.5, outAmount: 1.2 },
-    { date: "23/04", inAmount: 2.8, outAmount: 1.5 },
-    { date: "24/04", inAmount: 3.1, outAmount: 2.7 },
-];
-
-export function ActivityChart({ currency = "VND" }: { currency?: string } = {}) {
+export function ActivityChart({
+    currency = "VND",
+    transactions,
+    walletId,
+}: {
+    currency?: string;
+    transactions: TransactionDto[];
+    walletId: string;
+}) {
     const t = useTranslations("dashboard");
     const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
     const formatVND = (value: number) =>
         new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
 
     const [period, setPeriod] = useState<"30" | "7">("30");
-    const data = (period === "30" ? DATA_30_DAYS : DATA_7_DAYS).map((item) => ({
+    const data = activityData(transactions, walletId, Number(period)).map((item) => ({
         ...item,
         date: new Intl.DateTimeFormat(locale, {
             timeZone: "Asia/Ho_Chi_Minh",
             day: "2-digit",
             month: "2-digit",
-        }).format(new Date(`2026-${item.date.slice(3)}-${item.date.slice(0, 2)}T00:00:00Z`)),
+        }).format(new Date(`${item.date}T00:00:00+07:00`)),
     }));
 
     return (
@@ -98,10 +85,10 @@ export function ActivityChart({ currency = "VND" }: { currency?: string } = {}) 
                             tick={{ fontSize: 11, fill: "#94a3b8" }}
                             tickFormatter={(val) =>
                                 new Intl.NumberFormat(locale, { notation: "compact" }).format(
-                                    Number(val) * 1000000
+                                    Number(val)
                                 )
                             }
-                            domain={[0, 10]}
+                            domain={[0, "auto"]}
                         />
                         <Tooltip
                             content={({ active, payload, label }) => {
@@ -114,13 +101,13 @@ export function ActivityChart({ currency = "VND" }: { currency?: string } = {}) 
                                             <p className="flex justify-between gap-3 text-sky-300">
                                                 <span> {t("moneyIn")} </span>
                                                 <span className="font-semibold">
-                                                    {formatVND(Number(payload[0].value) * 1000000)}
+                                                    {formatVND(Number(payload[0].value))}
                                                 </span>
                                             </p>
                                             <p className="flex justify-between gap-3 text-slate-300">
                                                 <span> {t("moneyOut")} </span>
                                                 <span className="font-semibold">
-                                                    {formatVND(Number(payload[1].value) * 1000000)}
+                                                    {formatVND(Number(payload[1].value))}
                                                 </span>
                                             </p>
                                         </div>

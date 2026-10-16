@@ -1,11 +1,13 @@
 package com.tyson.digitalwallet.ddd.infrastructure.persistence.repository;
 
 import com.tyson.digitalwallet.ddd.domain.model.entity.PaymentOrder;
+import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentOrderStatus;
 import com.tyson.digitalwallet.ddd.domain.repository.PaymentOrderRepository;
 import com.tyson.digitalwallet.ddd.infrastructure.persistence.mapper.PaymentOrderMapper;
 import com.tyson.digitalwallet.ddd.infrastructure.persistence.model.entity.PaymentOrderEntity;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -61,6 +63,13 @@ public class PaymentOrderRepositoryImpl implements PaymentOrderRepository {
     @Override
     public List<PaymentOrder> findByWalletId(UUID walletId) {
         return springDataRepository.findByWalletIdOrderByCreatedAtDesc(walletId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<PaymentOrder> findPendingOrdersCreatedBefore(LocalDateTime threshold) {
+        return springDataRepository.findByStatusAndCreatedAtBefore(PaymentOrderStatus.PENDING, threshold).stream()
                 .map(mapper::toDomain)
                 .toList();
     }

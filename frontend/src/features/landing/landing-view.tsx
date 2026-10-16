@@ -115,11 +115,11 @@ export function LandingView() {
                             {/* 2 Columns */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                                 <div className="space-y-6">
-                                    <ActivityChart />
-                                    <SummaryLimitsCard />
+                                    <ActivityChart transactions={[]} walletId="" />
+                                    <SummaryLimitsCard transactions={[]} walletId="" />
                                 </div>
                                 <div className="space-y-6">
-                                    <RecentTransactions searchQuery="" />
+                                    <RecentTransactions searchQuery="" walletId="" />
                                     <AllocationChart mainBalance={12450000} />
                                 </div>
                             </div>

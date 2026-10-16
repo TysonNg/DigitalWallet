@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
-import { useState } from "react";
 import { User } from "@/features/auth/types/auth.types";
 import { WalletDto, TransactionDto } from "@/features/wallet/types/wallet.types";
 import { Link } from "@/i18n/navigation";
@@ -23,12 +22,13 @@ export function DashboardView({ initialWallet, initialTransactions }: DashboardV
     const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
 
     const { data: wallet = initialWallet ?? null, isPending, error, refetch } = useMyWalletQuery();
-    const currentWallet = wallet || initialWallet;
-    const { data: transactions = initialTransactions ?? [] } = useTransactionsQuery(
-        currentWallet?.id
-    );
-
-    const [searchQuery, setSearchQuery] = useState<string>("");
+    const currentWallet = wallet;
+    const {
+        data: transactions = initialTransactions ?? [],
+        isPending: transactionsPending,
+        error: transactionsError,
+        refetch: refetchTransactions,
+    } = useTransactionsQuery(currentWallet?.id);
 
     const mainBalance = currentWallet ? currentWallet.balance : 0;
     const walletId = currentWallet ? currentWallet.id : "";
@@ -85,34 +85,65 @@ export function DashboardView({ initialWallet, initialTransactions }: DashboardV
                 </div>
             </div>
 
-            {/* Row 1: 3 Wallet Cards */}
+            {/* Wallet balance */}
+            {error && (
+                <p role="alert" className="text-sm text-red-600">
+                    {error.message}
+                </p>
+            )}
             <WalletCards
                 currency={currentWallet?.currency ?? "VND"}
                 mainBalance={mainBalance}
                 walletId={walletId}
             />
 
-            {/* Row 2: 2 Columns Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                {/* Left Column: Hoạt động 30 ngày + Hạn mức & tóm tắt */}
-                <div className="space-y-6">
-                    <ActivityChart currency={currentWallet?.currency ?? "VND"} />
-                    <SummaryLimitsCard currency={currentWallet?.currency ?? "VND"} />
+            {transactionsError ? (
+                <div role="alert" className="rounded-xl border border-red-200 p-5 space-y-3">
+                    <p>{t("transactionsUnavailable")}</p>
+                    <button
+                        className="text-blue-600 cursor-pointer"
+                        onClick={() => void refetchTransactions()}
+                    >
+                        {t("walletRetry")}
+                    </button>
                 </div>
+            ) : transactionsPending && !initialTransactions ? (
+                <p role="status" className="text-sm text-slate-500">
+                    {t("transactionsLoading")}
+                </p>
+            ) : (
+                <>
+                    {/* Row 2: 2 Columns Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                        {/* Left Column: Hoạt động 30 ngày + Hạn mức & tóm tắt */}
+                        <div className="space-y-6">
+                            <ActivityChart
+                                currency={currentWallet.currency}
+                                transactions={transactions}
+                                walletId={walletId}
+                            />
+                            <SummaryLimitsCard
+                                currency={currentWallet.currency}
+                                transactions={transactions}
+                                walletId={walletId}
+                            />
+                        </div>
 
-                {/* Right Column: Giao dịch gần đây + Phân bổ ví */}
-                <div className="space-y-6">
-                    <RecentTransactions
-                        currency={currentWallet?.currency ?? "VND"}
-                        searchQuery={searchQuery}
-                        realTransactions={transactions}
-                    />
-                    <AllocationChart
-                        currency={currentWallet?.currency ?? "VND"}
-                        mainBalance={mainBalance}
-                    />
-                </div>
-            </div>
+                        {/* Right Column: Giao dịch gần đây + Phân bổ ví */}
+                        <div className="space-y-6">
+                            <RecentTransactions
+                                currency={currentWallet?.currency ?? "VND"}
+                                walletId={walletId}
+                                realTransactions={transactions}
+                            />
+                            <AllocationChart
+                                currency={currentWallet?.currency ?? "VND"}
+                                mainBalance={mainBalance}
+                            />
+                        </div>
+                    </div>
+                </>
+            )}
         </main>
     );
 }

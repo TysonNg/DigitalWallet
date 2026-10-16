@@ -6,6 +6,7 @@ import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
 import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentGatewayType;
+import com.tyson.digitalwallet.ddd.domain.model.enums.PaymentOrderStatus;
 import com.tyson.digitalwallet.ddd.application.port.payment.command.CreatePaymentLinkCommand;
 import com.tyson.digitalwallet.ddd.application.port.payment.PaymentGatewayPort;
 import com.tyson.digitalwallet.ddd.application.port.payment.result.PaymentLinkResult;
@@ -163,6 +164,31 @@ public class StripePaymentAdapter implements PaymentGatewayPort {
         } catch (Exception e) {
             log.error("Failed to verify Stripe webhook: {}", e.getMessage(), e);
             return PaymentWebhookResult.invalid("Invalid Stripe webhook signature: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public PaymentOrderStatus queryOrderStatus(String gatewayOrderId) {
+        if (secretKey == null || secretKey.isBlank() || gatewayOrderId == null || gatewayOrderId.isBlank()) {
+            return PaymentOrderStatus.PENDING;
+        }
+
+        try {
+            Session session = Session.retrieve(gatewayOrderId);
+            if (session == null) {
+                return PaymentOrderStatus.PENDING;
+            }
+
+            if ("paid".equalsIgnoreCase(session.getPaymentStatus())) {
+                return PaymentOrderStatus.SUCCESS;
+            }
+            if ("expired".equalsIgnoreCase(session.getStatus())) {
+                return PaymentOrderStatus.EXPIRED;
+            }
+            return PaymentOrderStatus.PENDING;
+        } catch (Exception e) {
+            log.error("Failed to query Stripe checkout session for gatewayOrderId {}: {}", gatewayOrderId, e.getMessage(), e);
+            return PaymentOrderStatus.PENDING;
         }
     }
 }

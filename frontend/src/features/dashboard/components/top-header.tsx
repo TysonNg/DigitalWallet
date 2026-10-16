@@ -12,6 +12,7 @@ import { logoutAction } from "@/features/auth/actions/auth.actions";
 import { toast } from "sonner";
 import { Settings } from "lucide-react";
 
+import { transactionDate } from "../dashboard-data";
 import { useNotificationsQuery, useMarkAllReadMutation } from "../hooks/use-notifications-query";
 
 interface TopHeaderProps {
@@ -31,7 +32,12 @@ export function TopHeader({ user, walletId, searchQuery, onSearchChange }: TopHe
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    const { data: notifications = [] } = useNotificationsQuery();
+    const {
+        data: notifications = [],
+        isPending: notificationsPending,
+        error: notificationsError,
+        refetch: refetchNotifications,
+    } = useNotificationsQuery(user.id);
     const markAllReadMutation = useMarkAllReadMutation();
     const hasUnread = notifications.some((n) => !n.isRead);
 
@@ -69,13 +75,15 @@ export function TopHeader({ user, walletId, searchQuery, onSearchChange }: TopHe
         const nextState = !isNotifOpen;
         setIsNotifOpen(nextState);
         if (nextState && hasUnread) {
-            markAllReadMutation.mutate();
+            markAllReadMutation.mutate(undefined, {
+                onError: () => toast.error(t("notificationsReadError")),
+            });
         }
     };
 
     const formatNotificationTime = (dateStr: string) => {
         try {
-            const date = new Date(dateStr);
+            const date = transactionDate(dateStr);
             return date.toLocaleTimeString(locale, {
                 timeZone: "Asia/Ho_Chi_Minh",
                 hour: "2-digit",
@@ -163,7 +171,30 @@ export function TopHeader({ user, walletId, searchQuery, onSearchChange }: TopHe
                             </div>
 
                             <div className="space-y-1.5 max-h-64 overflow-y-auto">
-                                {notifications.length === 0 ? (
+                                {notificationsError ? (
+                                    <div
+                                        role="alert"
+                                        className="py-6 text-center text-xs space-y-2"
+                                    >
+                                        <p className="text-red-600">
+                                            {t("notificationsLoadError")}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            className="text-blue-600 cursor-pointer"
+                                            onClick={() => void refetchNotifications()}
+                                        >
+                                            {t("walletRetry")}
+                                        </button>
+                                    </div>
+                                ) : notificationsPending ? (
+                                    <div
+                                        role="status"
+                                        className="py-6 text-center text-slate-400 text-xs"
+                                    >
+                                        {t("notificationsLoading")}
+                                    </div>
+                                ) : notifications.length === 0 ? (
                                     <div className="py-6 text-center text-slate-400 text-xs">
                                         {t("noNotificationsYet")}{" "}
                                     </div>

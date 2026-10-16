@@ -18,7 +18,7 @@ import {
     Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import {
     useDepositMutation,
@@ -200,14 +200,18 @@ export function DepositWithdrawView() {
                         <ShieldCheck className="w-5 h-5 stroke-[1.75]" />
                     </div>
                     <div>
-                        <p className="text-[11px] font-medium text-slate-500">{t("currentBalance")}</p>
+                        <p className="text-[11px] font-medium text-slate-500">
+                            {t("currentBalance")}
+                        </p>
                         <p className="text-lg sm:text-xl font-bold text-slate-900">
                             {isWalletLoading ? "..." : formatVND(currentBalance)}
                         </p>
                     </div>
                 </div>
                 <div className="text-right hidden sm:block">
-                    <p className="text-[10px] font-mono text-slate-400">ID: {walletId.slice(0, 12)}...</p>
+                    <p className="text-[10px] font-mono text-slate-400">
+                        ID: {walletId.slice(0, 12)}...
+                    </p>
                     <span className="inline-block mt-0.5 text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium border border-emerald-100">
                         Đang hoạt động
                     </span>
@@ -220,16 +224,18 @@ export function DepositWithdrawView() {
                     <form onSubmit={handleDepositSubmit} className="space-y-6">
                         {/* Amount */}
                         <div className="space-y-2">
-                            <Label htmlFor="deposit-amount" className="text-xs font-semibold text-slate-700">
+                            <Label
+                                htmlFor="deposit-amount"
+                                className="text-xs font-semibold text-slate-700"
+                            >
                                 {t("amount")} ({currency})
                             </Label>
-                            <Input
+                            <MoneyInput
                                 id="deposit-amount"
-                                type="number"
                                 min="10000"
                                 step="10000"
-                                value={depositAmount || ""}
-                                onChange={(e) => setDepositAmount(Number(e.target.value))}
+                                value={depositAmount}
+                                onValueChange={setDepositAmount}
                                 className="text-base font-semibold"
                                 required
                             />
@@ -277,7 +283,9 @@ export function DepositWithdrawView() {
                                         )}
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-slate-900">PayOS VietQR</p>
+                                        <p className="text-xs font-bold text-slate-900">
+                                            PayOS VietQR
+                                        </p>
                                         <p className="text-[11px] text-slate-500 mt-0.5">
                                             Quét mã ngân hàng 24/7
                                         </p>
@@ -303,7 +311,9 @@ export function DepositWithdrawView() {
                                         )}
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-slate-900">Nạp nhanh trực tiếp</p>
+                                        <p className="text-xs font-bold text-slate-900">
+                                            Nạp nhanh trực tiếp
+                                        </p>
                                         <p className="text-[11px] text-slate-500 mt-0.5">
                                             Cộng tiền ví tức thì (Mock)
                                         </p>
@@ -329,7 +339,9 @@ export function DepositWithdrawView() {
                                         )}
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-slate-900">Thẻ Quốc Tế</p>
+                                        <p className="text-xs font-bold text-slate-900">
+                                            Thẻ Quốc Tế
+                                        </p>
                                         <p className="text-[11px] text-slate-500 mt-0.5">
                                             Visa / MasterCard / JCB
                                         </p>
@@ -395,17 +407,19 @@ export function DepositWithdrawView() {
 
                         {/* Amount Input */}
                         <div className="space-y-2">
-                            <Label htmlFor="withdraw-amount" className="text-xs font-semibold text-slate-700">
+                            <Label
+                                htmlFor="withdraw-amount"
+                                className="text-xs font-semibold text-slate-700"
+                            >
                                 {t("amount")} ({currency})
                             </Label>
-                            <Input
+                            <MoneyInput
                                 id="withdraw-amount"
-                                type="number"
                                 min="10000"
                                 step="10000"
                                 max={currentBalance}
-                                value={withdrawAmount || ""}
-                                onChange={(e) => setWithdrawAmount(Number(e.target.value))}
+                                value={withdrawAmount}
+                                onValueChange={setWithdrawAmount}
                                 className="text-base font-semibold"
                                 required
                             />
@@ -422,8 +436,8 @@ export function DepositWithdrawView() {
                                             withdrawAmount === val
                                                 ? "bg-blue-50 border-blue-600 text-blue-600 font-semibold"
                                                 : val > currentBalance
-                                                ? "bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed"
-                                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                                                  ? "bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed"
+                                                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                                         }`}
                                     >
                                         {formatVND(val)}
@@ -439,7 +453,8 @@ export function DepositWithdrawView() {
                                 Lưu ý khi rút tiền:
                             </p>
                             <p className="text-[11px] leading-relaxed text-amber-700">
-                                Tiền sẽ được chuyển về tài khoản ngân hàng liên kết trong vòng 1-3 phút. Miễn phí rút tiền cho 5 giao dịch đầu tiên trong tháng.
+                                Tiền sẽ được chuyển về tài khoản ngân hàng liên kết trong vòng 1-3
+                                phút. Miễn phí rút tiền cho 5 giao dịch đầu tiên trong tháng.
                             </p>
                         </div>
 
@@ -453,7 +468,11 @@ export function DepositWithdrawView() {
                         <Button
                             type="submit"
                             variant="primary"
-                            disabled={isWithdrawLoading || !withdrawAmount || withdrawAmount > currentBalance}
+                            disabled={
+                                isWithdrawLoading ||
+                                !withdrawAmount ||
+                                withdrawAmount > currentBalance
+                            }
                             className="w-full h-11 text-sm font-semibold rounded-xl flex items-center justify-center space-x-2 cursor-pointer shadow-xs"
                         >
                             {isWithdrawLoading ? (

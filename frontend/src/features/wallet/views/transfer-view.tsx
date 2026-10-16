@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import { Link } from "@/i18n/navigation";
 import {
@@ -253,9 +254,7 @@ export function TransferView() {
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
                     {dashT("transfer")}
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    {t("beneficiariesSubtitle")}
-                </p>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">{t("transferSubtitle")}</p>
             </div>
 
             {/* 2-Column Layout */}
@@ -270,7 +269,9 @@ export function TransferView() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-slate-900">
-                                    {t("transferSuccess", { amount: formatVND(lastTransferSuccess.amount) })}
+                                    {t("transferSuccess", {
+                                        amount: formatVND(lastTransferSuccess.amount),
+                                    })}
                                 </h3>
                                 <p className="text-xs text-slate-500 mt-1">
                                     Giao dịch chuyển tiền đã được thực hiện thành công.
@@ -299,7 +300,11 @@ export function TransferView() {
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-                                <Button onClick={handleResetForm} variant="primary" className="cursor-pointer">
+                                <Button
+                                    onClick={handleResetForm}
+                                    variant="primary"
+                                    className="cursor-pointer"
+                                >
                                     Thực hiện giao dịch mới
                                 </Button>
                                 <Link
@@ -335,7 +340,10 @@ export function TransferView() {
 
                             {/* Section 1: Recipient Lookup */}
                             <div className="space-y-2">
-                                <Label htmlFor="transfer-recipient-input" className="text-xs font-semibold text-slate-700">
+                                <Label
+                                    htmlFor="transfer-recipient-input"
+                                    className="text-xs font-semibold text-slate-700"
+                                >
                                     {t("recipientPhoneOrEmail")}
                                 </Label>
                                 <div className="relative">
@@ -364,7 +372,9 @@ export function TransferView() {
                                         <div className="flex items-center space-x-3">
                                             <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
                                                 {verifiedRecipient.fullName
-                                                    ? verifiedRecipient.fullName.slice(0, 2).toUpperCase()
+                                                    ? verifiedRecipient.fullName
+                                                          .slice(0, 2)
+                                                          .toUpperCase()
                                                     : "US"}
                                             </div>
                                             <div>
@@ -385,16 +395,18 @@ export function TransferView() {
 
                             {/* Section 2: Amount & Presets */}
                             <div className="space-y-2">
-                                <Label htmlFor="transfer-amount-input" className="text-xs font-semibold text-slate-700">
+                                <Label
+                                    htmlFor="transfer-amount-input"
+                                    className="text-xs font-semibold text-slate-700"
+                                >
                                     {t("amount")} ({currency})
                                 </Label>
-                                <Input
+                                <MoneyInput
                                     id="transfer-amount-input"
-                                    type="number"
                                     min="1000"
                                     step="1000"
-                                    value={amount || ""}
-                                    onChange={(e) => setAmount(Number(e.target.value))}
+                                    value={amount}
+                                    onValueChange={setAmount}
                                     className="text-sm font-semibold"
                                     required
                                 />
@@ -419,7 +431,10 @@ export function TransferView() {
 
                             {/* Section 3: Description */}
                             <div className="space-y-2">
-                                <Label htmlFor="transfer-description-input" className="text-xs font-semibold text-slate-700">
+                                <Label
+                                    htmlFor="transfer-description-input"
+                                    className="text-xs font-semibold text-slate-700"
+                                >
                                     {t("description")}
                                 </Label>
                                 <Input
@@ -466,7 +481,9 @@ export function TransferView() {
                             <Button
                                 type="submit"
                                 variant="primary"
-                                disabled={transferMutation.isPending || isLookingUp || !receiverWalletId}
+                                disabled={
+                                    transferMutation.isPending || isLookingUp || !receiverWalletId
+                                }
                                 className="w-full h-11 text-sm font-semibold rounded-xl flex items-center justify-center space-x-2 cursor-pointer shadow-xs"
                             >
                                 {transferMutation.isPending ? (
@@ -477,7 +494,9 @@ export function TransferView() {
                                 ) : (
                                     <>
                                         <Send className="w-4 h-4" />
-                                        <span>{t("transferNow", { amount: formatVND(amount) })}</span>
+                                        <span>
+                                            {t("transferNow", { amount: formatVND(amount) })}
+                                        </span>
                                     </>
                                 )}
                             </Button>
@@ -519,7 +538,9 @@ export function TransferView() {
                             </div>
                         ) : filteredBeneficiaries.length === 0 ? (
                             <div className="py-8 text-center text-xs text-slate-400 space-y-1">
-                                <p className="font-medium text-slate-500">{t("noBeneficiariesYet")}</p>
+                                <p className="font-medium text-slate-500">
+                                    {t("noBeneficiariesYet")}
+                                </p>
                                 <p className="text-[11px]">{t("beneficiariesEmptyNotice")}</p>
                             </div>
                         ) : (
@@ -532,14 +553,18 @@ export function TransferView() {
                                 >
                                     <div className="flex items-center space-x-2.5 min-w-0">
                                         <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center font-bold text-[11px] transition-colors shrink-0">
-                                            {b.fullName ? b.fullName.slice(0, 2).toUpperCase() : "US"}
+                                            {b.fullName
+                                                ? b.fullName.slice(0, 2).toUpperCase()
+                                                : "US"}
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-xs font-semibold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
                                                 {b.nickname || b.fullName || "Người nhận"}
                                             </p>
                                             <p className="text-[11px] text-slate-400 truncate">
-                                                {b.phoneNumber || b.email || b.beneficiaryWalletId.slice(0, 10)}
+                                                {b.phoneNumber ||
+                                                    b.email ||
+                                                    b.beneficiaryWalletId.slice(0, 10)}
                                             </p>
                                         </div>
                                     </div>
