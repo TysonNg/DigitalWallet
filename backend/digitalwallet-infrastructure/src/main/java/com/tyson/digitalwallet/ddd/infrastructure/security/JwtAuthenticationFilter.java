@@ -19,8 +19,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -94,11 +96,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 6. Token hoàn toàn hợp lệ -> Nạp Authentication vào SecurityContext
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            List<String> roles = tokenProvider.extractRoles(token);
+            List<String> authorities = tokenProvider.extractAuthorities(token);
+
+            List<SimpleGrantedAuthority> grantedAuthorities = new ArrayList<>();
+            if (roles != null) {
+                roles.forEach(role -> grantedAuthorities.add(new SimpleGrantedAuthority(role)));
+            }
+            if (authorities != null) {
+                authorities.forEach(auth -> grantedAuthorities.add(new SimpleGrantedAuthority(auth)));
+            }
+
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     userId,
                     null,
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                    grantedAuthorities
             );
+
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }

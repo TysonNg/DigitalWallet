@@ -27,6 +27,12 @@ function PaymentFeedbackListener() {
     const queryClient = useQueryClient();
 
     useEffect(() => {
+        const error = searchParams.get("error");
+        if (error === "unauthorized") {
+            toast.error("Bạn không có quyền truy cập trang quản trị hệ thống.");
+            router.replace("/dashboard", { scroll: false });
+        }
+
         const payment = searchParams.get("payment");
         if (payment === "success") {
             toast.success(t("paymentSuccessfulYourWalletHasBeenCredited"));
@@ -37,6 +43,7 @@ function PaymentFeedbackListener() {
             router.replace("/dashboard", { scroll: false });
         }
     }, [searchParams, queryClient, router, t]);
+
 
     return null;
 }
@@ -76,7 +83,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
 
             {/* Desktop Sidebar (Persistent) */}
             <div className="hidden lg:block">
-                <Sidebar />
+                <Sidebar user={user} />
             </div>
 
             {/* Mobile Sidebar Drawer */}
@@ -96,10 +103,11 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <Sidebar onItemClick={() => setIsMobileMenuOpen(false)} />
+                        <Sidebar user={user} onItemClick={() => setIsMobileMenuOpen(false)} />
                     </div>
                 </div>
             )}
+
 
             {/* Main Area */}
             <div className="flex-1 flex flex-col min-w-0">

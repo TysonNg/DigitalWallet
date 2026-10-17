@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.UUID;
 
 @Service
 public class RegisterUseCaseImpl implements RegisterUseCase {
@@ -139,7 +140,7 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
         pendingRegistrations.delete(email);
 
         // Tạo mã phiên duy nhất (sessionId)
-        String sessionId = java.util.UUID.randomUUID().toString();
+        String sessionId = UUID.randomUUID().toString();
         tokenStorage.saveActiveSession(savedUser.getId(), sessionId);
 
         // Tạo Access Token và Refresh Token

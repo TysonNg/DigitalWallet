@@ -1,26 +1,23 @@
 package com.tyson.digitalwallet.ddd.controller.resource;
 
 import com.tyson.digitalwallet.ddd.application.usecase.transaction.GetTransactionsUseCase;
-import com.tyson.digitalwallet.ddd.application.usecase.wallet.CreateWalletUseCase;
-import com.tyson.digitalwallet.ddd.application.usecase.wallet.GetWalletUseCase;
-import com.tyson.digitalwallet.ddd.application.usecase.wallet.TransferMoneyUseCase;
-import com.tyson.digitalwallet.ddd.application.usecase.wallet.WithdrawUseCase;
-import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.CreateWalletCommand;
+import com.tyson.digitalwallet.ddd.application.usecase.wallet.*;
+import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.*;
+import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.RecipientLookupResponse;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
 import com.tyson.digitalwallet.ddd.controller.common.ApiResponse;
-import com.tyson.digitalwallet.ddd.controller.dto.request.wallet.CreateWalletRequestDto;
-import com.tyson.digitalwallet.ddd.controller.dto.request.wallet.TransferMoneyRequestDto;
-import com.tyson.digitalwallet.ddd.controller.dto.request.wallet.WithdrawRequestDto;
+import com.tyson.digitalwallet.ddd.controller.dto.request.wallet.*;
 import com.tyson.digitalwallet.ddd.controller.dto.response.transaction.TransactionResponseDto;
+import com.tyson.digitalwallet.ddd.controller.dto.response.wallet.RecipientLookupResponseDto;
 import com.tyson.digitalwallet.ddd.controller.dto.response.wallet.WalletResponseDto;
-import com.tyson.digitalwallet.ddd.controller.security.WalletAccess;
-import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.tyson.digitalwallet.ddd.application.usecase.wallet.LookupRecipientUseCase;
 import com.tyson.digitalwallet.ddd.controller.ratelimit.RateLimit;
 import com.tyson.digitalwallet.ddd.controller.ratelimit.RateLimitType;
+import com.tyson.digitalwallet.ddd.controller.security.WalletAccess;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
@@ -34,8 +31,8 @@ public class WalletController {
     private final TransferMoneyUseCase transferMoneyUseCase;
     private final GetTransactionsUseCase getTransactionsUseCase;
     private final LookupRecipientUseCase lookupRecipientUseCase;
-    private final com.tyson.digitalwallet.ddd.application.usecase.wallet.SetupWalletPinUseCase setupWalletPinUseCase;
-    private final com.tyson.digitalwallet.ddd.application.usecase.wallet.ChangeWalletPinUseCase changeWalletPinUseCase;
+    private final SetupWalletPinUseCase setupWalletPinUseCase;
+    private final ChangeWalletPinUseCase changeWalletPinUseCase;
 
     public WalletController(CreateWalletUseCase createWalletUseCase, WithdrawUseCase withdrawUseCase,
                             GetWalletUseCase getWalletUseCase, TransferMoneyUseCase transferMoneyUseCase,
@@ -50,8 +47,8 @@ public class WalletController {
                             GetWalletUseCase getWalletUseCase, TransferMoneyUseCase transferMoneyUseCase,
                             GetTransactionsUseCase getTransactionsUseCase,
                             LookupRecipientUseCase lookupRecipientUseCase,
-                            com.tyson.digitalwallet.ddd.application.usecase.wallet.SetupWalletPinUseCase setupWalletPinUseCase,
-                            com.tyson.digitalwallet.ddd.application.usecase.wallet.ChangeWalletPinUseCase changeWalletPinUseCase) {
+                            SetupWalletPinUseCase setupWalletPinUseCase,
+                            ChangeWalletPinUseCase changeWalletPinUseCase) {
         this.createWalletUseCase = createWalletUseCase;
         this.withdrawUseCase = withdrawUseCase;
         this.getWalletUseCase = getWalletUseCase;
@@ -108,7 +105,7 @@ public class WalletController {
         WalletAccess.requireOwner(principal, request.senderWalletId(), getWalletUseCase);
         String idempotencyKey = (idempotencyKeyHeader != null && !idempotencyKeyHeader.isBlank())
                 ? idempotencyKeyHeader : request.idempotencyKey();
-        var command = new com.tyson.digitalwallet.ddd.application.usecase.wallet.command.TransferMoneyCommand(
+        var command = new TransferMoneyCommand(
                 request.senderWalletId(), request.receiverWalletId(), request.amount(), request.description(), idempotencyKey, request.pin());
         WalletResponse response = transferMoneyUseCase.transfer(command);
         return ApiResponse.ok("Transferred successfully", WalletResponseDto.from(response));
@@ -116,14 +113,14 @@ public class WalletController {
 
     @PostMapping("/pin/setup")
     public ResponseEntity<ApiResponse<Void>> setupPin(
-            @RequestBody @Valid com.tyson.digitalwallet.ddd.controller.dto.request.wallet.SetupPinRequestDto request,
+            @RequestBody @Valid SetupPinRequestDto request,
             Principal principal) {
         UUID userId = WalletAccess.currentUser(principal);
         UUID walletId = request.walletId();
         if (walletId != null) {
             WalletAccess.requireOwner(principal, walletId, getWalletUseCase);
         }
-        setupWalletPinUseCase.setupPin(new com.tyson.digitalwallet.ddd.application.usecase.wallet.command.SetupWalletPinCommand(
+        setupWalletPinUseCase.setupPin(new SetupWalletPinCommand(
                 userId, walletId, request.pin()
         ));
         return ApiResponse.ok("Thiết lập mã PIN thành công", null);
@@ -131,14 +128,14 @@ public class WalletController {
 
     @PostMapping("/pin/change")
     public ResponseEntity<ApiResponse<Void>> changePin(
-            @RequestBody @Valid com.tyson.digitalwallet.ddd.controller.dto.request.wallet.ChangePinRequestDto request,
+            @RequestBody @Valid ChangePinRequestDto request,
             Principal principal) {
         UUID userId = WalletAccess.currentUser(principal);
         UUID walletId = request.walletId();
         if (walletId != null) {
             WalletAccess.requireOwner(principal, walletId, getWalletUseCase);
         }
-        changeWalletPinUseCase.changePin(new com.tyson.digitalwallet.ddd.application.usecase.wallet.command.ChangeWalletPinCommand(
+        changeWalletPinUseCase.changePin(new ChangeWalletPinCommand(
                 userId, walletId, request.oldPin(), request.newPin()
         ));
         return ApiResponse.ok("Đổi mã PIN thành công", null);
@@ -155,14 +152,14 @@ public class WalletController {
 
     @RateLimit(name = "lookupRateLimiter", type = RateLimitType.USER_OR_IP)
     @GetMapping("/lookup")
-    public ResponseEntity<ApiResponse<com.tyson.digitalwallet.ddd.controller.dto.response.wallet.RecipientLookupResponseDto>> lookupRecipient(
+    public ResponseEntity<ApiResponse<RecipientLookupResponseDto>> lookupRecipient(
             @RequestParam("identifier") String identifier,
             Principal principal
     ) {
         UUID currentUserId = WalletAccess.currentUser(principal);
-        com.tyson.digitalwallet.ddd.application.usecase.wallet.response.RecipientLookupResponse response =
+        RecipientLookupResponse response =
                 lookupRecipientUseCase.lookup(currentUserId, identifier);
         return ApiResponse.ok("Tra cứu người nhận thành công",
-                com.tyson.digitalwallet.ddd.controller.dto.response.wallet.RecipientLookupResponseDto.from(response));
+                RecipientLookupResponseDto.from(response));
     }
 }

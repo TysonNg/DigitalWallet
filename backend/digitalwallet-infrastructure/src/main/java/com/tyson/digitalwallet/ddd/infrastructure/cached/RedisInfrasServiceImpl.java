@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 @Service
 public class RedisInfrasServiceImpl implements RedisInfrasService {
@@ -80,7 +81,7 @@ public class RedisInfrasServiceImpl implements RedisInfrasService {
     }
 
     @Override
-    public <T> T getOrSet(String key, long timeout, TimeUnit unit, Class<T> clazz, java.util.function.Supplier<T> dbFallback) {
+    public <T> T getOrSet(String key, long timeout, TimeUnit unit, Class<T> clazz, Supplier<T> dbFallback) {
         T cached = getObject(key, clazz);
         if (cached != null) {
             return cached;

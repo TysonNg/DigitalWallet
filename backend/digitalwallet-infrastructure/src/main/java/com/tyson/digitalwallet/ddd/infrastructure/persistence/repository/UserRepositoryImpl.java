@@ -1,11 +1,13 @@
 package com.tyson.digitalwallet.ddd.infrastructure.persistence.repository;
 
 import com.tyson.digitalwallet.ddd.domain.model.entity.User;
+import com.tyson.digitalwallet.ddd.domain.model.enums.UserStatus;
 import com.tyson.digitalwallet.ddd.domain.repository.UserRepository;
 import com.tyson.digitalwallet.ddd.infrastructure.persistence.mapper.UserMapper;
 import com.tyson.digitalwallet.ddd.infrastructure.persistence.model.entity.UserEntity;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,5 +56,22 @@ public class UserRepositoryImpl implements UserRepository {
         UserEntity entity = userMapper.toEntity(user);
         UserEntity savedEntity = springDataUserRepository.save(entity);
         return userMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public List<User> findAll() {
+        return springDataUserRepository.findAllWithRoles().stream()
+                .map(userMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public long count() {
+        return springDataUserRepository.count();
+    }
+
+    @Override
+    public long countByStatus(UserStatus status) {
+        return springDataUserRepository.countByStatus(status);
     }
 }

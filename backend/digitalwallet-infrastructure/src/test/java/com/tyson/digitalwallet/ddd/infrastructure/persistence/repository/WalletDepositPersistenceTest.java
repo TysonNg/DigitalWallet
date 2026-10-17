@@ -20,6 +20,8 @@ public class WalletDepositPersistenceTest {
     @Test
     public void depositPersistsBalanceAndTransactionWithDomainAssignedId() {
         Configuration configuration = new Configuration()
+                .addAnnotatedClass(AuthorityEntity.class)
+                .addAnnotatedClass(RoleEntity.class)
                 .addAnnotatedClass(UserEntity.class)
                 .addAnnotatedClass(WalletEntity.class)
                 .addAnnotatedClass(TransactionEntity.class)

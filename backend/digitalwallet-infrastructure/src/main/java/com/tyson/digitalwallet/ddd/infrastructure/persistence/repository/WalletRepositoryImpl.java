@@ -2,11 +2,11 @@ package com.tyson.digitalwallet.ddd.infrastructure.persistence.repository;
 
 import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
 import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
-
 import com.tyson.digitalwallet.ddd.infrastructure.persistence.mapper.WalletMapper;
 import com.tyson.digitalwallet.ddd.infrastructure.persistence.model.entity.WalletEntity;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,4 +49,15 @@ public class WalletRepositoryImpl implements WalletRepository {
         WalletEntity saved = springDataWalletRepository.save(entity);
         return walletMapper.toDomain(saved);
     }
+
+    @Override
+    public long count() {
+        return springDataWalletRepository.count();
+    }
+
+    @Override
+    public BigDecimal getTotalBalance() {
+        return springDataWalletRepository.sumTotalBalance();
+    }
 }
+

@@ -1,5 +1,6 @@
 package com.tyson.digitalwallet.ddd.infrastructure.persistence.model.entity;
 
+import com.tyson.digitalwallet.ddd.domain.model.enums.UserRole;
 import com.tyson.digitalwallet.ddd.domain.model.enums.UserStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -7,7 +8,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -39,6 +42,14 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private UserStatus status;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<RoleEntity> roles = new HashSet<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -101,6 +112,23 @@ public class UserEntity {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public Set<RoleEntity> getRoles() {
+        return roles != null ? roles : new HashSet<>();
+    }
+
+    public void setRoles(Set<RoleEntity> roles) {
+        this.roles = roles != null ? roles : new HashSet<>();
+    }
+
+    public void addRole(RoleEntity role) {
+        if (this.roles == null) {
+            this.roles = new HashSet<>();
+        }
+        if (role != null) {
+            this.roles.add(role);
+        }
     }
 
     public LocalDate getDob() {

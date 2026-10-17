@@ -60,6 +60,20 @@ export async function loginAction(input: LoginInput): Promise<ActionResponse<Use
             }
         }
 
+        // Trích xuất roles và authorities từ JWT token
+        let roles: string[] = [];
+        let authorities: string[] = [];
+        try {
+            const payloadBase64 = authData.accessToken.split(".")[1];
+            if (payloadBase64) {
+                const payload = JSON.parse(Buffer.from(payloadBase64, "base64").toString("utf-8"));
+                roles = Array.isArray(payload.roles) ? payload.roles : [];
+                authorities = Array.isArray(payload.authorities) ? payload.authorities : [];
+            }
+        } catch {
+            // fallback empty
+        }
+
         // BFF MÃ HÓA toàn bộ Token vào session cookie
         const session = await getSession();
         session.accessToken = authData.accessToken;
@@ -70,9 +84,12 @@ export async function loginAction(input: LoginInput): Promise<ActionResponse<Use
             fullName: authData.user.fullName,
             phoneNumber: authData.user.phoneNumber,
             status: authData.user.status,
+            roles,
+            authorities,
         };
         session.isLoggedIn = true;
         await session.save();
+
 
         return {
             success: true,

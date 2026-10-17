@@ -2,17 +2,22 @@
 
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { Home, ArrowLeftRight, CreditCard, Clock, Settings, BookUser } from "lucide-react";
+import { Home, ArrowLeftRight, CreditCard, Clock, Settings, BookUser, ShieldAlert } from "lucide-react";
+import { User } from "@/features/auth/types/auth.types";
 
 interface SidebarProps {
+    user?: User;
     activeTab?: string;
     onTabSelect?: (tab: string) => void;
     onItemClick?: () => void;
 }
 
-export function Sidebar({ onItemClick }: SidebarProps) {
+export function Sidebar({ user, onItemClick }: SidebarProps) {
     const t = useTranslations("dashboard");
     const pathname = usePathname();
+
+    const isAdmin =
+        user?.roles?.includes("ROLE_ADMIN") || user?.authorities?.includes("SYSTEM_STATS");
 
     const mainNavItems = [
         {
@@ -48,13 +53,26 @@ export function Sidebar({ onItemClick }: SidebarProps) {
     ];
 
     const systemNavItems = [
+        ...(isAdmin
+            ? [
+                  {
+                      href: "/admin",
+                      label: "Admin Console",
+                      icon: ShieldAlert,
+                      isActive: pathname.startsWith("/admin"),
+                      isSpecial: true,
+                  },
+              ]
+            : []),
         {
             href: "/dashboard/settings",
             label: t("settings"),
             icon: Settings,
             isActive: pathname.startsWith("/dashboard/settings"),
+            isSpecial: false,
         },
     ];
+
 
     return (
         <aside className="w-60 bg-white border-r border-slate-200/80 flex flex-col shrink-0 sticky top-0 h-screen select-none">
@@ -117,18 +135,25 @@ export function Sidebar({ onItemClick }: SidebarProps) {
                                     href={item.href}
                                     onClick={onItemClick}
                                     className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs transition-colors cursor-pointer ${
-                                        item.isActive
-                                            ? "bg-blue-50 text-blue-600 font-semibold"
-                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium"
+                                        item.isSpecial
+                                            ? "bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200/70 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300"
+                                            : item.isActive
+                                              ? "bg-blue-50 text-blue-600 font-semibold"
+                                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium"
                                     }`}
                                 >
                                     <Icon
                                         className={`w-4 h-4 stroke-[1.75] ${
-                                            item.isActive ? "text-blue-600" : "text-slate-400"
+                                            item.isSpecial
+                                                ? "text-indigo-600 dark:text-indigo-400"
+                                                : item.isActive
+                                                  ? "text-blue-600"
+                                                  : "text-slate-400"
                                         }`}
                                     />
                                     <span>{item.label}</span>
                                 </Link>
+
                             );
                         })}
                     </nav>

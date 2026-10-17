@@ -45,6 +45,15 @@ export function createRefreshCoordinator(
 interface RefreshSession {
     accessToken?: string;
     refreshToken?: string;
+    user?: {
+        id: string;
+        email: string;
+        fullName: string;
+        phoneNumber?: string;
+        status: any;
+        roles?: string[];
+        authorities?: string[];
+    };
     save(): Promise<void>;
     destroy(): void;
 }
@@ -58,8 +67,21 @@ export async function refreshSession(
         const tokens = await exchange(session.refreshToken);
         session.accessToken = tokens.accessToken;
         session.refreshToken = tokens.refreshToken;
+
+        try {
+            const payloadBase64 = tokens.accessToken.split(".")[1];
+            if (payloadBase64 && session.user) {
+                const payload = JSON.parse(Buffer.from(payloadBase64, "base64").toString("utf-8"));
+                if (Array.isArray(payload.roles)) session.user.roles = payload.roles;
+                if (Array.isArray(payload.authorities)) session.user.authorities = payload.authorities;
+            }
+        } catch {
+            // fallback
+        }
+
         await session.save();
         return tokens.accessToken;
+
     } catch (error) {
         if (error instanceof RefreshRejectedError) session.destroy();
         throw error;

@@ -1,10 +1,11 @@
 package com.tyson.digitalwallet.ddd.infrastructure.security;
 
+import com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PasswordHasherImpl implements com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher {
+public class PasswordHasherImpl implements PasswordHasher {
     private final PasswordEncoder passwordEncoder;
 
     public PasswordHasherImpl(PasswordEncoder passwordEncoder){

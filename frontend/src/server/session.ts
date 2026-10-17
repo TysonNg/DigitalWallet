@@ -2,7 +2,8 @@ import { getIronSession, SessionOptions } from "iron-session";
 import { cookies } from "next/headers";
 import { env } from "@/lib/env";
 
-export type UserStatus = "ACTIVE" | "INACTIVE" | "LOCKED";
+export type UserStatus = "ACTIVE" | "INACTIVE" | "LOCKED" | "SUSPENDED";
+
 
 export interface SessionUser {
     id: string;
@@ -10,7 +11,10 @@ export interface SessionUser {
     fullName: string;
     phoneNumber?: string;
     status: UserStatus;
+    roles?: string[];
+    authorities?: string[];
 }
+
 
 export interface SessionData {
     accessToken?: string;

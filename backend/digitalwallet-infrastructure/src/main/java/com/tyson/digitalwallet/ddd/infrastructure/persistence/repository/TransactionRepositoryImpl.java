@@ -1,11 +1,13 @@
 package com.tyson.digitalwallet.ddd.infrastructure.persistence.repository;
 
 import com.tyson.digitalwallet.ddd.domain.model.entity.Transaction;
+import com.tyson.digitalwallet.ddd.domain.model.enums.TransactionStatus;
 import com.tyson.digitalwallet.ddd.domain.repository.TransactionRepository;
 import com.tyson.digitalwallet.ddd.infrastructure.persistence.mapper.TransactionMapper;
 import com.tyson.digitalwallet.ddd.infrastructure.persistence.model.entity.TransactionEntity;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,4 +45,20 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                 .map(transactionMapper::toDomain)
                 .toList();
     }
+
+    @Override
+    public long count() {
+        return springDataTransactionRepository.count();
+    }
+
+    @Override
+    public long countByStatus(TransactionStatus status) {
+        return springDataTransactionRepository.countByStatus(status);
+    }
+
+    @Override
+    public BigDecimal getTotalVolumeByStatus(TransactionStatus status) {
+        return springDataTransactionRepository.sumTotalVolumeByStatus(status);
+    }
 }
+

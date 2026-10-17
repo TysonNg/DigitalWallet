@@ -83,7 +83,7 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
         });
     }
 
-    private void doProcessWebhookInternal(PaymentWebhookResult result, com.tyson.digitalwallet.ddd.domain.model.enums.PaymentGatewayType gatewayType, String gatewayOrderId) {
+    private void doProcessWebhookInternal(PaymentWebhookResult result, PaymentGatewayType gatewayType, String gatewayOrderId) {
 
         // Khóa bi quan (Pessimistic Lock) dòng PaymentOrder để chống xử lý đồng thời
         PaymentOrder order = paymentOrderRepository.findByGatewayOrderIdWithLock(gatewayOrderId)

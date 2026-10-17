@@ -2,6 +2,7 @@ package com.tyson.digitalwallet.ddd.application.port.security;
 
 import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface TokenProvider {
@@ -15,6 +16,9 @@ public interface TokenProvider {
     UUID extractUserId(String token);
     String extractEmail(String token);
     String extractSessionId(String token);
+    String extractRole(String token);
+    List<String> extractRoles(String token);
+    List<String> extractAuthorities(String token);
     long getRemainingExpiration(String token);
     boolean validateToken(String token);
 }

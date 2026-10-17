@@ -13,6 +13,11 @@ import com.tyson.digitalwallet.ddd.domain.repository.WalletRepository;
 import com.tyson.digitalwallet.ddd.application.port.lock.DistributedLockService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.result.TransferResult;
+import com.tyson.digitalwallet.ddd.application.exception.AppException;
+import com.tyson.digitalwallet.ddd.application.exception.ErrorCode;
+import com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher;
+import com.tyson.digitalwallet.ddd.application.usecase.wallet.pin.WalletPinAttemptService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -31,8 +36,8 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
     private final ApplicationEventPublisher eventPublisher;
     private final DistributedLockService lockService;
     private final TransactionTemplate transactionTemplate;
-    private final com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher passwordHasher;
-    private final com.tyson.digitalwallet.ddd.application.usecase.wallet.pin.WalletPinAttemptService pinAttemptService;
+    private final PasswordHasher passwordHasher;
+    private final WalletPinAttemptService pinAttemptService;
 
     public TransferMoneyUseCaseImpl(
             WalletService walletService,
@@ -45,7 +50,7 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
         this(walletService, walletRepository, idempotencyKeyRepository, eventPublisher, lockService, transactionTemplate, null, null);
     }
 
-    @org.springframework.beans.factory.annotation.Autowired
+    @Autowired
     public TransferMoneyUseCaseImpl(
             WalletService walletService,
             WalletRepository walletRepository,
@@ -53,8 +58,8 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
             ApplicationEventPublisher eventPublisher,
             DistributedLockService lockService,
             TransactionTemplate transactionTemplate,
-            com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher passwordHasher,
-            com.tyson.digitalwallet.ddd.application.usecase.wallet.pin.WalletPinAttemptService pinAttemptService
+            PasswordHasher passwordHasher,
+            WalletPinAttemptService pinAttemptService
     ) {
         this.walletService = walletService;
         this.walletRepository = walletRepository;
@@ -112,15 +117,15 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
         if (senderWallet.hasPin() && passwordHasher != null && pinAttemptService != null) {
             pinAttemptService.assertNotLocked(senderWalletId);
             if (command.pin() == null || command.pin().isBlank()) {
-                throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                        com.tyson.digitalwallet.ddd.application.exception.ErrorCode.INVALID_WALLET_PIN,
+                throw new AppException(
+                        ErrorCode.INVALID_WALLET_PIN,
                         "Mã PIN là bắt buộc để thực hiện giao dịch"
                 );
             }
             if (!passwordHasher.matches(command.pin(), senderWallet.getPinHash())) {
                 int remaining = pinAttemptService.recordFailedAttempt(senderWalletId);
-                throw new com.tyson.digitalwallet.ddd.application.exception.AppException(
-                        com.tyson.digitalwallet.ddd.application.exception.ErrorCode.INVALID_WALLET_PIN,
+                throw new AppException(
+                        ErrorCode.INVALID_WALLET_PIN,
                         "Mã PIN không chính xác. Bạn còn " + remaining + " lần thử"
                 );
             }

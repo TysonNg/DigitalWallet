@@ -4,8 +4,11 @@ export interface User {
     fullName: string;
     phoneNumber?: string;
     dateOfBirth?: string;
-    status: "ACTIVE" | "INACTIVE" | "LOCKED";
+    status: "ACTIVE" | "INACTIVE" | "LOCKED" | "SUSPENDED";
+    roles?: string[];
+    authorities?: string[];
 }
+
 
 export interface AuthResponseData {
     accessToken: string;

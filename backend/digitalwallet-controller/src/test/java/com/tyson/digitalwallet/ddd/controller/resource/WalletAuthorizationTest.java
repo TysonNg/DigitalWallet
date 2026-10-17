@@ -5,7 +5,10 @@ import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletRes
 import com.tyson.digitalwallet.ddd.application.usecase.transaction.GetTransactionsUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.payment.*;
 import com.tyson.digitalwallet.ddd.application.usecase.payment.command.CreatePaymentOrderCommand;
+import com.tyson.digitalwallet.ddd.application.usecase.payment.command.ProcessPaymentWebhookCommand;
+import com.tyson.digitalwallet.ddd.application.usecase.payment.response.PaymentOrderResponse;
 import com.tyson.digitalwallet.ddd.application.usecase.transaction.response.TransactionResponse;
+import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.RecipientLookupResponse;
 import com.tyson.digitalwallet.ddd.controller.exception.GlobalExceptionHandler;
 import com.tyson.digitalwallet.ddd.domain.model.enums.*;
 import org.junit.Before;
@@ -15,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.math.BigDecimal;
 import java.security.Principal;
+import java.util.List;
 import java.util.UUID;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -53,6 +57,8 @@ public class WalletAuthorizationTest {
     private WalletResponse wallet(UUID id, UUID owner) {
         return new WalletResponse(id, owner, new BigDecimal("1000000"), "VND", WalletStatus.ACTIVE, null, null);
     }
+
+
     private void status(int expected, org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request) throws Exception {
         assertEquals(expected, mvc.perform(request.principal(principal)).andReturn().getResponse().getStatus());
     }
@@ -102,7 +108,7 @@ public class WalletAuthorizationTest {
         status(403, get("/transactions/" + id));
     }
     @Test public void paymentOrderUsesJwtUserInsteadOfBodyUser() throws Exception {
-        when(payment.createPaymentOrder(any())).thenReturn(new com.tyson.digitalwallet.ddd.application.usecase.payment.response.PaymentOrderResponse(
+        when(payment.createPaymentOrder(any())).thenReturn(new PaymentOrderResponse(
                 UUID.randomUUID(), ownWallet, user, null, new BigDecimal("1000"), PaymentGatewayType.STRIPE,
                 "test-session", PaymentOrderStatus.PENDING, "https://example.com/checkout", null, null));
         assertEquals(200, mvc.perform(post("/payments/create-order").principal(principal).contentType("application/json")
@@ -117,7 +123,7 @@ public class WalletAuthorizationTest {
         verifyNoInteractions(create);
     }
     @Test public void ownerCanReadHistoryThroughBothRoutes() throws Exception {
-        when(transactions.getTransactionsByWalletId(ownWallet)).thenReturn(java.util.List.of());
+        when(transactions.getTransactionsByWalletId(ownWallet)).thenReturn(List.of());
         status(200, get("/wallet/" + ownWallet + "/transactions"));
         status(200, get("/transactions/wallet/" + ownWallet));
     }
@@ -143,7 +149,7 @@ public class WalletAuthorizationTest {
         assertEquals(200, mvc.perform(post("/payments/webhook/stripe").contentType("application/json")
                 .header("Stripe-Signature", "test-signature").content("{\"type\":\"test\"}"))
                 .andReturn().getResponse().getStatus());
-        var command = ArgumentCaptor.forClass(com.tyson.digitalwallet.ddd.application.usecase.payment.command.ProcessPaymentWebhookCommand.class);
+        var command = ArgumentCaptor.forClass(ProcessPaymentWebhookCommand.class);
         verify(webhook).processWebhook(command.capture());
         assertEquals(PaymentGatewayType.STRIPE, command.getValue().gateway());
         assertEquals("{\"type\":\"test\"}", command.getValue().rawPayload());
@@ -153,7 +159,7 @@ public class WalletAuthorizationTest {
         assertEquals(200, mvc.perform(post("/payments/webhook/payos").contentType("application/json")
                 .content("{\"code\":\"00\"}"))
                 .andReturn().getResponse().getStatus());
-        var command = ArgumentCaptor.forClass(com.tyson.digitalwallet.ddd.application.usecase.payment.command.ProcessPaymentWebhookCommand.class);
+        var command = ArgumentCaptor.forClass(ProcessPaymentWebhookCommand.class);
         verify(webhook, atLeastOnce()).processWebhook(command.capture());
         assertEquals(PaymentGatewayType.PAYOS, command.getValue().gateway());
         assertEquals("{\"code\":\"00\"}", command.getValue().rawPayload());
@@ -161,7 +167,7 @@ public class WalletAuthorizationTest {
 
     @Test public void lookupRecipientReturnsOkWhenFound() throws Exception {
         when(lookupRecipient.lookup(eq(user), eq("0901234567"))).thenReturn(
-                new com.tyson.digitalwallet.ddd.application.usecase.wallet.response.RecipientLookupResponse(
+                new RecipientLookupResponse(
                         UUID.randomUUID(), UUID.randomUUID(), "NGUYEN VAN B", "0901234567", "b@example.com", "VND")
         );
         status(200, get("/wallet/lookup").param("identifier", "0901234567"));

@@ -1,17 +1,21 @@
 package com.tyson.digitalwallet.ddd.infrastructure.persistence.mapper;
 
+import com.tyson.digitalwallet.ddd.domain.model.entity.Role;
 import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 import com.tyson.digitalwallet.ddd.infrastructure.persistence.model.entity.UserEntity;
-import com.tyson.digitalwallet.ddd.infrastructure.persistence.model.entity.WalletEntity;
-import org.hibernate.query.results.internal.Builders;
 import org.springframework.stereotype.Component;
+
+import java.util.Set;
 
 @Component
 public class UserMapper {
-    private WalletMapper walletMapper;
 
-    public UserMapper(WalletMapper walletMapper){
+    private final WalletMapper walletMapper;
+    private final RoleMapper roleMapper;
+
+    public UserMapper(WalletMapper walletMapper, RoleMapper roleMapper) {
         this.walletMapper = walletMapper;
+        this.roleMapper = roleMapper;
     }
 
     public UserEntity toEntity(User domain) {
@@ -28,6 +32,7 @@ public class UserMapper {
         userEntity.setFullName(domain.getFullName());
         userEntity.setStatus(domain.getStatus());
         userEntity.setPhoneNumber(domain.getPhoneNumber());
+        userEntity.setRoles(roleMapper.toEntitySet(domain.getRoles()));
         userEntity.setCreatedAt(domain.getCreatedAt());
         userEntity.setUpdatedAt(domain.getUpdatedAt());
 
@@ -39,11 +44,14 @@ public class UserMapper {
             return null;
         }
 
+        Set<Role> roles = roleMapper.toDomainSet(entity.getRoles());
+
         return new User(
                 entity.getId(),
                 entity.getFullName(),
                 entity.getEmail(),
                 entity.getPassword(),
+                roles,
                 entity.getPhoneNumber(),
                 entity.getDob(),
                 entity.getStatus(),

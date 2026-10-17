@@ -3,7 +3,7 @@ export interface WalletDto {
     userId: string;
     balance: number;
     currency: string;
-    status: "ACTIVE" | "LOCKED" | "SUSPENDED";
+    status: "ACTIVE" | "LOCKED" | "SUSPENDED" | "FROZEN" | "CLOSED";
     hasPin?: boolean;
 }
 

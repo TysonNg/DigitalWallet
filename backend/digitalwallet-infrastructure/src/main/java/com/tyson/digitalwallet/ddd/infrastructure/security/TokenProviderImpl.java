@@ -1,5 +1,7 @@
 package com.tyson.digitalwallet.ddd.infrastructure.security;
 
+import com.tyson.digitalwallet.ddd.domain.model.entity.Authority;
+import com.tyson.digitalwallet.ddd.domain.model.entity.Role;
 import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 import com.tyson.digitalwallet.ddd.application.port.security.TokenProvider;
 import io.jsonwebtoken.*;
@@ -13,8 +15,10 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,6 +54,29 @@ public class TokenProviderImpl implements TokenProvider {
 
         claims.put("email", user.getEmail());
         claims.put("phoneNumber", user.getPhoneNumber());
+
+        List<String> roleNames;
+        List<String> authorityNames = new ArrayList<>();
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            roleNames = user.getRoles().stream()
+                    .map(Role::getName)
+                    .toList();
+            for (Role role : user.getRoles()) {
+                if (role.getAuthorities() != null) {
+                    for (Authority authority : role.getAuthorities()) {
+                        if (!authorityNames.contains(authority.getName())) {
+                            authorityNames.add(authority.getName());
+                        }
+                    }
+                }
+            }
+        } else {
+            roleNames = List.of(user.getRole() != null ? user.getRole().name() : "ROLE_USER");
+        }
+        claims.put("roles", roleNames);
+        claims.put("role", roleNames.contains("ROLE_ADMIN") ? "ROLE_ADMIN" : roleNames.get(0));
+        claims.put("authorities", authorityNames);
+
         claims.put("fullName", user.getFullName());
         if (sessionId != null) {
             claims.put("sessionId", sessionId);
@@ -102,6 +129,39 @@ public class TokenProviderImpl implements TokenProvider {
     public String extractEmail(String token) {
         Claims claims = extractAllClaims(token);
         return claims.get("email", String.class);
+    }
+
+    @Override
+    public List<String> extractRoles(String token) {
+        Claims claims = extractAllClaims(token);
+        Object rolesObj = claims.get("roles");
+        if (rolesObj instanceof List<?> list) {
+            return list.stream().map(Object::toString).toList();
+        }
+        String singleRole = claims.get("role", String.class);
+        if (singleRole != null && !singleRole.isBlank()) {
+            return List.of(singleRole);
+        }
+        return List.of("ROLE_USER");
+    }
+
+    @Override
+    public List<String> extractAuthorities(String token) {
+        Claims claims = extractAllClaims(token);
+        Object authObj = claims.get("authorities");
+        if (authObj instanceof List<?> list) {
+            return list.stream().map(Object::toString).toList();
+        }
+        return List.of();
+    }
+
+    @Override
+    public String extractRole(String token) {
+        List<String> roles = extractRoles(token);
+        if (roles.contains("ROLE_ADMIN")) {
+            return "ROLE_ADMIN";
+        }
+        return roles.isEmpty() ? "ROLE_USER" : roles.get(0);
     }
 
     @Override
