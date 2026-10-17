@@ -55,7 +55,9 @@ public class SecurityConfig {
                                 "/api/v1/ws/**",
                                 "/ws/**",
                                 "/api/v1/payments/webhook/**",
-                                "/payments/webhook/**"
+                                "/payments/webhook/**",
+                                "/api/v1/actuator/**",
+                                "/actuator/**"
                         ).permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

@@ -50,5 +50,5 @@ frontend/out/
 .env
 .env.local
 .env.*.local
-deploy/.env
+environment/.env
 *.backup
