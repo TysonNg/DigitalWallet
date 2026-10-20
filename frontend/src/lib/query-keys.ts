@@ -15,6 +15,7 @@ export const queryKeys = {
     admin: {
         stats: ["admin", "stats"] as const,
         users: ["admin", "users"] as const,
+        trialBalance: ["admin", "ledger", "trial-balance"] as const,
     },
 } as const;
 

@@ -15,6 +15,6 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: ['backend:3006']
-    labels:
-      application: 'digital-wallet'
-      environment: 'development'
+        labels:
+          application: 'digital-wallet'
+          environment: 'development'

@@ -2,20 +2,24 @@
 
 import { useState } from "react";
 import { User } from "@/features/auth/types/auth.types";
-import { AdminStats, AdminUser } from "../types/admin.types";
+import { AdminStats, AdminUser, WalletReconciliation } from "../types/admin.types";
 import {
     useAdminStatsQuery,
     useAdminUsersQuery,
     useToggleUserStatusMutation,
     useAssignUserRolesMutation,
     useToggleWalletFreezeMutation,
+    useTrialBalanceQuery,
+    useReconcileWalletMutation,
 } from "../hooks/use-admin";
 import { AdminHeader } from "../components/admin-header";
 import { AdminKpiStrip } from "../components/admin-kpi-strip";
+import { LedgerTrialBalanceCard } from "../components/ledger-trial-balance-card";
 import { AdminUserTable } from "../components/admin-user-table";
 import { ConfirmToggleDialog } from "../components/confirm-toggle-dialog";
 import { ConfirmFreezeDialog } from "../components/confirm-freeze-dialog";
 import { RoleAssignmentModal } from "../components/role-assignment-modal";
+import { WalletReconcileDialog } from "../components/wallet-reconcile-dialog";
 
 interface AdminConsoleViewProps {
     currentUser?: User;
@@ -42,17 +46,28 @@ export function AdminConsoleView({
         refetch: refetchUsers,
     } = useAdminUsersQuery(initialUsers);
 
+    const {
+        data: trialBalance,
+        isPending: trialBalancePending,
+        isRefetching: trialBalanceRefetching,
+        refetch: refetchTrialBalance,
+    } = useTrialBalanceQuery();
+
     const toggleStatusMutation = useToggleUserStatusMutation();
     const assignRolesMutation = useAssignUserRolesMutation();
     const toggleWalletFreezeMutation = useToggleWalletFreezeMutation();
+    const reconcileMutation = useReconcileWalletMutation();
 
     const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
     const [userToAssign, setUserToAssign] = useState<AdminUser | null>(null);
     const [userToFreeze, setUserToFreeze] = useState<AdminUser | null>(null);
+    const [userToReconcile, setUserToReconcile] = useState<AdminUser | null>(null);
+    const [reconciliationResult, setReconciliationResult] = useState<WalletReconciliation | null>(null);
 
     const handleRefreshAll = () => {
         void refetchStats();
         void refetchUsers();
+        void refetchTrialBalance();
     };
 
     const handleConfirmToggle = (userId: string) => {
@@ -76,7 +91,23 @@ export function AdminConsoleView({
         });
     };
 
-    const isRefreshing = statsRefetching || usersRefetching;
+    const handleOpenReconcile = (user: AdminUser) => {
+        setUserToReconcile(user);
+        setReconciliationResult(null);
+        if (user.walletId) {
+            reconcileMutation.mutate(user.walletId, {
+                onSuccess: (data) => setReconciliationResult(data),
+            });
+        }
+    };
+
+    const handleReconcileRetry = (walletId: string) => {
+        reconcileMutation.mutate(walletId, {
+            onSuccess: (data) => setReconciliationResult(data),
+        });
+    };
+
+    const isRefreshing = statsRefetching || usersRefetching || trialBalanceRefetching;
 
     return (
         <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 flex flex-col">
@@ -90,6 +121,14 @@ export function AdminConsoleView({
                 {/* Compact KPI Metrics Strip on top */}
                 <AdminKpiStrip stats={stats} isPending={statsPending} />
 
+                {/* Double-Entry General Ledger Trial Balance Card */}
+                <LedgerTrialBalanceCard
+                    data={trialBalance}
+                    isPending={trialBalancePending}
+                    isRefetching={trialBalanceRefetching}
+                    onRefresh={() => void refetchTrialBalance()}
+                />
+
                 {/* Data Grid Centered View */}
                 <AdminUserTable
                     users={users}
@@ -97,6 +136,7 @@ export function AdminConsoleView({
                     onToggleStatus={(user) => setUserToToggle(user)}
                     onAssignRoles={(user) => setUserToAssign(user)}
                     onToggleWalletFreeze={(user) => setUserToFreeze(user)}
+                    onReconcileWallet={handleOpenReconcile}
                 />
             </main>
 
@@ -125,6 +165,19 @@ export function AdminConsoleView({
                 isPending={assignRolesMutation.isPending}
                 onClose={() => setUserToAssign(null)}
                 onSave={handleConfirmAssignRoles}
+            />
+
+            {/* Wallet Ledger Reconciliation Modal */}
+            <WalletReconcileDialog
+                user={userToReconcile}
+                isOpen={!!userToReconcile}
+                isPending={reconcileMutation.isPending}
+                reconciliation={reconciliationResult}
+                onClose={() => {
+                    setUserToReconcile(null);
+                    setReconciliationResult(null);
+                }}
+                onReconcile={handleReconcileRetry}
             />
         </div>
     );

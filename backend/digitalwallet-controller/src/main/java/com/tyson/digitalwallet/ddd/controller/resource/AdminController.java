@@ -25,6 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
+import com.tyson.digitalwallet.ddd.application.usecase.admin.GetTrialBalanceUseCase;
+import com.tyson.digitalwallet.ddd.application.usecase.admin.ReconcileWalletUseCase;
+import com.tyson.digitalwallet.ddd.application.usecase.admin.response.TrialBalanceResponse;
+import com.tyson.digitalwallet.ddd.application.usecase.admin.response.WalletReconciliationResponse;
+
 @RestController
 @RequestMapping("/api/v1/admin")
 public class AdminController {
@@ -34,19 +39,25 @@ public class AdminController {
     private final ToggleUserStatusUseCase toggleUserStatusUseCase;
     private final AssignUserRolesUseCase assignUserRolesUseCase;
     private final ToggleWalletFreezeUseCase toggleWalletFreezeUseCase;
+    private final GetTrialBalanceUseCase getTrialBalanceUseCase;
+    private final ReconcileWalletUseCase reconcileWalletUseCase;
 
     public AdminController(
             GetAdminStatsUseCase getAdminStatsUseCase,
             GetAdminUsersUseCase getAdminUsersUseCase,
             ToggleUserStatusUseCase toggleUserStatusUseCase,
             AssignUserRolesUseCase assignUserRolesUseCase,
-            ToggleWalletFreezeUseCase toggleWalletFreezeUseCase
+            ToggleWalletFreezeUseCase toggleWalletFreezeUseCase,
+            GetTrialBalanceUseCase getTrialBalanceUseCase,
+            ReconcileWalletUseCase reconcileWalletUseCase
     ) {
         this.getAdminStatsUseCase = getAdminStatsUseCase;
         this.getAdminUsersUseCase = getAdminUsersUseCase;
         this.toggleUserStatusUseCase = toggleUserStatusUseCase;
         this.assignUserRolesUseCase = assignUserRolesUseCase;
         this.toggleWalletFreezeUseCase = toggleWalletFreezeUseCase;
+        this.getTrialBalanceUseCase = getTrialBalanceUseCase;
+        this.reconcileWalletUseCase = reconcileWalletUseCase;
     }
 
     @GetMapping("/stats")
@@ -87,5 +98,19 @@ public class AdminController {
     public ResponseEntity<ApiResponse<AdminUserSummaryResponse>> toggleWalletFreeze(@PathVariable UUID walletId) {
         AdminUserSummaryResponse response = toggleWalletFreezeUseCase.toggleFreeze(new ToggleWalletFreezeCommand(walletId));
         return ApiResponse.ok("Wallet freeze status updated successfully", response);
+    }
+
+    @GetMapping("/ledger/trial-balance")
+    @PreAuthorize("hasAuthority('SYSTEM_STATS')")
+    public ResponseEntity<ApiResponse<TrialBalanceResponse>> getTrialBalance() {
+        TrialBalanceResponse response = getTrialBalanceUseCase.getTrialBalance();
+        return ApiResponse.ok("Bảng cân đối thử sổ cái (Trial Balance) đã được truy xuất thành công", response);
+    }
+
+    @GetMapping("/ledger/reconcile/{walletId}")
+    @PreAuthorize("hasAuthority('SYSTEM_STATS')")
+    public ResponseEntity<ApiResponse<WalletReconciliationResponse>> reconcileWallet(@PathVariable UUID walletId) {
+        WalletReconciliationResponse response = reconcileWalletUseCase.reconcile(walletId);
+        return ApiResponse.ok("Đối soát số dư ví với sổ cái thành công", response);
     }
 }

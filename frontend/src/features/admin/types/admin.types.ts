@@ -27,3 +27,18 @@ export interface AdminUser {
 export interface AssignRolesInput {
     roles: string[];
 }
+
+export interface TrialBalance {
+    totalDebit: number;
+    totalCredit: number;
+    balanced: boolean;
+    difference: number;
+    totalEntries: number;
+}
+
+export interface WalletReconciliation {
+    walletId: string;
+    walletBalance: number;
+    reconciled: boolean;
+}
+

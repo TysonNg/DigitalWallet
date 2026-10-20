@@ -7,6 +7,8 @@ import com.tyson.digitalwallet.ddd.domain.model.entity.User;
 import com.tyson.digitalwallet.ddd.domain.model.entity.Wallet;
 import com.tyson.digitalwallet.ddd.domain.repository.UserRepository;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
+import com.tyson.digitalwallet.ddd.domain.service.ledger.LedgerService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
@@ -17,10 +19,17 @@ public class CreateWalletUseCaseImpl implements CreateWalletUseCase {
 
     private final UserRepository userRepository;
     private final WalletService walletService;
+    private final LedgerService ledgerService;
 
     public CreateWalletUseCaseImpl(UserRepository userRepository, WalletService walletService) {
+        this(userRepository, walletService, null);
+    }
+
+    @Autowired
+    public CreateWalletUseCaseImpl(UserRepository userRepository, WalletService walletService, LedgerService ledgerService) {
         this.userRepository = userRepository;
         this.walletService = walletService;
+        this.ledgerService = ledgerService;
     }
 
     @Override
@@ -36,6 +45,9 @@ public class CreateWalletUseCaseImpl implements CreateWalletUseCase {
         }
 
         Wallet savedWallet = walletService.createWallet(userId, currency);
+        if (ledgerService != null) {
+            ledgerService.getOrCreateWalletAccount(savedWallet.getId(), savedWallet.getCurrency());
+        }
         return WalletResponse.from(savedWallet);
     }
 }

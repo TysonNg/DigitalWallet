@@ -8,9 +8,11 @@ import {
     toggleUserStatusAction,
     assignUserRolesAction,
     toggleWalletFreezeAction,
+    getTrialBalanceAction,
+    reconcileWalletAction,
 } from "../actions/admin.actions";
 import { toast } from "sonner";
-import { AdminStats, AdminUser } from "../types/admin.types";
+import { AdminStats, AdminUser, TrialBalance, WalletReconciliation } from "../types/admin.types";
 
 export function useAdminStatsQuery(initialData?: AdminStats | null) {
     return useQuery({
@@ -112,4 +114,35 @@ export function useToggleWalletFreezeMutation() {
         },
     });
 }
+
+export function useTrialBalanceQuery(initialData?: TrialBalance | null) {
+    return useQuery({
+        queryKey: queryKeys.admin.trialBalance,
+        queryFn: async () => {
+            const res = await getTrialBalanceAction();
+            if (!res.success || !res.data) {
+                throw new Error(res.message || "Không thể tải bảng cân đối thử sổ cái");
+            }
+            return res.data;
+        },
+        initialData: initialData ?? undefined,
+        refetchInterval: 15000,
+    });
+}
+
+export function useReconcileWalletMutation() {
+    return useMutation({
+        mutationFn: async (walletId: string) => {
+            const res = await reconcileWalletAction(walletId);
+            if (!res.success || !res.data) {
+                throw new Error(res.message || "Đối soát ví thất bại");
+            }
+            return res.data;
+        },
+        onError: (err: Error) => {
+            toast.error(err.message || "Lỗi đối soát ví");
+        },
+    });
+}
+
 

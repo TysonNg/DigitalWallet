@@ -14,6 +14,7 @@ import {
     Wallet,
     RotateCcw,
     Snowflake,
+    Scale,
 } from "lucide-react";
 
 interface AdminUserTableProps {
@@ -22,6 +23,7 @@ interface AdminUserTableProps {
     onToggleStatus: (user: AdminUser) => void;
     onAssignRoles: (user: AdminUser) => void;
     onToggleWalletFreeze: (user: AdminUser) => void;
+    onReconcileWallet?: (user: AdminUser) => void;
 }
 
 export function AdminUserTable({
@@ -30,6 +32,7 @@ export function AdminUserTable({
     onToggleStatus,
     onAssignRoles,
     onToggleWalletFreeze,
+    onReconcileWallet,
 }: AdminUserTableProps) {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -264,6 +267,16 @@ export function AdminUserTable({
                                                 >
                                                     <Shield className="w-4 h-4" />
                                                 </button>
+                                                {user.walletId && onReconcileWallet && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => onReconcileWallet(user)}
+                                                        className="p-1.5 text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors cursor-pointer"
+                                                        title="Đối soát Sổ cái (Audit Ledger)"
+                                                    >
+                                                        <Scale className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                                 {user.walletId && user.walletStatus !== "CLOSED" && (
                                                     <button
                                                         type="button"

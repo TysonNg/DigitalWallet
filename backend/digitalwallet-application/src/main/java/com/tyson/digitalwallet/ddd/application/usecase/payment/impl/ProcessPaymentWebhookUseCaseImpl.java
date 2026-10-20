@@ -15,12 +15,15 @@ import com.tyson.digitalwallet.ddd.application.port.payment.PaymentGatewayPort;
 import com.tyson.digitalwallet.ddd.application.port.payment.result.PaymentWebhookResult;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.result.DepositResult;
+import com.tyson.digitalwallet.ddd.domain.service.ledger.LedgerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
@@ -37,6 +40,7 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
     private final ApplicationEventPublisher eventPublisher;
     private final DistributedLockService lockService;
     private final TransactionTemplate transactionTemplate;
+    private final LedgerService ledgerService;
 
     public ProcessPaymentWebhookUseCaseImpl(
         PaymentGatewayResolver gatewayResolver,
@@ -48,6 +52,21 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
         DistributedLockService lockService,
         TransactionTemplate transactionTemplate
     ) {
+        this(gatewayResolver, paymentOrderRepository, paymentService, walletService, walletRepository, eventPublisher, lockService, transactionTemplate, null);
+    }
+
+    @Autowired
+    public ProcessPaymentWebhookUseCaseImpl(
+        PaymentGatewayResolver gatewayResolver,
+        PaymentOrderRepository paymentOrderRepository,
+        PaymentService paymentService,
+        WalletService walletService,
+        WalletRepository walletRepository,
+        ApplicationEventPublisher eventPublisher,
+        DistributedLockService lockService,
+        TransactionTemplate transactionTemplate,
+        LedgerService ledgerService
+    ) {
         this.gatewayResolver = gatewayResolver;
         this.paymentOrderRepository = paymentOrderRepository;
         this.paymentService = paymentService;
@@ -56,6 +75,7 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
         this.eventPublisher = eventPublisher;
         this.lockService = lockService;
         this.transactionTemplate = transactionTemplate;
+        this.ledgerService = ledgerService;
     }
 
     @Override
@@ -125,6 +145,19 @@ public class ProcessPaymentWebhookUseCaseImpl implements ProcessPaymentWebhookUs
 
             // 1. Ủy thác nạp tiền vào ví cho WalletService (Domain)
             DepositResult depositResult = walletService.deposit(order.getWalletId(), order.getAmount());
+
+            // 1.1 Ghi nhận Sổ cái ghi kép (Double-Entry Ledger)
+            if (ledgerService != null) {
+                ledgerService.recordDeposit(
+                        depositResult.transaction().getId(),
+                        order.getId(),
+                        order.getWalletId(),
+                        order.getAmount(),
+                        order.getGateway().name(),
+                        BigDecimal.ZERO,
+                        "Nạp tiền qua cổng " + order.getGateway() + " #" + order.getId()
+                );
+            }
 
             // 2. Cập nhật trạng thái đơn hàng thành công và gán transaction_id thông qua PaymentService (Domain)
             paymentService.completeOrder(order.getId(), depositResult.transaction().getId());

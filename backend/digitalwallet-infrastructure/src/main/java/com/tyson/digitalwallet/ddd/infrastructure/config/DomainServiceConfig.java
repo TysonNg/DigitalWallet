@@ -15,11 +15,23 @@ import com.tyson.digitalwallet.ddd.domain.service.user.UserService;
 import com.tyson.digitalwallet.ddd.domain.service.user.impl.UserServiceImpl;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.WalletService;
 import com.tyson.digitalwallet.ddd.domain.service.wallet.impl.WalletServiceImpl;
+import com.tyson.digitalwallet.ddd.domain.repository.AccountRepository;
+import com.tyson.digitalwallet.ddd.domain.repository.LedgerRepository;
+import com.tyson.digitalwallet.ddd.domain.service.ledger.LedgerService;
+import com.tyson.digitalwallet.ddd.domain.service.ledger.impl.LedgerServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class DomainServiceConfig {
+
+    @Bean
+    public LedgerService ledgerService(
+            AccountRepository accountRepository,
+            LedgerRepository ledgerRepository
+    ) {
+        return new LedgerServiceImpl(accountRepository, ledgerRepository);
+    }
 
     @Bean
     public WalletService walletService(

@@ -27,6 +27,8 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.tyson.digitalwallet.ddd.domain.service.ledger.LedgerService;
+
 @Service
 public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
 
@@ -38,6 +40,7 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
     private final TransactionTemplate transactionTemplate;
     private final PasswordHasher passwordHasher;
     private final WalletPinAttemptService pinAttemptService;
+    private final LedgerService ledgerService;
 
     public TransferMoneyUseCaseImpl(
             WalletService walletService,
@@ -47,7 +50,20 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
             DistributedLockService lockService,
             TransactionTemplate transactionTemplate
     ) {
-        this(walletService, walletRepository, idempotencyKeyRepository, eventPublisher, lockService, transactionTemplate, null, null);
+        this(walletService, walletRepository, idempotencyKeyRepository, eventPublisher, lockService, transactionTemplate, null, null, null);
+    }
+
+    public TransferMoneyUseCaseImpl(
+            WalletService walletService,
+            WalletRepository walletRepository,
+            IdempotencyKeyRepository idempotencyKeyRepository,
+            ApplicationEventPublisher eventPublisher,
+            DistributedLockService lockService,
+            TransactionTemplate transactionTemplate,
+            PasswordHasher passwordHasher,
+            WalletPinAttemptService pinAttemptService
+    ) {
+        this(walletService, walletRepository, idempotencyKeyRepository, eventPublisher, lockService, transactionTemplate, passwordHasher, pinAttemptService, null);
     }
 
     @Autowired
@@ -59,7 +75,8 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
             DistributedLockService lockService,
             TransactionTemplate transactionTemplate,
             PasswordHasher passwordHasher,
-            WalletPinAttemptService pinAttemptService
+            WalletPinAttemptService pinAttemptService,
+            LedgerService ledgerService
     ) {
         this.walletService = walletService;
         this.walletRepository = walletRepository;
@@ -69,6 +86,7 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
         this.transactionTemplate = transactionTemplate;
         this.passwordHasher = passwordHasher;
         this.pinAttemptService = pinAttemptService;
+        this.ledgerService = ledgerService;
     }
 
     @Override
@@ -169,6 +187,18 @@ public class TransferMoneyUseCaseImpl implements TransferMoneyUseCase {
                 amount,
                 command.description()
         );
+
+        // 4.1 Ghi nhận Sổ cái ghi kép (Double-Entry Ledger)
+        if (ledgerService != null) {
+            ledgerService.recordTransfer(
+                    result.transaction().getId(),
+                    senderWalletId,
+                    receiverWalletId,
+                    amount,
+                    BigDecimal.ZERO,
+                    command.description()
+            );
+        }
 
         // 5. Cập nhật Idempotency record
         if (idempotencyRecord != null) {

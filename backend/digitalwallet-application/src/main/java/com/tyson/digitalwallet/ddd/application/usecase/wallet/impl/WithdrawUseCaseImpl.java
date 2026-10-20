@@ -14,10 +14,13 @@ import com.tyson.digitalwallet.ddd.application.exception.ErrorCode;
 import com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.pin.WalletPinAttemptService;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.tyson.digitalwallet.ddd.domain.service.ledger.LedgerService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -31,6 +34,7 @@ public class WithdrawUseCaseImpl implements WithdrawUseCase {
     private final TransactionTemplate transactionTemplate;
     private final PasswordHasher passwordHasher;
     private final WalletPinAttemptService pinAttemptService;
+    private final LedgerService ledgerService;
 
     public WithdrawUseCaseImpl(
             WalletService walletService,
@@ -38,7 +42,19 @@ public class WithdrawUseCaseImpl implements WithdrawUseCase {
             DistributedLockService lockService,
             TransactionTemplate transactionTemplate
     ) {
-        this(walletService, null, eventPublisher, lockService, transactionTemplate, null, null);
+        this(walletService, null, eventPublisher, lockService, transactionTemplate, null, null, null);
+    }
+
+    public WithdrawUseCaseImpl(
+            WalletService walletService,
+            WalletRepository walletRepository,
+            ApplicationEventPublisher eventPublisher,
+            DistributedLockService lockService,
+            TransactionTemplate transactionTemplate,
+            PasswordHasher passwordHasher,
+            WalletPinAttemptService pinAttemptService
+    ) {
+        this(walletService, walletRepository, eventPublisher, lockService, transactionTemplate, passwordHasher, pinAttemptService, null);
     }
 
     @Autowired
@@ -49,7 +65,8 @@ public class WithdrawUseCaseImpl implements WithdrawUseCase {
             DistributedLockService lockService,
             TransactionTemplate transactionTemplate,
             PasswordHasher passwordHasher,
-            WalletPinAttemptService pinAttemptService
+            WalletPinAttemptService pinAttemptService,
+            LedgerService ledgerService
     ) {
         this.walletService = walletService;
         this.walletRepository = walletRepository;
@@ -58,6 +75,7 @@ public class WithdrawUseCaseImpl implements WithdrawUseCase {
         this.transactionTemplate = transactionTemplate;
         this.passwordHasher = passwordHasher;
         this.pinAttemptService = pinAttemptService;
+        this.ledgerService = ledgerService;
     }
 
     @Override
@@ -96,6 +114,16 @@ public class WithdrawUseCaseImpl implements WithdrawUseCase {
         }
 
         WithdrawResult result = walletService.withdraw(command.walletId(), command.amount());
+
+        if (ledgerService != null) {
+            ledgerService.recordWithdraw(
+                    result.transaction().getId(),
+                    command.walletId(),
+                    command.amount(),
+                    BigDecimal.ZERO,
+                    "Rút tiền từ ví #" + command.walletId()
+            );
+        }
 
         eventPublisher.publishEvent(new MoneyWithdrawnEvent(
                 result.transaction().getId(),

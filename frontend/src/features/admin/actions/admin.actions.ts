@@ -2,7 +2,7 @@
 
 import { backendFetch, BackendError } from "@/server/backend-client";
 import { getSession } from "@/server/session";
-import { AdminStats, AdminUser } from "../types/admin.types";
+import { AdminStats, AdminUser, TrialBalance, WalletReconciliation } from "../types/admin.types";
 import { revalidatePath } from "next/cache";
 
 export interface ActionResult<T> {
@@ -129,4 +129,47 @@ export async function toggleWalletFreezeAction(walletId: string): Promise<Action
         return { success: false, message: "Không thể cập nhật trạng thái ví" };
     }
 }
+
+export async function getTrialBalanceAction(): Promise<ActionResult<TrialBalance>> {
+    try {
+        const session = await getSession();
+        if (!session.isLoggedIn || !session.user) {
+            return { success: false, message: "Phiên đăng nhập đã hết hạn" };
+        }
+
+        const res = await backendFetch<TrialBalance>("/api/v1/admin/ledger/trial-balance");
+        return {
+            success: true,
+            message: "Lấy bảng cân đối thử thành công",
+            data: res.data,
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            return { success: false, message: error.message, errorCode: error.errorCode };
+        }
+        return { success: false, message: "Không thể lấy bảng cân đối thử" };
+    }
+}
+
+export async function reconcileWalletAction(walletId: string): Promise<ActionResult<WalletReconciliation>> {
+    try {
+        const session = await getSession();
+        if (!session.isLoggedIn || !session.user) {
+            return { success: false, message: "Phiên đăng nhập đã hết hạn" };
+        }
+
+        const res = await backendFetch<WalletReconciliation>(`/api/v1/admin/ledger/reconcile/${walletId}`);
+        return {
+            success: true,
+            message: "Đối soát ví thành công",
+            data: res.data,
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            return { success: false, message: error.message, errorCode: error.errorCode };
+        }
+        return { success: false, message: "Không thể đối soát ví" };
+    }
+}
+
 
