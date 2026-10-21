@@ -11,9 +11,7 @@ import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletRes
 import com.tyson.digitalwallet.ddd.domain.model.enums.TransactionStatus;
 import com.tyson.digitalwallet.ddd.domain.model.enums.TransactionType;
 import com.tyson.digitalwallet.ddd.domain.model.enums.WalletStatus;
-import com.tyson.digitalwallet.ddd.infrastructure.ai.context.AiContextHolder;
 import com.tyson.digitalwallet.ddd.infrastructure.ai.tools.FinancialAgentTools;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,21 +53,43 @@ public class FinancialAgentToolsTest {
         );
     }
 
-    @After
-    public void tearDown() {
-        AiContextHolder.clear();
+
+    @Test
+    public void checkCurrentBalance_onAnotherThread_keepsAuthenticatedUser() throws Exception {
+        tools = tools.forUser(userId);
+        WalletResponse wallet = new WalletResponse(walletId, userId, BigDecimal.valueOf(2500000),
+                "VND", WalletStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now());
+        when(getWalletUseCase.getWalletByUserId(userId)).thenReturn(wallet);
+
+        String result = java.util.concurrent.CompletableFuture.supplyAsync(tools::checkCurrentBalance).get();
+
+        assertTrue(result, result.contains("2,500,000"));
+    }
+
+    @Test
+    public void requestTools_doNotShareDraftsAndRejectFractionalVnd() throws Exception {
+        tools = tools.forUser(userId);
+        DraftTransferPayload draft = new DraftTransferPayload(UUID.randomUUID(), walletId, "Nam", "nam@example.com",
+                BigDecimal.valueOf(50000), "lunch", BigDecimal.ZERO, true, "OK");
+        when(prepareDraftTransferUseCase.prepareDraft(userId, "Nam", BigDecimal.valueOf(50000), "lunch"))
+                .thenReturn(draft);
+        java.util.concurrent.CompletableFuture.runAsync(() ->
+                tools.prepareDraftTransfer("Nam", BigDecimal.valueOf(50000), "lunch")).get();
+        org.junit.Assert.assertEquals(draft, tools.getDraftTransfer());
+        org.junit.Assert.assertNull(tools.forUser(UUID.randomUUID()).getDraftTransfer());
+        tools.prepareDraftTransfer("Nam", new BigDecimal("50000.5"), "lunch");
+        org.junit.Assert.assertNull(tools.getDraftTransfer());
     }
 
     @Test
     public void checkCurrentBalance_withoutUserContext_returnsError() {
-        AiContextHolder.clear();
         String result = tools.checkCurrentBalance();
         assertTrue(result.contains("Không xác định được danh tính"));
     }
 
     @Test
     public void checkCurrentBalance_withUserContext_returnsBalance() {
-        AiContextHolder.setCurrentUserId(userId);
+        tools = tools.forUser(userId);
         WalletResponse wallet = new WalletResponse(
                 walletId,
                 userId,
@@ -88,7 +108,7 @@ public class FinancialAgentToolsTest {
 
     @Test
     public void lookupRecipient_found_returnsRecipientInfo() {
-        AiContextHolder.setCurrentUserId(userId);
+        tools = tools.forUser(userId);
         RecipientLookupResponse recipient = new RecipientLookupResponse(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
@@ -106,7 +126,7 @@ public class FinancialAgentToolsTest {
 
     @Test
     public void prepareDraftTransfer_valid_setsContextAndReturnsPrompt() {
-        AiContextHolder.setCurrentUserId(userId);
+        tools = tools.forUser(userId);
         DraftTransferPayload draft = new DraftTransferPayload(
                 UUID.randomUUID(),
                 walletId,
@@ -121,15 +141,15 @@ public class FinancialAgentToolsTest {
         when(prepareDraftTransferUseCase.prepareDraft(eq(userId), eq("Bob"), eq(BigDecimal.valueOf(100000.0)), eq("cafe")))
                 .thenReturn(draft);
 
-        String result = tools.prepareDraftTransfer("Bob", 100000.0, "cafe");
+        String result = tools.prepareDraftTransfer("Bob", BigDecimal.valueOf(100000.0), "cafe");
         assertTrue(result.contains("Đã tạo lệnh chuyển tiền nháp thành công"));
         assertTrue(result.contains("Bob Tran"));
-        assertNotNull(AiContextHolder.getDraftTransfer());
+        assertNotNull(tools.getDraftTransfer());
     }
 
     @Test
     public void queryRecentTransactions_returnsFormattedHistory() {
-        AiContextHolder.setCurrentUserId(userId);
+        tools = tools.forUser(userId);
         WalletResponse wallet = new WalletResponse(
                 walletId,
                 userId,
@@ -178,7 +198,7 @@ public class FinancialAgentToolsTest {
 
     @Test
     public void getSpendingSummary_calculatesTotals() {
-        AiContextHolder.setCurrentUserId(userId);
+        tools = tools.forUser(userId);
         WalletResponse wallet = new WalletResponse(
                 walletId,
                 userId,

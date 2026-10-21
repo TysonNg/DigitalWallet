@@ -22,7 +22,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.FutureTask;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 @RestController
 @RequestMapping("/ai")
@@ -32,11 +34,14 @@ public class AiAssistantController {
 
     private final ChatFinancialAssistantUseCase chatFinancialAssistantUseCase;
     private final SyncKnowledgeUseCase syncKnowledgeUseCase;
+    private final Executor aiChatExecutor;
 
     public AiAssistantController(ChatFinancialAssistantUseCase chatFinancialAssistantUseCase,
-                                SyncKnowledgeUseCase syncKnowledgeUseCase) {
+                                SyncKnowledgeUseCase syncKnowledgeUseCase,
+                                @Qualifier("aiChatExecutor") Executor aiChatExecutor) {
         this.chatFinancialAssistantUseCase = chatFinancialAssistantUseCase;
         this.syncKnowledgeUseCase = syncKnowledgeUseCase;
+        this.aiChatExecutor = aiChatExecutor;
     }
 
     @PostMapping("/chat")
@@ -56,7 +61,7 @@ public class AiAssistantController {
         UUID userId = WalletAccess.currentUser(principal);
         SseEmitter emitter = new SseEmitter(60_000L);
 
-        CompletableFuture.runAsync(() -> {
+        FutureTask<Void> task = new FutureTask<>(() -> {
             try {
                 ChatAssistantCommand command = new ChatAssistantCommand(userId, request.message(), request.conversationId());
                 ChatAssistantResponse response = chatFinancialAssistantUseCase.chat(command);
@@ -69,7 +74,6 @@ public class AiAssistantController {
                         emitter.send(SseEmitter.event()
                                 .name("token")
                                 .data(Map.of("content", word)));
-                        Thread.sleep(15);
                     }
                 }
 
@@ -87,22 +91,40 @@ public class AiAssistantController {
                 try {
                     emitter.send(SseEmitter.event()
                             .name("error")
-                            .data(Map.of("error", e.getMessage())));
+                            .data(Map.of("error", "Không thể xử lý yêu cầu AI. Vui lòng thử lại.")));
                 } catch (Exception ignored) {
                 }
                 emitter.completeWithError(e);
             }
-        });
+        }, null);
+        emitter.onTimeout(() -> task.cancel(true));
+        emitter.onError(error -> task.cancel(true));
+        try {
+            aiChatExecutor.execute(task);
+        } catch (java.util.concurrent.RejectedExecutionException e) {
+            task.cancel(false);
+            emitter.completeWithError(e);
+        }
 
         return emitter;
     }
 
     @PostMapping("/knowledge/sync")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> syncKnowledge() {
         int count = syncKnowledgeUseCase.sync();
         return ApiResponse.ok("Knowledge Base synced successfully", Map.of(
                 "ingestedChunks", count,
                 "status", "SUCCESS"
         ));
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/chat/conversation/{conversationId}")
+    public ResponseEntity<ApiResponse<Void>> clearConversation(
+            @org.springframework.web.bind.annotation.PathVariable String conversationId,
+            Principal principal) {
+        UUID userId = WalletAccess.currentUser(principal);
+        chatFinancialAssistantUseCase.clearConversation(userId, conversationId);
+        return ApiResponse.ok("Xóa lịch sử hội thoại thành công", null);
     }
 }

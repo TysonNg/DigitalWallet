@@ -10,12 +10,12 @@ import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.Recipient
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
 import com.tyson.digitalwallet.ddd.domain.model.enums.TransactionStatus;
 import com.tyson.digitalwallet.ddd.domain.model.enums.TransactionType;
-import com.tyson.digitalwallet.ddd.infrastructure.ai.context.AiContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
@@ -31,20 +31,40 @@ public class FinancialAgentTools {
     private final LookupRecipientUseCase lookupRecipientUseCase;
     private final PrepareDraftTransferUseCase prepareDraftTransferUseCase;
     private final GetTransactionsUseCase getTransactionsUseCase;
+    private final UUID currentUserId;
+    private volatile DraftTransferPayload draftTransfer;
 
+    @Autowired
     public FinancialAgentTools(GetWalletUseCase getWalletUseCase,
                               LookupRecipientUseCase lookupRecipientUseCase,
                               PrepareDraftTransferUseCase prepareDraftTransferUseCase,
                               GetTransactionsUseCase getTransactionsUseCase) {
+        this(getWalletUseCase, lookupRecipientUseCase, prepareDraftTransferUseCase, getTransactionsUseCase, null);
+    }
+
+    private FinancialAgentTools(GetWalletUseCase getWalletUseCase,
+                                LookupRecipientUseCase lookupRecipientUseCase,
+                                PrepareDraftTransferUseCase prepareDraftTransferUseCase,
+                                GetTransactionsUseCase getTransactionsUseCase, UUID currentUserId) {
         this.getWalletUseCase = getWalletUseCase;
         this.lookupRecipientUseCase = lookupRecipientUseCase;
         this.prepareDraftTransferUseCase = prepareDraftTransferUseCase;
         this.getTransactionsUseCase = getTransactionsUseCase;
+        this.currentUserId = currentUserId;
+    }
+
+    /** Server creates one instance per request; identity is never a model argument. */
+    public FinancialAgentTools forUser(UUID userId) {
+        return new FinancialAgentTools(getWalletUseCase, lookupRecipientUseCase,
+                prepareDraftTransferUseCase, getTransactionsUseCase, java.util.Objects.requireNonNull(userId));
+    }
+
+    public DraftTransferPayload getDraftTransfer() {
+        return draftTransfer;
     }
 
     @Tool(description = "Kiểm tra số dư khả dụng và trạng thái ví của người dùng hiện tại")
     public String checkCurrentBalance() {
-        UUID currentUserId = AiContextHolder.getCurrentUserId();
         if (currentUserId == null) {
             return "Không xác định được danh tính người dùng hiện tại.";
         }
@@ -61,7 +81,6 @@ public class FinancialAgentTools {
     @Tool(description = "Tìm kiếm thông tin người nhận theo tên, số điện thoại hoặc email để chuẩn bị chuyển tiền")
     public String lookupRecipient(
             @ToolParam(description = "Tên, số điện thoại hoặc địa chỉ email của người nhận") String keyword) {
-        UUID currentUserId = AiContextHolder.getCurrentUserId();
         if (currentUserId == null) {
             return "Không xác định được danh tính người dùng hiện tại.";
         }
@@ -84,23 +103,27 @@ public class FinancialAgentTools {
     @Tool(description = "Soạn lệnh chuyển tiền nháp (Draft Transfer) để hiển thị thẻ xác nhận trên màn hình. AI không được tự ý trừ tiền.")
     public String prepareDraftTransfer(
             @ToolParam(description = "Tên, số điện thoại hoặc email người nhận") String recipientQuery,
-            @ToolParam(description = "Số tiền cần chuyển (VNĐ)") double amount,
+            @ToolParam(description = "Số tiền nguyên cần chuyển (VNĐ)") BigDecimal amount,
             @ToolParam(description = "Lời nhắn / nội dung chuyển tiền") String note) {
-        UUID currentUserId = AiContextHolder.getCurrentUserId();
+        draftTransfer = null;
         if (currentUserId == null) {
             return "Không xác định được danh tính người dùng.";
+        }
+        if (amount == null || amount.signum() <= 0 || amount.stripTrailingZeros().scale() > 0
+                || amount.compareTo(BigDecimal.valueOf(9007199254740991L)) > 0) {
+            return "Số tiền phải là số nguyên VNĐ dương trong phạm vi hỗ trợ.";
         }
 
         try {
             DraftTransferPayload payload = prepareDraftTransferUseCase.prepareDraft(
                     currentUserId,
                     recipientQuery,
-                    BigDecimal.valueOf(amount),
+                    amount,
                     note
             );
 
             if (payload.canProceed()) {
-                AiContextHolder.setDraftTransfer(payload);
+                draftTransfer = payload;
                 return String.format("Đã tạo lệnh chuyển tiền nháp thành công: Chuyển %,d VNĐ cho %s (%s). " +
                                 "Lời nhắn: '%s'. Phí: 0 VNĐ. Thẻ xác nhận giao dịch đã được hiển thị trên giao diện người dùng. " +
                                 "Vui lòng yêu cầu người dùng bấm 'Xác nhận & Nhập mã PIN' trên thẻ để hoàn tất.",
@@ -117,7 +140,6 @@ public class FinancialAgentTools {
     @Tool(description = "Tra cứu danh sách các giao dịch gần đây của người dùng (nạp tiền, rút tiền, chuyển tiền, nhận tiền)")
     public String queryRecentTransactions(
             @ToolParam(description = "Số lượng giao dịch cần lấy (mặc định 5, tối đa 10)") int limit) {
-        UUID currentUserId = AiContextHolder.getCurrentUserId();
         if (currentUserId == null) {
             return "Không xác định được danh tính người dùng hiện tại.";
         }
@@ -170,7 +192,6 @@ public class FinancialAgentTools {
 
     @Tool(description = "Phân tích và tổng kết dòng tiền thu chi (tổng nạp, tổng chi/chuyển đi) từ các giao dịch gần đây")
     public String getSpendingSummary() {
-        UUID currentUserId = AiContextHolder.getCurrentUserId();
         if (currentUserId == null) {
             return "Không xác định được danh tính người dùng hiện tại.";
         }

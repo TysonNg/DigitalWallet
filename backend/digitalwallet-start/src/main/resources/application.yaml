@@ -17,6 +17,8 @@ spring:
     openai:
       api-key: ${OPENAI_API_KEY:demo-key}
       base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      timeout: ${OPENAI_TIMEOUT:10s}
+      max-retries: 0
       chat:
         options:
           model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}

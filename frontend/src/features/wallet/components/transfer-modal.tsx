@@ -25,6 +25,8 @@ import {
 import { lookupRecipientAction } from "../actions/wallet.actions";
 import { BeneficiaryDto, RecipientLookupDto } from "../types/wallet.types";
 import { toast } from "sonner";
+import { initializeTransferForm } from "../transfer-form";
+import { PinModal } from "./pin-modal";
 
 interface InitialRecipient {
     identifier: string;
@@ -41,6 +43,15 @@ interface TransferModalProps {
     currency?: string;
     onSuccess?: () => void;
     initialRecipient?: InitialRecipient | null;
+    initialAmount?: number;
+    initialDescription?: string;
+}
+
+interface PendingTransfer {
+    senderWalletId: string;
+    receiverWalletId: string;
+    amount: number;
+    description: string;
 }
 
 export function TransferModal({
@@ -51,6 +62,8 @@ export function TransferModal({
     currency = "VND",
     onSuccess,
     initialRecipient,
+    initialAmount,
+    initialDescription,
 }: TransferModalProps) {
     const t = useTranslations("wallet");
     const apiErr = useTranslations("apiErrors");
@@ -62,9 +75,20 @@ export function TransferModal({
     // Form inputs
     const [identifier, setIdentifier] = useState<string>("");
     const [receiverWalletId, setReceiverWalletId] = useState<string>("");
-    const [amount, setAmount] = useState<number>(200000);
-    const [description, setDescription] = useState<string>(t("defaultTransferDescription"));
+    const defaultDescription = t("defaultTransferDescription");
+    const [amount, setAmount] = useState<number>(() =>
+        initializeTransferForm(defaultDescription, initialAmount, initialDescription).amount
+    );
+    const [description, setDescription] = useState<string>(() =>
+        initializeTransferForm(defaultDescription, initialAmount, initialDescription).description
+    );
     const [error, setError] = useState<string | null>(null);
+
+    const [pendingTransfer, setPendingTransfer] = useState<PendingTransfer | null>(null);
+
+    const pendingTransferRef = useRef<PendingTransfer | null>(null);
+
+    const transferInFlightRef = useRef(false);
 
     // Recipient lookup states
     const [isLookingUp, setIsLookingUp] = useState<boolean>(false);
@@ -88,6 +112,8 @@ export function TransferModal({
     // Initialize or reset when modal opens or initialRecipient changes
     useEffect(() => {
         if (!isOpen) {
+            pendingTransferRef.current = null;
+            setPendingTransfer(null);
             setIdentifier("");
             setReceiverWalletId("");
             setVerifiedRecipient(null);
@@ -110,7 +136,11 @@ export function TransferModal({
             });
             setLookupError(null);
         }
-    }, [isOpen, initialRecipient, currency]);
+
+        const form = initializeTransferForm(defaultDescription, initialAmount, initialDescription);
+        setAmount(form.amount);
+        setDescription(form.description);
+    }, [isOpen, initialRecipient, currency, initialAmount, initialDescription, defaultDescription]);
 
     // Handle debounced lookup when user types in the identifier input
     const handleIdentifierChange = (value: string) => {
@@ -185,6 +215,8 @@ export function TransferModal({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (pendingTransferRef.current || transferInFlightRef.current) return;
+
         setError(null);
 
         const targetWalletId = receiverWalletId.trim();
@@ -199,7 +231,7 @@ export function TransferModal({
             return;
         }
 
-        if (amount <= 0) {
+        if (!Number.isSafeInteger(amount) || amount <= 0) {
             setError(t("theTransferAmountMustBeGreaterThan0"));
             return;
         }
@@ -209,20 +241,51 @@ export function TransferModal({
             return;
         }
 
+        const transfer = {
+            senderWalletId,
+            receiverWalletId: targetWalletId,
+            amount,
+            description: initialDescription !== undefined
+                ? description
+                : description.trim() || defaultDescription,
+        };
+        pendingTransferRef.current = transfer;
+        setPendingTransfer(transfer);
+    };
+
+    const handleCancelPin = () => {
+        if (transferInFlightRef.current) return;
+
+        pendingTransferRef.current = null;
+        setPendingTransfer(null);
+    };
+
+    const handleClose = () => {
+        if (transferInFlightRef.current) return;
+
+        handleCancelPin();
+        onClose();
+    };
+
+    const handleConfirmPin = async (pin: string) => {
+        if (!pendingTransfer || pendingTransferRef.current !== pendingTransfer || transferInFlightRef.current) return;
+
+        if (!/^\d{6}$/.test(pin)) {
+            throw new Error(apiErr("INVALID_WALLET_PIN"));
+        }
+
+        transferInFlightRef.current = true;
+        setError(null);
+
         try {
-            await transferMutation.mutateAsync({
-                senderWalletId,
-                receiverWalletId: targetWalletId,
-                amount,
-                description: description.trim() || t("defaultTransferDescription"),
-            });
+            await transferMutation.mutateAsync({ ...pendingTransfer, pin });
 
             // Automatically save to beneficiaries if checked and recipient info is available
             if (saveBeneficiary && verifiedRecipient && verifiedRecipient.userId) {
                 try {
                     await addBeneficiaryMutation.mutateAsync({
                         beneficiaryUserId: verifiedRecipient.userId,
-                        beneficiaryWalletId: targetWalletId,
+                        beneficiaryWalletId: pendingTransfer.receiverWalletId,
                         nickname: beneficiaryNickname.trim() || undefined,
                     });
                 } catch {
@@ -230,7 +293,9 @@ export function TransferModal({
                 }
             }
 
-            toast.success(t("transferSuccess", { amount: formatVND(amount) }));
+            pendingTransferRef.current = null;
+            setPendingTransfer(null);
+            toast.success(t("transferSuccess", { amount: formatVND(pendingTransfer.amount) }));
             onSuccess?.();
             onClose();
         } catch (err: unknown) {
@@ -242,6 +307,9 @@ export function TransferModal({
             }
             setError(msg);
             toast.error(msg);
+            throw new Error(msg);
+        } finally {
+            transferInFlightRef.current = false;
         }
     };
 
@@ -252,12 +320,12 @@ export function TransferModal({
             <div
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-150"
                 aria-label={common("close")}
-                onClick={onClose}
+                onClick={handleClose}
             />
 
             <div className="relative w-full max-w-sm sm:max-w-md bg-white rounded-2xl shadow-xl border border-slate-200/90 p-6 sm:p-7 z-10 duration-150 my-auto">
                 <button
-                    onClick={onClose}
+                    onClick={handleClose}
                     className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                 >
                     <X className="w-4 h-4 stroke-[1.75]" />
@@ -479,6 +547,17 @@ export function TransferModal({
                     </Button>
                 </form>
             </div>
+
+            {pendingTransfer && (
+                <PinModal
+                    isOpen={true}
+                    onClose={handleCancelPin}
+                    onConfirm={handleConfirmPin}
+                    amount={pendingTransfer.amount}
+                    currency={currency}
+                    isLoading={transferMutation.isPending}
+                />
+            )}
         </div>
     );
 }

@@ -12,10 +12,10 @@ import {
     Zap,
     CheckCircle2,
     AlertCircle,
-    Loader2
+    Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { sendAiChatAction } from "../actions/ai.actions";
+import { sendAiChatAction, clearAiConversationAction } from "../actions/ai.actions";
 import { streamAiChat } from "../services/ai-stream";
 import { ChatMessage, DraftTransferPayload } from "../types/ai.types";
 import { DraftTransferCard } from "./draft-transfer-card";
@@ -30,11 +30,19 @@ interface AiChatDrawerProps {
 
 const QUICK_SUGGESTIONS = [
     { label: "💳 Phí nạp tiền Stripe", prompt: "Phí nạp tiền qua cổng Stripe là bao nhiêu?" },
-    { label: "📊 Hạn mức giao dịch", prompt: "Hạn mức chuyển tiền trong ngày của tài khoản là bao nhiêu?" },
-    { label: "🛡️ Quy định an toàn mã PIN", prompt: "Nhập sai mã PIN bao nhiêu lần thì ví bị khóa?" },
+    {
+        label: "📊 Hạn mức giao dịch",
+        prompt: "Hạn mức chuyển tiền trong ngày của tài khoản là bao nhiêu?",
+    },
+    {
+        label: "🛡️ Quy định an toàn mã PIN",
+        prompt: "Nhập sai mã PIN bao nhiêu lần thì ví bị khóa?",
+    },
     { label: "📜 Lịch sử giao dịch", prompt: "Cho tôi xem 3 giao dịch gần nhất của tôi" },
-    { label: "💸 Soạn lệnh chuyển tiền", prompt: "Chuyển 50.000đ cho bạn Nam tiền ăn trưa" },
+    { label: "💸 Soạn lệnh chuyển tiền", prompt: "Chuyển 50.000đ cho Nam nội dung ăn trưa" },
 ];
+
+const createConversationId = () => "conv-" + crypto.randomUUID();
 
 export function AiChatDrawer({
     walletId,
@@ -45,14 +53,17 @@ export function AiChatDrawer({
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [conversationId] = useState(() => "conv-" + Date.now() + "-" + Math.random().toString(36).substring(2, 8));
-    
+    const [conversationId, setConversationId] = useState(createConversationId);
+    const requestInFlight = useRef(false);
+
     // State cho Modal chuyển tiền an toàn (Human-in-the-loop)
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [selectedRecipient, setSelectedRecipient] = useState<{
         identifier: string;
         walletId: string;
         fullName: string;
+        amount: number;
+        description: string;
     } | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -74,7 +85,9 @@ export function AiChatDrawer({
 
     const handleSendMessage = async (textToSend?: string) => {
         const queryText = (textToSend || input).trim();
-        if (!queryText || isLoading) return;
+        if (!queryText || requestInFlight.current) return;
+
+        requestInFlight.current = true;
 
         const userMsg: ChatMessage = {
             id: "msg-" + Date.now(),
@@ -105,18 +118,14 @@ export function AiChatDrawer({
                     streamedText += token;
                     setMessages((prev) =>
                         prev.map((m) =>
-                            m.id === assistantMsgId
-                                ? { ...m, content: streamedText }
-                                : m
+                            m.id === assistantMsgId ? { ...m, content: streamedText } : m
                         )
                     );
                 },
                 onDraftTransfer: (draft) => {
                     setMessages((prev) =>
                         prev.map((m) =>
-                            m.id === assistantMsgId
-                                ? { ...m, draftTransfer: draft }
-                                : m
+                            m.id === assistantMsgId ? { ...m, draftTransfer: draft } : m
                         )
                     );
                 },
@@ -151,7 +160,10 @@ export function AiChatDrawer({
                                 m.id === assistantMsgId
                                     ? {
                                           ...m,
-                                          content: "⚠️ " + (res.message || "Đã xảy ra lỗi khi kết nối với máy chủ AI."),
+                                          content:
+                                              "⚠️ " +
+                                              (res.message ||
+                                                  "Đã xảy ra lỗi khi kết nối với máy chủ AI."),
                                       }
                                     : m
                             )
@@ -163,7 +175,8 @@ export function AiChatDrawer({
                             m.id === assistantMsgId
                                 ? {
                                       ...m,
-                                      content: "⚠️ Không thể kết nối với dịch vụ Trợ lý AI. Vui lòng thử lại sau.",
+                                      content:
+                                          "⚠️ Không thể kết nối với dịch vụ Trợ lý AI. Vui lòng thử lại sau.",
                                   }
                                 : m
                         )
@@ -171,6 +184,7 @@ export function AiChatDrawer({
                 }
             }
         } finally {
+            requestInFlight.current = false;
             setIsLoading(false);
         }
     };
@@ -183,7 +197,18 @@ export function AiChatDrawer({
     };
 
     const handleConfirmDraftTransfer = (payload: DraftTransferPayload) => {
-        if (!payload.recipientWalletId) {
+        if (
+            !payload ||
+            payload.canProceed !== true ||
+            typeof payload.recipientWalletId !== "string" ||
+            !payload.recipientWalletId.trim() ||
+            payload.recipientWalletId.trim() === walletId ||
+            !Number.isSafeInteger(payload.amount) ||
+            payload.amount <= 0 ||
+            typeof payload.note !== "string" ||
+            typeof payload.recipientPhoneOrEmail !== "string" ||
+            typeof payload.recipientName !== "string"
+        ) {
             toast.error("Không tìm thấy ví người nhận hợp lệ để chuyển.");
             return;
         }
@@ -192,9 +217,28 @@ export function AiChatDrawer({
             identifier: payload.recipientPhoneOrEmail,
             walletId: payload.recipientWalletId,
             fullName: payload.recipientName,
+            amount: payload.amount,
+            description: payload.note,
         });
 
         setIsTransferModalOpen(true);
+    };
+
+    const handleReset = () => {
+        if (requestInFlight.current) return;
+
+        const oldConvId = conversationId;
+        setMessages([]);
+        setInput("");
+        setSelectedRecipient(null);
+        setIsTransferModalOpen(false);
+        setConversationId(createConversationId());
+
+        if (oldConvId) {
+            clearAiConversationAction(oldConvId).catch((err) =>
+                console.warn("Failed to clear AI conversation in Redis:", err)
+            );
+        }
     };
 
     const handleTransferSuccess = () => {
@@ -205,7 +249,8 @@ export function AiChatDrawer({
             {
                 id: "msg-success-" + Date.now(),
                 role: "assistant",
-                content: "✅ **Giao dịch đã được xác thực mã PIN và chuyển tiền thành công!** Số dư ví của bạn đã được cập nhật.",
+                content:
+                    "✅ **Giao dịch đã được xác thực mã PIN và chuyển tiền thành công!** Số dư ví của bạn đã được cập nhật.",
                 timestamp: new Date(),
             },
         ]);
@@ -242,18 +287,23 @@ export function AiChatDrawer({
                             </div>
                             <div>
                                 <div className="flex items-center gap-1.5">
-                                    <h3 className="font-bold text-sm tracking-tight">Trợ lý AI Digital Wallet</h3>
+                                    <h3 className="font-bold text-sm tracking-tight">
+                                        Trợ lý AI Digital Wallet
+                                    </h3>
                                     <span className="text-[10px] px-1.5 py-0.2 bg-indigo-500/30 text-indigo-200 rounded font-mono">
                                         RAG + Agent
                                     </span>
                                 </div>
-                                <p className="text-[11px] text-slate-400">Tư vấn biểu phí, hạn mức & điều phối ví</p>
+                                <p className="text-[11px] text-slate-400">
+                                    Tư vấn biểu phí, hạn mức & điều phối ví
+                                </p>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-1">
                             <button
-                                onClick={() => setMessages([])}
+                                onClick={handleReset}
+                                disabled={isLoading}
                                 title="Làm mới đoạn chat"
                                 className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                             >
@@ -281,7 +331,8 @@ export function AiChatDrawer({
                                         Tôi có thể giúp gì cho bạn hôm nay?
                                     </h4>
                                     <p className="text-xs text-slate-500 max-w-[280px] mx-auto">
-                                        Tra cứu chính sách biểu phí, hạn mức giao dịch hoặc ra lệnh chuyển tiền trực tiếp.
+                                        Tra cứu chính sách biểu phí, hạn mức giao dịch hoặc ra lệnh
+                                        chuyển tiền trực tiếp.
                                     </p>
                                 </div>
 
@@ -330,7 +381,9 @@ export function AiChatDrawer({
                                                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" />
                                                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]" />
                                                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.4s]" />
-                                                <span className="text-[11px] text-slate-400 ml-1 font-medium">Đang trả lời...</span>
+                                                <span className="text-[11px] text-slate-400 ml-1 font-medium">
+                                                    Đang trả lời...
+                                                </span>
                                             </div>
                                         ) : (
                                             <FormattedAiMessage content={msg.content} />
@@ -405,6 +458,8 @@ export function AiChatDrawer({
                     currentBalance={currentBalance}
                     currency={currency}
                     initialRecipient={selectedRecipient}
+                    initialAmount={selectedRecipient?.amount}
+                    initialDescription={selectedRecipient?.description}
                     onSuccess={handleTransferSuccess}
                 />
             )}

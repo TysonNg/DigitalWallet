@@ -55,3 +55,29 @@ export async function syncAiKnowledgeAction(): Promise<ActionResult<{ ingestedCh
         return { success: false, message: "Không thể đồng bộ dữ liệu tri thức." };
     }
 }
+
+export async function clearAiConversationAction(
+    conversationId: string
+): Promise<ActionResult<void>> {
+    try {
+        const session = await getSession();
+        if (!session.isLoggedIn || !session.user) {
+            return { success: false, message: "Phiên đăng nhập đã hết hạn." };
+        }
+
+        await backendFetch<void>(`/ai/chat/conversation/${encodeURIComponent(conversationId)}`, {
+            method: "DELETE",
+        });
+
+        return {
+            success: true,
+            message: "Đã xóa ngữ cảnh hội thoại thành công",
+        };
+    } catch (error) {
+        if (error instanceof BackendError) {
+            return { success: false, message: error.message };
+        }
+        return { success: false, message: "Không thể xóa ngữ cảnh hội thoại." };
+    }
+}
+

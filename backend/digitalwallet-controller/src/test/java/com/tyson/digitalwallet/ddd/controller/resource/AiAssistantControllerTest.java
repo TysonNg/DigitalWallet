@@ -48,7 +48,8 @@ public class AiAssistantControllerTest {
 
         AiAssistantController controller = new AiAssistantController(
                 chatFinancialAssistantUseCase,
-                syncKnowledgeUseCase
+                syncKnowledgeUseCase,
+                java.util.concurrent.ForkJoinPool.commonPool()
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
@@ -107,6 +108,20 @@ public class AiAssistantControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void chat_oversizedInput_isRejectedBeforeCallingAi() throws Exception {
+        for (var requestDto : java.util.List.of(
+                new ChatAssistantRequestDto("a".repeat(4001), "conversation"),
+                new ChatAssistantRequestDto("hello", "a".repeat(129)))) {
+            mockMvc.perform(post("/ai/chat")
+                            .principal(principal)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(requestDto)))
+                    .andExpect(status().isBadRequest());
+        }
+        org.mockito.Mockito.verifyNoInteractions(chatFinancialAssistantUseCase);
     }
 
     @Test

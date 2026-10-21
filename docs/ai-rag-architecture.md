@@ -1,5 +1,7 @@
 # 🤖 AI & RAG Architecture for Digital Wallet
 
+> Học theo mã hiện tại, cách chạy và bài tập: [Hướng dẫn học AI/RAG](ai-rag-learning-guide.md). Tài liệu bên dưới giữ nguyên phần thiết kế và lộ trình ban đầu.
+
 Tài liệu này mô tả chi tiết thiết kế kiến trúc, nguyên lý hoạt động và lộ trình triển khai hệ thống **AI & RAG (Retrieval-Augmented Generation)** tích hợp trực tiếp vào **Digital Wallet** sử dụng **Spring AI** và **PostgreSQL (pgvector)**.
 
 ---

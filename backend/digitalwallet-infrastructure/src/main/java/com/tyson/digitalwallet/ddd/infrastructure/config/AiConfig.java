@@ -2,7 +2,7 @@ package com.tyson.digitalwallet.ddd.infrastructure.config;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
+import com.tyson.digitalwallet.ddd.infrastructure.ai.memory.RedisChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,10 +10,20 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AiConfig {
 
+    @Bean("aiChatExecutor")
+    public org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor aiChatExecutor() {
+        var executor = new org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(32);
+        executor.setThreadNamePrefix("ai-chat-");
+        return executor;
+    }
+
     @Bean
-    public ChatMemory chatMemory() {
+    public ChatMemory chatMemory(RedisChatMemoryRepository redisChatMemoryRepository) {
         return MessageWindowChatMemory.builder()
-                .chatMemoryRepository(new InMemoryChatMemoryRepository())
+                .chatMemoryRepository(redisChatMemoryRepository)
                 .maxMessages(20)
                 .build();
     }

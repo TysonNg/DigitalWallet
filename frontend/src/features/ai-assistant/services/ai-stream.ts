@@ -49,10 +49,12 @@ export async function streamAiChat(
     try {
         while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done) {
+                throw new Error("AI stream ended before the done event.");
+            }
 
             buffer += decoder.decode(value, { stream: true });
-            const blocks = buffer.split("\n\n");
+            const blocks = buffer.split(/\r?\n\r?\n/);
             buffer = blocks.pop() || "";
 
             for (const block of blocks) {
@@ -61,16 +63,21 @@ export async function streamAiChat(
                 let eventType = "message";
                 let dataStr = "";
 
-                const lines = block.split("\n");
+                const lines = block.split(/\r?\n/);
                 for (const line of lines) {
                     if (line.startsWith("event:")) {
                         eventType = line.slice(6).trim();
                     } else if (line.startsWith("data:")) {
-                        dataStr = line.slice(5).trim();
+                        dataStr += (dataStr ? "\n" : "") + line.slice(5).replace(/^ /, "");
                     }
                 }
 
-                if (!dataStr) continue;
+                if (eventType === "done") {
+                    callbacks.onDone();
+                    return;
+                }
+
+                if (!dataStr && eventType !== "error") continue;
 
                 if (eventType === "token") {
                     try {
@@ -89,19 +96,22 @@ export async function streamAiChat(
                         console.error("Failed to parse draft transfer payload:", e);
                     }
                 } else if (eventType === "error") {
+                    let errorMessage = dataStr || "Lỗi xử lý AI";
                     try {
                         const errObj = JSON.parse(dataStr);
-                        callbacks.onError(errObj.error || "Lỗi xử lý AI");
+                        if (typeof errObj?.error === "string" && errObj.error) {
+                            errorMessage = errObj.error;
+                        }
                     } catch {
-                        callbacks.onError(dataStr);
+                        // Plain-text server errors are valid too.
                     }
-                } else if (eventType === "done") {
-                    callbacks.onDone();
-                    return;
+
+                    callbacks.onError(errorMessage);
+                    throw new Error(errorMessage);
                 }
             }
         }
     } finally {
-        callbacks.onDone();
+        reader.releaseLock();
     }
 }
