@@ -2,10 +2,14 @@ package com.tyson.digitalwallet.ddd.infrastructure.ai.tools;
 
 import com.tyson.digitalwallet.ddd.application.usecase.ai.PrepareDraftTransferUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.ai.response.DraftTransferPayload;
+import com.tyson.digitalwallet.ddd.application.usecase.transaction.GetTransactionsUseCase;
+import com.tyson.digitalwallet.ddd.application.usecase.transaction.response.TransactionResponse;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.GetWalletUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.LookupRecipientUseCase;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.RecipientLookupResponse;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.response.WalletResponse;
+import com.tyson.digitalwallet.ddd.domain.model.enums.TransactionStatus;
+import com.tyson.digitalwallet.ddd.domain.model.enums.TransactionType;
 import com.tyson.digitalwallet.ddd.infrastructure.ai.context.AiContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +18,8 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -24,13 +30,16 @@ public class FinancialAgentTools {
     private final GetWalletUseCase getWalletUseCase;
     private final LookupRecipientUseCase lookupRecipientUseCase;
     private final PrepareDraftTransferUseCase prepareDraftTransferUseCase;
+    private final GetTransactionsUseCase getTransactionsUseCase;
 
     public FinancialAgentTools(GetWalletUseCase getWalletUseCase,
                               LookupRecipientUseCase lookupRecipientUseCase,
-                              PrepareDraftTransferUseCase prepareDraftTransferUseCase) {
+                              PrepareDraftTransferUseCase prepareDraftTransferUseCase,
+                              GetTransactionsUseCase getTransactionsUseCase) {
         this.getWalletUseCase = getWalletUseCase;
         this.lookupRecipientUseCase = lookupRecipientUseCase;
         this.prepareDraftTransferUseCase = prepareDraftTransferUseCase;
+        this.getTransactionsUseCase = getTransactionsUseCase;
     }
 
     @Tool(description = "Kiểm tra số dư khả dụng và trạng thái ví của người dùng hiện tại")
@@ -102,6 +111,105 @@ public class FinancialAgentTools {
         } catch (Exception e) {
             log.error("Failed to prepare draft transfer in AI tool: {}", e.getMessage());
             return "Đã xảy ra lỗi khi tạo lệnh chuyển tiền nháp: " + e.getMessage();
+        }
+    }
+
+    @Tool(description = "Tra cứu danh sách các giao dịch gần đây của người dùng (nạp tiền, rút tiền, chuyển tiền, nhận tiền)")
+    public String queryRecentTransactions(
+            @ToolParam(description = "Số lượng giao dịch cần lấy (mặc định 5, tối đa 10)") int limit) {
+        UUID currentUserId = AiContextHolder.getCurrentUserId();
+        if (currentUserId == null) {
+            return "Không xác định được danh tính người dùng hiện tại.";
+        }
+        int effectiveLimit = (limit <= 0) ? 5 : Math.min(limit, 10);
+        try {
+            WalletResponse wallet = getWalletUseCase.getWalletByUserId(currentUserId);
+            List<TransactionResponse> txList = getTransactionsUseCase.getTransactionsByWalletId(wallet.id());
+            if (txList == null || txList.isEmpty()) {
+                return "Bạn chưa có giao dịch nào gần đây.";
+            }
+
+            List<TransactionResponse> recent = txList.stream()
+                    .sorted((a, b) -> {
+                        if (a.createdAt() == null || b.createdAt() == null) return 0;
+                        return b.createdAt().compareTo(a.createdAt());
+                    })
+                    .limit(effectiveLimit)
+                    .toList();
+
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("Dưới đây là %d giao dịch gần nhất của bạn:\n", recent.size()));
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            int index = 1;
+            for (TransactionResponse tx : recent) {
+                String sign = (tx.type() == TransactionType.DEPOSIT || tx.type() == TransactionType.TRANSFER_IN) ? "+" : "-";
+                String typeName = switch (tx.type()) {
+                    case DEPOSIT -> "Nạp tiền";
+                    case WITHDRAW -> "Rút tiền";
+                    case TRANSFER_OUT -> "Chuyển tiền đi";
+                    case TRANSFER_IN -> "Nhận tiền";
+                };
+                String timeStr = tx.createdAt() != null ? tx.createdAt().format(dtf) : "N/A";
+                String desc = (tx.description() != null && !tx.description().isBlank()) ? (" - " + tx.description()) : "";
+                sb.append(String.format("%d. [%s] %s: %s%,d VNĐ (%s)%s\n",
+                        index++,
+                        timeStr,
+                        typeName,
+                        sign,
+                        tx.amount().longValue(),
+                        tx.status() == TransactionStatus.SUCCESS ? "Thành công" : tx.status().name(),
+                        desc
+                ));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            log.error("Failed to query recent transactions in AI tool: {}", e.getMessage());
+            return "Không thể tra cứu lịch sử giao dịch: " + e.getMessage();
+        }
+    }
+
+    @Tool(description = "Phân tích và tổng kết dòng tiền thu chi (tổng nạp, tổng chi/chuyển đi) từ các giao dịch gần đây")
+    public String getSpendingSummary() {
+        UUID currentUserId = AiContextHolder.getCurrentUserId();
+        if (currentUserId == null) {
+            return "Không xác định được danh tính người dùng hiện tại.";
+        }
+        try {
+            WalletResponse wallet = getWalletUseCase.getWalletByUserId(currentUserId);
+            List<TransactionResponse> txList = getTransactionsUseCase.getTransactionsByWalletId(wallet.id());
+            if (txList == null || txList.isEmpty()) {
+                return "Chưa có đủ dữ liệu giao dịch để lập báo cáo thu chi.";
+            }
+
+            BigDecimal totalIn = BigDecimal.ZERO;
+            BigDecimal totalOut = BigDecimal.ZERO;
+            int inCount = 0;
+            int outCount = 0;
+
+            for (TransactionResponse tx : txList) {
+                if (tx.status() != TransactionStatus.SUCCESS) continue;
+                if (tx.type() == TransactionType.DEPOSIT || tx.type() == TransactionType.TRANSFER_IN) {
+                    totalIn = totalIn.add(tx.amount());
+                    inCount++;
+                } else if (tx.type() == TransactionType.WITHDRAW || tx.type() == TransactionType.TRANSFER_OUT) {
+                    totalOut = totalOut.add(tx.amount());
+                    outCount++;
+                }
+            }
+
+            return String.format("""
+                    Báo cáo tổng quan dòng tiền của bạn:
+                    - Tổng tiền nạp / nhận vào: +%,d %s (%d giao dịch)
+                    - Tổng tiền rút / chuyển đi: -%,d %s (%d giao dịch)
+                    - Số dư khả dụng hiện tại: %,d %s
+                    """,
+                    totalIn.longValue(), wallet.currency(), inCount,
+                    totalOut.longValue(), wallet.currency(), outCount,
+                    wallet.balance().longValue(), wallet.currency()
+            );
+        } catch (Exception e) {
+            log.error("Failed to generate spending summary in AI tool: {}", e.getMessage());
+            return "Không thể tổng kết dòng tiền: " + e.getMessage();
         }
     }
 }

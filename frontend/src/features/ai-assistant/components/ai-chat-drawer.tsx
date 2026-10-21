@@ -16,8 +16,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { sendAiChatAction } from "../actions/ai.actions";
+import { streamAiChat } from "../services/ai-stream";
 import { ChatMessage, DraftTransferPayload } from "../types/ai.types";
 import { DraftTransferCard } from "./draft-transfer-card";
+import { FormattedAiMessage } from "./formatted-ai-message";
 import { TransferModal } from "@/features/wallet/components/transfer-modal";
 
 interface AiChatDrawerProps {
@@ -30,6 +32,7 @@ const QUICK_SUGGESTIONS = [
     { label: "💳 Phí nạp tiền Stripe", prompt: "Phí nạp tiền qua cổng Stripe là bao nhiêu?" },
     { label: "📊 Hạn mức giao dịch", prompt: "Hạn mức chuyển tiền trong ngày của tài khoản là bao nhiêu?" },
     { label: "🛡️ Quy định an toàn mã PIN", prompt: "Nhập sai mã PIN bao nhiêu lần thì ví bị khóa?" },
+    { label: "📜 Lịch sử giao dịch", prompt: "Cho tôi xem 3 giao dịch gần nhất của tôi" },
     { label: "💸 Soạn lệnh chuyển tiền", prompt: "Chuyển 50.000đ cho bạn Nam tiền ăn trưa" },
 ];
 
@@ -42,6 +45,7 @@ export function AiChatDrawer({
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [conversationId] = useState(() => "conv-" + Date.now() + "-" + Math.random().toString(36).substring(2, 8));
     
     // State cho Modal chuyển tiền an toàn (Human-in-the-loop)
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
@@ -79,45 +83,93 @@ export function AiChatDrawer({
             timestamp: new Date(),
         };
 
-        setMessages((prev) => [...prev, userMsg]);
+        const assistantMsgId = "msg-" + (Date.now() + 1);
+        const initialAssistantMsg: ChatMessage = {
+            id: assistantMsgId,
+            role: "assistant",
+            content: "",
+            timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, userMsg, initialAssistantMsg]);
         setInput("");
         setIsLoading(true);
 
-        try {
-            const res = await sendAiChatAction(queryText);
+        let streamedText = "";
+        let hasStreamedToken = false;
 
-            if (res.success && res.data) {
-                const assistantMsg: ChatMessage = {
-                    id: "msg-" + (Date.now() + 1),
-                    role: "assistant",
-                    content: res.data.answer,
-                    timestamp: new Date(),
-                    draftTransfer: res.data.draftTransfer,
-                };
-                setMessages((prev) => [...prev, assistantMsg]);
-            } else {
-                toast.error(res.message || "Không thể nhận phản hồi từ AI");
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        id: "msg-err-" + Date.now(),
-                        role: "assistant",
-                        content: "⚠️ " + (res.message || "Đã xảy ra lỗi khi kết nối với máy chủ AI."),
-                        timestamp: new Date(),
-                    },
-                ]);
-            }
-        } catch (err: any) {
-            toast.error("Lỗi kết nối");
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: "msg-err-" + Date.now(),
-                    role: "assistant",
-                    content: "⚠️ Không thể kết nối với dịch vụ Trợ lý AI. Vui lòng thử lại sau.",
-                    timestamp: new Date(),
+        try {
+            await streamAiChat(queryText, conversationId, {
+                onToken: (token) => {
+                    hasStreamedToken = true;
+                    streamedText += token;
+                    setMessages((prev) =>
+                        prev.map((m) =>
+                            m.id === assistantMsgId
+                                ? { ...m, content: streamedText }
+                                : m
+                        )
+                    );
                 },
-            ]);
+                onDraftTransfer: (draft) => {
+                    setMessages((prev) =>
+                        prev.map((m) =>
+                            m.id === assistantMsgId
+                                ? { ...m, draftTransfer: draft }
+                                : m
+                        )
+                    );
+                },
+                onError: (error) => {
+                    toast.error(error);
+                },
+                onDone: () => {
+                    setIsLoading(false);
+                },
+            });
+        } catch (streamErr) {
+            console.warn("SSE stream failed, falling back to REST action:", streamErr);
+            // Fallback sang Server Action nếu stream gặp lỗi trước khi nhận token
+            if (!hasStreamedToken) {
+                try {
+                    const res = await sendAiChatAction(queryText, conversationId);
+                    if (res.success && res.data) {
+                        setMessages((prev) =>
+                            prev.map((m) =>
+                                m.id === assistantMsgId
+                                    ? {
+                                          ...m,
+                                          content: res.data!.answer,
+                                          draftTransfer: res.data!.draftTransfer,
+                                      }
+                                    : m
+                            )
+                        );
+                    } else {
+                        setMessages((prev) =>
+                            prev.map((m) =>
+                                m.id === assistantMsgId
+                                    ? {
+                                          ...m,
+                                          content: "⚠️ " + (res.message || "Đã xảy ra lỗi khi kết nối với máy chủ AI."),
+                                      }
+                                    : m
+                            )
+                        );
+                    }
+                } catch {
+                    setMessages((prev) =>
+                        prev.map((m) =>
+                            m.id === assistantMsgId
+                                ? {
+                                      ...m,
+                                      content: "⚠️ Không thể kết nối với dịch vụ Trợ lý AI. Vui lòng thử lại sau.",
+                                  }
+                                : m
+                        )
+                    );
+                }
+            }
         } finally {
             setIsLoading(false);
         }
@@ -265,13 +317,24 @@ export function AiChatDrawer({
 
                                 <div className={`max-w-[85%] space-y-1.5`}>
                                     <div
-                                        className={`px-4 py-3 rounded-2xl text-xs leading-relaxed whitespace-pre-line shadow-2xs ${
+                                        className={`px-4 py-3 rounded-2xl text-xs leading-relaxed shadow-2xs ${
                                             msg.role === "user"
-                                                ? "bg-indigo-600 text-white rounded-tr-xs"
+                                                ? "bg-indigo-600 text-white rounded-tr-xs whitespace-pre-line"
                                                 : "bg-white text-slate-800 border border-slate-200/80 rounded-tl-xs"
                                         }`}
                                     >
-                                        {msg.content}
+                                        {msg.role === "user" ? (
+                                            msg.content
+                                        ) : !msg.content && isLoading ? (
+                                            <div className="flex items-center gap-1.5 py-0.5 text-slate-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" />
+                                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]" />
+                                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.4s]" />
+                                                <span className="text-[11px] text-slate-400 ml-1 font-medium">Đang trả lời...</span>
+                                            </div>
+                                        ) : (
+                                            <FormattedAiMessage content={msg.content} />
+                                        )}
                                     </div>
 
                                     {/* Render Confirmation Card nếu có lệnh chuyển tiền nháp */}
@@ -301,21 +364,6 @@ export function AiChatDrawer({
                                 )}
                             </div>
                         ))}
-
-                        {/* Indicator khi AI đang suy nghĩ / tải */}
-                        {isLoading && (
-                            <div className="flex gap-2.5 justify-start">
-                                <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 text-xs shadow-xs mt-0.5">
-                                    <Bot className="w-3.5 h-3.5" />
-                                </div>
-                                <div className="px-4 py-3 bg-white text-slate-600 border border-slate-200/80 rounded-2xl rounded-tl-xs shadow-2xs flex items-center gap-1.5">
-                                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" />
-                                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]" />
-                                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.4s]" />
-                                    <span className="text-[11px] text-slate-400 ml-1 font-medium">Đang tra cứu dữ liệu...</span>
-                                </div>
-                            </div>
-                        )}
 
                         <div ref={messagesEndRef} />
                     </div>

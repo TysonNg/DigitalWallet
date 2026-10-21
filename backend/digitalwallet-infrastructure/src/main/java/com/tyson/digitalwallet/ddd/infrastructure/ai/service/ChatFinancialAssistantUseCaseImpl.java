@@ -14,6 +14,8 @@ import com.tyson.digitalwallet.ddd.infrastructure.ai.tools.FinancialAgentTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,17 +31,20 @@ public class ChatFinancialAssistantUseCaseImpl implements ChatFinancialAssistant
     private final VectorKnowledgePort vectorKnowledgePort;
     private final GetWalletUseCase getWalletUseCase;
     private final UserRepository userRepository;
+    private final ChatMemory chatMemory;
 
     public ChatFinancialAssistantUseCaseImpl(ChatClient chatClient,
                                             FinancialAgentTools financialAgentTools,
                                             VectorKnowledgePort vectorKnowledgePort,
                                             GetWalletUseCase getWalletUseCase,
-                                            UserRepository userRepository) {
+                                            UserRepository userRepository,
+                                            ChatMemory chatMemory) {
         this.chatClient = chatClient;
         this.financialAgentTools = financialAgentTools;
         this.vectorKnowledgePort = vectorKnowledgePort;
         this.getWalletUseCase = getWalletUseCase;
         this.userRepository = userRepository;
+        this.chatMemory = chatMemory;
     }
 
     @Override
@@ -91,13 +96,22 @@ public class ChatFinancialAssistantUseCaseImpl implements ChatFinancialAssistant
                     policyContext
             );
 
-            // 4. Gọi LLM qua Spring AI ChatClient với Function Calling tools
+            // 4. Xác định conversationId cho bộ nhớ hội thoại nhiều lượt (Multi-turn ChatMemory)
+            String conversationId = (command.conversationId() != null && !command.conversationId().isBlank())
+                    ? command.conversationId()
+                    : command.userId().toString();
+
+            // 5. Gọi LLM qua Spring AI ChatClient với Function Calling tools và Chat Memory
             String answer;
             try {
                 answer = chatClient.prompt()
                         .system(systemPrompt)
                         .user(command.message())
                         .tools(financialAgentTools)
+                        .advisors(advisorSpec -> advisorSpec
+                                .advisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                                .param("chat_memory_conversation_id", conversationId)
+                        )
                         .call()
                         .content();
             } catch (Exception e) {
