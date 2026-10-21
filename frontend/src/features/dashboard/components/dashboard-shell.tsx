@@ -14,6 +14,7 @@ import { useMyWalletQuery } from "@/features/wallet/hooks/use-wallet";
 import { useNotificationSocket } from "../hooks/use-notification-socket";
 import { Sidebar } from "./sidebar";
 import { TopHeader } from "./top-header";
+import { AiChatDrawer } from "@/features/ai-assistant/components/ai-chat-drawer";
 
 interface DashboardShellProps {
     user: User;
@@ -129,6 +130,13 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
 
                 {/* Page Content Body */}
                 <div className="flex-1 flex flex-col min-w-0">{children}</div>
+
+                {/* Floating AI Financial Assistant & RAG Chat Drawer */}
+                <AiChatDrawer
+                    walletId={wallet?.id}
+                    currentBalance={wallet?.balance}
+                    currency={wallet?.currency}
+                />
             </div>
         </div>
     );

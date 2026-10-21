@@ -44,6 +44,8 @@ public class AdminControllerTest {
     private ToggleUserStatusUseCase toggleUserStatusUseCase;
     private AssignUserRolesUseCase assignUserRolesUseCase;
     private ToggleWalletFreezeUseCase toggleWalletFreezeUseCase;
+    private com.tyson.digitalwallet.ddd.application.usecase.admin.GetTrialBalanceUseCase getTrialBalanceUseCase;
+    private com.tyson.digitalwallet.ddd.application.usecase.admin.ReconcileWalletUseCase reconcileWalletUseCase;
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -54,13 +56,17 @@ public class AdminControllerTest {
         toggleUserStatusUseCase = mock(ToggleUserStatusUseCase.class);
         assignUserRolesUseCase = mock(AssignUserRolesUseCase.class);
         toggleWalletFreezeUseCase = mock(ToggleWalletFreezeUseCase.class);
+        getTrialBalanceUseCase = mock(com.tyson.digitalwallet.ddd.application.usecase.admin.GetTrialBalanceUseCase.class);
+        reconcileWalletUseCase = mock(com.tyson.digitalwallet.ddd.application.usecase.admin.ReconcileWalletUseCase.class);
 
         AdminController adminController = new AdminController(
                 getAdminStatsUseCase,
                 getAdminUsersUseCase,
                 toggleUserStatusUseCase,
                 assignUserRolesUseCase,
-                toggleWalletFreezeUseCase
+                toggleWalletFreezeUseCase,
+                getTrialBalanceUseCase,
+                reconcileWalletUseCase
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(adminController)
