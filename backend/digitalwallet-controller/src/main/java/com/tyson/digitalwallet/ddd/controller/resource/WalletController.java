@@ -93,8 +93,7 @@ public class WalletController {
     public ResponseEntity<ApiResponse<WalletResponseDto>> withdraw(
             @RequestBody @Valid WithdrawRequestDto request, Principal principal) {
         WalletAccess.requireOwner(principal, request.walletId(), getWalletUseCase);
-        WalletResponse response = withdrawUseCase.withdraw(request.toCommand());
-        return ApiResponse.ok("Withdraw successfully", WalletResponseDto.from(response));
+        throw new SecurityException("Legacy local withdrawals are disabled. Use /wallet/withdrawals for Stripe test payouts.");
     }
 
     @RateLimit(name = "transferRateLimiter", type = RateLimitType.USER_OR_IP)

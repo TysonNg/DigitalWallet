@@ -76,10 +76,10 @@ public class WalletAuthorizationTest {
                 .content("{\"walletId\":\"" + otherWallet + "\",\"amount\":1000}"));
         verifyNoInteractions(withdraw);
     }
-    @Test public void ownerCanWithdraw() throws Exception {
-        status(200, post("/wallet/withdraw").contentType("application/json")
+    @Test public void legacyWithdrawalIsDisabledEvenForOwner() throws Exception {
+        status(403, post("/wallet/withdraw").contentType("application/json")
                 .content("{\"walletId\":\"" + ownWallet + "\",\"amount\":1000}"));
-        verify(withdraw).withdraw(any());
+        verifyNoInteractions(withdraw);
     }
     @Test public void cannotTransferFromAnotherWallet() throws Exception {
         status(403, post("/wallet/transfer").contentType("application/json")

@@ -1,14 +1,8 @@
 "use client";
 
-import { useTranslations, useLocale } from "next-intl";
-
-import { useState } from "react";
-import { X, ArrowUpRight, Landmark } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { MoneyInput } from "@/components/ui/money-input";
-import { Label } from "@/components/ui/label";
-import { useWithdrawMutation } from "../hooks/use-wallet";
-import { toast } from "sonner";
+import { useTranslations } from "next-intl";
+import { X } from "lucide-react";
+import { StripeWithdrawalPanel } from "./stripe-withdrawal-panel";
 
 interface WithdrawModalProps {
     isOpen: boolean;
@@ -19,166 +13,35 @@ interface WithdrawModalProps {
     onSuccess?: () => void;
 }
 
-export function WithdrawModal({
-    isOpen,
-    onClose,
-    walletId,
-    currentBalance,
-    currency,
-    onSuccess,
-}: WithdrawModalProps) {
-    const t = useTranslations("wallet");
-    const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
+export function WithdrawModal({ isOpen, onClose, ...props }: WithdrawModalProps) {
     const common = useTranslations("common");
-    const formatVND = (value: number) =>
-        new Intl.NumberFormat(locale, { style: "currency", currency: currency ?? "VND" }).format(
-            value
-        );
-
-    const [amount, setAmount] = useState<number>(500000);
-    const bankNumber = "1029384756";
-    const [error, setError] = useState<string | null>(null);
-
-    const withdrawMutation = useWithdrawMutation();
 
     if (!isOpen) return null;
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-
-        if (amount <= 0) {
-            setError(t("theWithdrawalAmountMustBeGreaterThan0"));
-            return;
-        }
-
-        if (amount > currentBalance) {
-            setError(t("yourAvailableBalanceIsInsufficientForThisTransaction"));
-            return;
-        }
-
-        try {
-            await withdrawMutation.mutateAsync({ walletId, amount });
-            toast.success(t("withdrawSuccess", { amount: formatVND(amount) }));
-            onSuccess?.();
-            onClose();
-        } catch (err: unknown) {
-            const msg =
-                err instanceof Error ? err.message : t("anErrorOccurredWhileWithdrawingMoney");
-            setError(msg);
-            toast.error(msg);
-        }
-    };
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6">
             <div
-                className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-150"
-                aria-label={common("close")}
+                className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs"
                 onClick={onClose}
+                aria-hidden="true"
             />
 
-            <div className="relative w-full max-w-sm sm:max-w-md bg-white rounded-2xl shadow-xl border border-slate-200/90 p-6 sm:p-7 z-10 duration-150 my-auto">
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Stripe Connect sandbox withdrawal"
+                className="relative z-10 my-auto max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 pt-12 shadow-xl"
+            >
                 <button
+                    type="button"
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                    aria-label={common("close")}
+                    className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
                 >
-                    <X className="w-4 h-4 stroke-[1.75]" />
+                    <X className="h-4 w-4" />
                 </button>
 
-                <div className="flex items-center space-x-3 mb-5 pr-6">
-                    <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                        <ArrowUpRight className="w-4.5 h-4.5 stroke-[2]" />
-                    </div>
-                    <div>
-                        <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                            {" "}
-                            {t("withdrawToBank")}{" "}
-                        </h3>
-                        <p className="text-xs text-slate-500">
-                            {t("available")}{" "}
-                            <span className="font-semibold text-slate-800">
-                                {formatVND(currentBalance)}
-                            </span>
-                        </p>
-                    </div>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {error && (
-                        <div className="p-2.5 bg-rose-50 border border-rose-200 text-xs text-rose-700 rounded-lg">
-                            {error}
-                        </div>
-                    )}
-
-                    <div>
-                        <div className="flex justify-between items-center mb-1">
-                            <Label htmlFor="withdraw-amount"> {t("withdrawalAmount")} </Label>
-                            <button
-                                type="button"
-                                onClick={() => setAmount(currentBalance)}
-                                className="text-xs font-medium text-blue-600 hover:underline cursor-pointer"
-                            >
-                                {t("withdrawMaximum")}{" "}
-                            </button>
-                        </div>
-                        <div className="relative">
-                            <MoneyInput
-                                id="withdraw-amount"
-                                min={50000}
-                                max={currentBalance}
-                                step={10000}
-                                value={amount}
-                                onValueChange={setAmount}
-                                className="text-base font-bold text-slate-900 pr-12"
-                                placeholder="0"
-                                required
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
-                                {currency ?? "VND"}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <Label> {t("receivingAccount")} </Label>
-                        <div className="flex items-center space-x-3 p-2.5 mt-1 rounded-lg border border-slate-200 bg-slate-50/70">
-                            <div className="w-7 h-7 rounded-md bg-white border border-slate-200 flex items-center justify-center text-slate-600">
-                                <Landmark className="w-3.5 h-3.5 stroke-[1.75]" />
-                            </div>
-                            <div className="flex-1 text-xs">
-                                <p className="font-semibold text-slate-800">
-                                    {t("vietcombankHoChiMinhCityBranch")}{" "}
-                                </p>
-                                <p className="text-slate-400 font-mono text-[11px]">
-                                    {" "}
-                                    {t("account")} {bankNumber}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="p-2.5 bg-slate-50 rounded-lg space-y-1 text-xs text-slate-600 border border-slate-100">
-                        <div className="flex justify-between">
-                            <span> {t("withdrawalFee")} </span>
-                            <span className="font-semibold text-emerald-600"> {t("free")} </span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span> {t("processingTime")} </span>
-                            <span className="font-medium text-slate-700"> {t("instant247")} </span>
-                        </div>
-                    </div>
-
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        className="w-full mt-2"
-                        isLoading={withdrawMutation.isPending}
-                        disabled={currentBalance <= 0}
-                    >
-                        {t("confirmWithdrawal", { amount: amount > 0 ? formatVND(amount) : "" })}
-                    </Button>
-                </form>
+                <StripeWithdrawalPanel key={props.walletId} {...props} />
             </div>
         </div>
     );

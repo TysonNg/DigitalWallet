@@ -14,6 +14,8 @@ public interface LedgerService {
 
     JournalEntry recordWithdraw(UUID transactionId, UUID walletId, BigDecimal amount, BigDecimal fee, String description);
 
+    JournalEntry recordWithdrawReturn(UUID transactionId, UUID walletId, BigDecimal amount, String description);
+
     JournalEntry recordTransfer(UUID transactionId, UUID senderWalletId, UUID receiverWalletId, BigDecimal amount, BigDecimal fee, String description);
 
     TrialBalance getTrialBalance();

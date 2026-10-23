@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import {
@@ -10,9 +10,7 @@ import {
     QrCode,
     CreditCard,
     Building2,
-    Landmark,
     Loader2,
-    CheckCircle2,
     AlertCircle,
     ShieldCheck,
     Check,
@@ -22,13 +20,10 @@ import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import {
     useDepositMutation,
-    useWithdrawMutation,
     useCreatePaymentOrderMutation,
     useMyWalletQuery,
-    ActionError,
 } from "../hooks/use-wallet";
-import { PaymentGatewayType } from "../types/wallet.types";
-import { PinModal } from "../components/pin-modal";
+import { StripeWithdrawalPanel } from "../components/stripe-withdrawal-panel";
 import { toast } from "sonner";
 
 const PRESET_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000, 5000000];
@@ -39,8 +34,6 @@ type PaymentMethodType = "PAYOS" | "STRIPE" | "MOCK";
 export function DepositWithdrawView() {
     const t = useTranslations("wallet");
     const dashT = useTranslations("dashboard");
-    const apiErr = useTranslations("apiErrors");
-    const common = useTranslations("common");
     const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -54,36 +47,17 @@ export function DepositWithdrawView() {
         new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
 
     // Active tab
-    const [activeTab, setActiveTab] = useState<TabType>("deposit");
+    const activeTab: TabType = searchParams.get("tab") === "withdraw" ? "withdraw" : "deposit";
 
     // Deposit form state
     const [depositAmount, setDepositAmount] = useState<number>(500000);
     const [depositMethod, setDepositMethod] = useState<PaymentMethodType>("PAYOS");
     const [depositError, setDepositError] = useState<string | null>(null);
 
-    // Withdraw form state
-    const [withdrawAmount, setWithdrawAmount] = useState<number>(200000);
-    const [withdrawError, setWithdrawError] = useState<string | null>(null);
-    const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-    const bankNumber = "1029384756";
-    const bankName = "MB Bank (Ngân hàng Quân Đội)";
-
     const depositMutation = useDepositMutation();
-    const withdrawMutation = useWithdrawMutation();
     const createOrderMutation = useCreatePaymentOrderMutation();
 
-    // Sync tab from URL query param
-    useEffect(() => {
-        const queryTab = searchParams.get("tab");
-        if (queryTab === "withdraw") {
-            setActiveTab("withdraw");
-        } else if (queryTab === "deposit") {
-            setActiveTab("deposit");
-        }
-    }, [searchParams]);
-
     const handleTabChange = (tab: TabType) => {
-        setActiveTab(tab);
         router.replace(`/dashboard/deposit-withdraw?tab=${tab}`, { scroll: false });
     };
 
@@ -123,54 +97,7 @@ export function DepositWithdrawView() {
         }
     };
 
-    // Handle Withdraw
-    const executeWithdraw = async (pin?: string) => {
-        try {
-            await withdrawMutation.mutateAsync({
-                walletId,
-                amount: withdrawAmount,
-                pin,
-            });
-            setIsPinModalOpen(false);
-            toast.success(t("withdrawalRequestSuccessful", { amount: formatVND(withdrawAmount) }));
-            setWithdrawAmount(200000);
-        } catch (err: unknown) {
-            let msg = t("withdrawalFailed");
-            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
-                msg = apiErr(err.errorCode as any);
-            } else if (err instanceof Error) {
-                msg = err.message;
-            }
-            setWithdrawError(msg);
-            toast.error(msg);
-            throw new Error(msg);
-        }
-    };
-
-    const handleWithdrawSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setWithdrawError(null);
-
-        if (withdrawAmount <= 0) {
-            setWithdrawError(t("theWithdrawalAmountMustBeGreaterThan0"));
-            return;
-        }
-
-        if (withdrawAmount > currentBalance) {
-            setWithdrawError(t("yourAvailableBalanceIsInsufficientForThisTransaction"));
-            return;
-        }
-
-        if (myWallet?.hasPin) {
-            setIsPinModalOpen(true);
-            return;
-        }
-
-        await executeWithdraw();
-    };
-
     const isDepositLoading = depositMutation.isPending || createOrderMutation.isPending;
-    const isWithdrawLoading = withdrawMutation.isPending;
 
     return (
         <main className="flex-1 p-4 sm:p-8 max-w-4xl w-full mx-auto space-y-6">
@@ -406,122 +333,15 @@ export function DepositWithdrawView() {
 
             {/* Tab 2: Withdraw View */}
             {activeTab === "withdraw" && (
-                <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs animate-in fade-in duration-150">
-                    <form onSubmit={handleWithdrawSubmit} className="space-y-6">
-                        {/* Linked Bank Card */}
-                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/90 flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                                    <Landmark className="w-5 h-5 stroke-[1.75]" />
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold text-slate-900">{bankName}</p>
-                                    <p className="text-xs font-mono text-slate-500 mt-0.5">
-                                        STK: {bankNumber} • NGUYEN MINH ANH
-                                    </p>
-                                </div>
-                            </div>
-                            <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                                Đã liên kết
-                            </span>
-                        </div>
-
-                        {/* Amount Input */}
-                        <div className="space-y-2">
-                            <Label
-                                htmlFor="withdraw-amount"
-                                className="text-xs font-semibold text-slate-700"
-                            >
-                                {t("amount")} ({currency})
-                            </Label>
-                            <MoneyInput
-                                id="withdraw-amount"
-                                min="10000"
-                                step="10000"
-                                max={currentBalance}
-                                value={withdrawAmount}
-                                onValueChange={setWithdrawAmount}
-                                className="text-base font-semibold"
-                                required
-                            />
-
-                            {/* Preset Buttons */}
-                            <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 pt-1">
-                                {PRESET_AMOUNTS.map((val) => (
-                                    <button
-                                        key={val}
-                                        type="button"
-                                        disabled={val > currentBalance}
-                                        onClick={() => setWithdrawAmount(val)}
-                                        className={`py-1.5 px-2 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                                            withdrawAmount === val
-                                                ? "bg-blue-50 border-blue-600 text-blue-600 font-semibold"
-                                                : val > currentBalance
-                                                  ? "bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed"
-                                                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-                                        }`}
-                                    >
-                                        {formatVND(val)}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Transaction Note */}
-                        <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs text-amber-800 space-y-1">
-                            <p className="font-semibold flex items-center gap-1.5">
-                                <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-                                Lưu ý khi rút tiền:
-                            </p>
-                            <p className="text-[11px] leading-relaxed text-amber-700">
-                                Tiền sẽ được chuyển về tài khoản ngân hàng liên kết trong vòng 1-3
-                                phút. Miễn phí rút tiền cho 5 giao dịch đầu tiên trong tháng.
-                            </p>
-                        </div>
-
-                        {withdrawError && (
-                            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-600 flex items-center space-x-2">
-                                <AlertCircle className="w-4 h-4 shrink-0" />
-                                <span>{withdrawError}</span>
-                            </div>
-                        )}
-
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            disabled={
-                                isWithdrawLoading ||
-                                !withdrawAmount ||
-                                withdrawAmount > currentBalance
-                            }
-                            className="w-full h-11 text-sm font-semibold rounded-xl flex items-center justify-center space-x-2 cursor-pointer shadow-xs"
-                        >
-                            {isWithdrawLoading ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span>{t("processing")}</span>
-                                </>
-                            ) : (
-                                <>
-                                    <ArrowUpRight className="w-4 h-4" />
-                                    <span>Rút {formatVND(withdrawAmount)} về ngân hàng</span>
-                                </>
-                            )}
-                        </Button>
-                    </form>
+                <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
+                    <StripeWithdrawalPanel
+                        key={walletId}
+                        walletId={walletId}
+                        currentBalance={currentBalance}
+                        currency={currency}
+                    />
                 </div>
             )}
-
-            <PinModal
-                isOpen={isPinModalOpen}
-                onClose={() => setIsPinModalOpen(false)}
-                onConfirm={executeWithdraw}
-                amount={withdrawAmount}
-                currency={currency}
-                isLoading={withdrawMutation.isPending}
-                title="Xác thực mã PIN rút tiền"
-                description="Nhập mã PIN 6 số để xác nhận rút tiền về tài khoản ngân hàng liên kết"
-            />
         </main>
     );
 }

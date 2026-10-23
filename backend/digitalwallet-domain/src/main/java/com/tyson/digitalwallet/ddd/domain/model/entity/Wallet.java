@@ -167,6 +167,13 @@ public class Wallet {
         this.updatedAt = LocalDateTime.now();
     }
 
+    /** Release reserved demo funds even if the wallet was frozen after reservation. */
+    public void releaseWithdrawalHold(BigDecimal amount) {
+        if (amount == null || amount.signum() <= 0) throw new IllegalArgumentException("Invalid hold amount");
+        this.balance = balance.add(amount);
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public void withdraw(BigDecimal amount) {
         if(status != WalletStatus.ACTIVE) {
             throw new IllegalStateException("Cannot withdraw: Wallet is " + this.status);

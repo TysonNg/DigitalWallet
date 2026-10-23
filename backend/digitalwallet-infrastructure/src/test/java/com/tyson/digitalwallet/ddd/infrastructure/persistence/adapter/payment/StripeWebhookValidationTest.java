@@ -15,7 +15,7 @@ public class StripeWebhookValidationTest {
     private static final String SECRET = "whsec_test_only";
     private final StripePaymentAdapter adapter = new StripePaymentAdapter("", SECRET);
     private String event(String type, String status, String amount, String currency) {
-        return "{\"id\":\"evt_test\",\"object\":\"event\",\"api_version\":\"2024-06-20\",\"type\":\"" + type + "\",\"data\":{\"object\":{"
+        return "{\"id\":\"evt_test\",\"object\":\"event\",\"livemode\":false,\"api_version\":\"2024-06-20\",\"type\":\"" + type + "\",\"data\":{\"object\":{"
                 + "\"id\":\"cs_test\",\"object\":\"checkout.session\",\"payment_status\":" + status
                 + ",\"amount_total\":" + amount + ",\"currency\":" + currency + "}}}";
     }
@@ -59,5 +59,14 @@ public class StripeWebhookValidationTest {
     @Test public void tamperedSignedPayloadIsRejected() throws Exception {
         String body = event("checkout.session.completed", "\"paid\"", "500000", "\"vnd\"");
         assertFalse(adapter.verifyWebhook(body.replace("500000", "999999"), signature(body)).isValid());
+    }
+
+    @Test public void signedLiveEventIsRejectedInDemo() throws Exception {
+        String body = event("checkout.session.completed", "\"paid\"", "500000", "\"vnd\"").replace("\"livemode\":false", "\"livemode\":true");
+        assertFalse(adapter.verifyWebhook(body, signature(body)).isValid());
+    }
+
+    @Test public void liveKeyIsRejectedAtStartup() {
+        assertThrows(IllegalArgumentException.class, () -> new StripePaymentAdapter("sk_live_forbidden", SECRET));
     }
 }
