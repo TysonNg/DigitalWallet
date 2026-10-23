@@ -30,3 +30,9 @@ V14 is unchanged. V15 renames its table, copies provider execution state into pa
 ## Verification
 
 Run backend tests with mvn -f backend/pom.xml clean test. The PostgreSQL migration regression fixture is backend/digitalwallet-infrastructure/src/test/resources/db/withdrawal_migration_test.sql; execute it with psql against an isolated test database. It wraps its schema and assertions in a transaction and rolls back. Unit tests cover lifecycle transitions, duplicate holds, provider mismatch, authorization/PIN, pending/paid/failure, ambiguous outcomes, compensation failures, late returns and webhook validation. Persistence tests verify checkpoints after a new session and hold-aware queries. Stripe tests use a local HTTP server, not real API calls.
+
+## One held withdrawal per wallet
+
+Creation locks the wallet, checks idempotency first, then rejects a new key if any request is PENDING, PROCESSING or REVIEW_REQUIRED. Replays of the same key return the original request. The API returns HTTP 409 / WITHDRAWAL_ALREADY_IN_PROGRESS for a new request while funds are held. SUCCEEDED, FAILED and RETURNED requests do not block a new request.
+
+V16 adds a PostgreSQL partial unique index on wallet_id for these held states. It aborts without changing financial data if legacy wallets already have multiple holds; reconcile those payouts before deployment. Do not clear holds merely to make migration succeed. The incomplete Kafka queue dependency was removed from use-case constructors; scheduler processing remains active.

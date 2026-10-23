@@ -17,7 +17,6 @@ public class HandlePayoutNotificationUseCaseImpl implements HandlePayoutNotifica
     private final WithdrawalRepository withdrawals;
     private final PayoutAttemptRepository attempts;
     private final TransactionTemplate tx;
-    private final WithdrawalWorkQueue workQueue;
     private final PayoutGatewayRegistry gateways;
     private final PayoutNotificationInbox inbox;
 
@@ -26,11 +25,10 @@ public class HandlePayoutNotificationUseCaseImpl implements HandlePayoutNotifica
             PayoutAttemptRepository attempts,
             TransactionTemplate tx,
             PayoutGatewayRegistry gateways,
-            PayoutNotificationInbox inbox, WithdrawalWorkQueue workQueue) {
+            PayoutNotificationInbox inbox) {
         this.withdrawals = withdrawals;
         this.attempts = attempts;
         this.tx = tx;
-        this.workQueue = workQueue;
         this.gateways = gateways;
         this.inbox = inbox;
     }

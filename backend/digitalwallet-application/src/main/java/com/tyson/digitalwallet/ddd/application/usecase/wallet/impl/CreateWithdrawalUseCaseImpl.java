@@ -24,7 +24,6 @@ public class CreateWithdrawalUseCaseImpl implements CreateWithdrawalUseCase {
     private final PasswordHasher hasher;
     private final WalletPinAttemptService pins;
     private final TransactionTemplate tx;
-    private final WithdrawalWorkQueue workQueue;
     private final PayoutGatewayRegistry gateways;
 
     public CreateWithdrawalUseCaseImpl(
@@ -34,14 +33,13 @@ public class CreateWithdrawalUseCaseImpl implements CreateWithdrawalUseCase {
             PasswordHasher hasher,
             WalletPinAttemptService pins,
             TransactionTemplate tx,
-            PayoutGatewayRegistry gateways, WithdrawalWorkQueue workQueue) {
+            PayoutGatewayRegistry gateways) {
         this.wallets = wallets;
         this.withdrawals = withdrawals;
         this.attempts = attempts;
         this.hasher = hasher;
         this.pins = pins;
         this.tx = tx;
-        this.workQueue = workQueue;
         this.gateways = gateways;
     }
 
@@ -72,6 +70,12 @@ public class CreateWithdrawalUseCaseImpl implements CreateWithdrawalUseCase {
                             throw new IllegalArgumentException(
                                     "Idempotency key already used with different details");
                         return WithdrawalResponse.from(r, a);
+                    }
+                    if (withdrawals.existsHeldWithdrawalByWalletId(c.walletId())) {
+                        throw new AppException(
+                                ErrorCode.WITHDRAWAL_ALREADY_IN_PROGRESS,
+                                "This wallet already has a withdrawal holding funds. Check"
+                                    + " withdrawal history before creating another.");
                     }
                     var quote =
                             gateways.get(c.provider())

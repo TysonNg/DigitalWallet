@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum ErrorStatus {
     NOTFOUND(404),
     BAD_REQUEST(400),
+    CONFLICT(409),
     UNAUTHORIZED(401),
     FORBIDDEN(403),
     TOO_MANY_REQUESTS(429),

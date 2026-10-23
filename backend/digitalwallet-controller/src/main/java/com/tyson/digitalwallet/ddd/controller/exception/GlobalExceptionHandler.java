@@ -38,6 +38,7 @@ public class GlobalExceptionHandler {
             case USER_NOT_FOUND, WALLET_NOT_FOUND, BENEFICIARY_NOT_FOUND -> ErrorStatus.NOTFOUND;
             case FORBIDDEN_ACCESS -> ErrorStatus.FORBIDDEN;
             case UNAUTHORIZED, SESSION_EXPIRED, INVALID_CREDENTIALS -> ErrorStatus.UNAUTHORIZED;
+            case WITHDRAWAL_ALREADY_IN_PROGRESS -> ErrorStatus.CONFLICT;
             case TOO_MANY_REQUESTS -> ErrorStatus.TOO_MANY_REQUESTS;
             case PAYMENT_GATEWAY_UNAVAILABLE, SERVICE_UNAVAILABLE -> ErrorStatus.SERVICE_UNAVAILABLE;
             default -> ErrorStatus.BAD_REQUEST;

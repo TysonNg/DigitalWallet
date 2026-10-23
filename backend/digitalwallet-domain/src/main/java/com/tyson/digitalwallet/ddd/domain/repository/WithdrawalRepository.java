@@ -9,6 +9,8 @@ public interface WithdrawalRepository {
 
     Optional<WithdrawalRequest> findByIdWithLock(UUID id);
 
+    boolean existsHeldWithdrawalByWalletId(UUID walletId);
+
     WithdrawalRequest save(WithdrawalRequest request);
 
     List<WithdrawalRequest> findByWallet(UUID walletId);

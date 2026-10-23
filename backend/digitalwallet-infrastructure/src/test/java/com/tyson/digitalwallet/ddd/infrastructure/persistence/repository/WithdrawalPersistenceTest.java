@@ -71,6 +71,7 @@ public class WithdrawalPersistenceTest {
                 assertEquals(
                         0, new BigDecimal("200000").compareTo(withdrawals.sumHeldAmount(wallet)));
                 assertEquals(List.of(r.getId()), withdrawals.findPendingIds());
+                assertTrue(withdrawals.existsHeldWithdrawalByWalletId(wallet));
                 var restored = attempts.findByWithdrawalId(r.getId()).orElseThrow();
                 assertEquals(a.getId(), restored.getId());
                 assertEquals(PayoutAttemptStatus.UNKNOWN, restored.getStatus());
@@ -80,6 +81,7 @@ public class WithdrawalPersistenceTest {
                 withdrawals.save(stored);
                 session.flush();
                 assertEquals(0, BigDecimal.ZERO.compareTo(withdrawals.sumHeldAmount(wallet)));
+                assertFalse(withdrawals.existsHeldWithdrawalByWalletId(wallet));
                 var completed =
                         WithdrawalRequest.create(
                                 wallet,

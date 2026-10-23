@@ -78,4 +78,15 @@ public class WithdrawalRepositoryImpl implements WithdrawalRepository {
                         com.tyson.digitalwallet.ddd.domain.model.enums.WithdrawalStatus
                                 .REVIEW_REQUIRED));
     }
+
+    @Override
+    public boolean existsHeldWithdrawalByWalletId(UUID walletId) {
+        return springDataRepository.existsByWalletIdAndStatusIn(
+                walletId,
+                Set.of(
+                        com.tyson.digitalwallet.ddd.domain.model.enums.WithdrawalStatus.PENDING,
+                        com.tyson.digitalwallet.ddd.domain.model.enums.WithdrawalStatus.PROCESSING,
+                        com.tyson.digitalwallet.ddd.domain.model.enums.WithdrawalStatus
+                                .REVIEW_REQUIRED));
+    }
 }

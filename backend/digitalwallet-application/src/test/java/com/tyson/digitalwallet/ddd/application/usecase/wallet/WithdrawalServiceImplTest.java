@@ -39,7 +39,6 @@ public class WithdrawalServiceImplTest {
     private final Map<UUID, PayoutAttempt> executions = new HashMap<>();
     private Wallet wallet;
     private Services service;
-    private final WithdrawalWorkQueue workQueue=mock(WithdrawalWorkQueue.class);
 
     @Before
     public void setup() {
@@ -81,6 +80,14 @@ public class WithdrawalServiceImplTest {
         when(gateway.provider()).thenReturn("EXAMPLE");
         when(gateway.validate(any(), anyString(), anyString()))
                 .thenReturn(new PayoutGateway.Quote(800, "USD", 2));
+        when(requests.existsHeldWithdrawalByWalletId(any()))
+                .thenAnswer(
+                        i ->
+                                stored.values().stream()
+                                        .anyMatch(
+                                                r ->
+                                                        r.getWalletId().equals(i.getArgument(0))
+                                                                && r.isHeld()));
         outcome(PayoutGateway.Outcome.PENDING);
         TransactionTemplate tx =
                 new TransactionTemplate() {
@@ -102,7 +109,7 @@ public class WithdrawalServiceImplTest {
         service =
                 new Services(
                         new CreateWithdrawalUseCaseImpl(
-                                wallets, requests, attempts, hasher, pins, tx, registry,workQueue),
+                                wallets, requests, attempts, hasher, pins, tx, registry),
                         new GetWithdrawalHistoryUseCaseImpl(wallets, requests, attempts, tx),
                         new ProcessWithdrawalUseCaseImpl(
                                 wallets,
@@ -115,7 +122,7 @@ public class WithdrawalServiceImplTest {
                                 registry,
                                 locks),
                         new HandlePayoutNotificationUseCaseImpl(
-                                requests, attempts, tx, registry, inbox,workQueue));
+                                requests, attempts, tx, registry, inbox));
     }
 
     private CreateWithdrawalCommand command(String provider, BigDecimal amount) {
@@ -315,13 +322,101 @@ public class WithdrawalServiceImplTest {
         assertEquals(WithdrawalStatus.FAILED, stored.get(id).getStatus());
     }
 
-    @Test public void creationEnqueuesOnceAndReplayDoesNotEnqueueAgain(){
-        UUID id=create();assertEquals(id,create());verify(workQueue,times(1)).enqueue(id);
+    private void assertSecondRequestBlocked() {
+        var error =
+                assertThrows(
+                        com.tyson.digitalwallet.ddd.application.exception.AppException.class,
+                        () ->
+                                service.create(
+                                        new CreateWithdrawalCommand(
+                                                userId,
+                                                walletId,
+                                                new BigDecimal("200000"),
+                                                "second-request-key",
+                                                "EXAMPLE",
+                                                "recipient-token",
+                                                null)));
+        assertEquals("WITHDRAWAL_ALREADY_IN_PROGRESS", error.getErrorCode().getCode());
+        balance("800000");
+        assertEquals(1, stored.size());
+        assertEquals(1, executions.size());
     }
-    @Test public void verifiedWebhookEnqueuesProcessingInTheSameTransaction(){
-        UUID id=create();reset(workQueue);
-        when(gateway.verifyWebhook("body","sig")).thenReturn(new PayoutGateway.Notice("evt1",id,null,null,800,"USD"));
-        service.webhook("EXAMPLE","body","sig");verify(workQueue).enqueue(id);
+
+    @Test
+    public void pendingWithdrawalBlocksDifferentKeyButAllowsReplay() {
+        var id = create();
+        assertEquals(id, create());
+        assertSecondRequestBlocked();
+    }
+
+    @Test
+    public void processingWithdrawalBlocksDifferentKey() {
+        var id = create();
+        service.process(id);
+        assertSecondRequestBlocked();
+    }
+
+    @Test
+    public void reviewRequiredWithdrawalBlocksDifferentKey() {
+        var id = create();
+        stored.get(id).requireReview("manual review");
+        assertSecondRequestBlocked();
+    }
+
+    @Test
+    public void completedWithdrawalAllowsNewRequest() {
+        create();
+        outcome(PayoutGateway.Outcome.PAID);
+        service.process(stored.keySet().iterator().next());
+        service.create(
+                new CreateWithdrawalCommand(
+                        userId,
+                        walletId,
+                        new BigDecimal("200000"),
+                        "second-request-key",
+                        "EXAMPLE",
+                        "recipient-token",
+                        null));
+        balance("600000");
+        assertEquals(2, stored.size());
+    }
+
+    @Test
+    public void failedWithdrawalAllowsNewRequest() {
+        var id = create();
+        outcome(PayoutGateway.Outcome.FAILED);
+        service.process(id);
+        service.create(
+                new CreateWithdrawalCommand(
+                        userId,
+                        walletId,
+                        new BigDecimal("200000"),
+                        "second-request-key",
+                        "EXAMPLE",
+                        "recipient-token",
+                        null));
+        balance("800000");
+        assertEquals(2, stored.size());
+    }
+
+    @Test
+    public void returnedWithdrawalAllowsNewRequest() {
+        var id = create();
+        var previous = stored.get(id);
+        previous.complete(UUID.randomUUID());
+        previous.markReturned("returned");
+        wallet.releaseWithdrawalHold(previous.getAmount());
+        service.create(
+                new CreateWithdrawalCommand(
+                        userId,
+                        walletId,
+                        new BigDecimal("200000"),
+                        "second-request-key",
+                        "EXAMPLE",
+                        "recipient-token",
+                        null));
+        balance("800000");
+        assertEquals(2, stored.size());
     }
 
     private record Services(

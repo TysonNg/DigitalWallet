@@ -46,4 +46,8 @@ public interface SpringDataWithdrawalRepository
             @Param("statuses")
                     Collection<com.tyson.digitalwallet.ddd.domain.model.enums.WithdrawalStatus>
                             statuses);
+
+    boolean existsByWalletIdAndStatusIn(
+            UUID walletId,
+            Collection<com.tyson.digitalwallet.ddd.domain.model.enums.WithdrawalStatus> statuses);
 }

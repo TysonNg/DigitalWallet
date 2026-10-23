@@ -70,4 +70,17 @@ public class WithdrawalControllerTest {
         assertEquals("EXAMPLE", dto.provider());
         assertNull(dto.stripeAccountId());
     }
+
+    @Test
+    public void activeHoldConflictReturnsHttp409() {
+        var exception =
+                new com.tyson.digitalwallet.ddd.application.exception.AppException(
+                        com.tyson.digitalwallet.ddd.application.exception.ErrorCode
+                                .WITHDRAWAL_ALREADY_IN_PROGRESS,
+                        "Check withdrawal history");
+        var response =
+                new com.tyson.digitalwallet.ddd.controller.exception.GlobalExceptionHandler()
+                        .handleAppException(exception);
+        assertEquals(409, response.getStatusCode().value());
+    }
 }
