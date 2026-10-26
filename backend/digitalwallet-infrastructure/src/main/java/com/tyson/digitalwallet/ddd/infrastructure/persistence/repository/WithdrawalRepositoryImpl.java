@@ -69,6 +69,11 @@ public class WithdrawalRepositoryImpl implements WithdrawalRepository {
     }
 
     @Override
+    public List<UUID> findRecoveryIds() {
+        return springDataRepository.findRecoveryIds(java.time.Instant.now().minusSeconds(3600));
+    }
+
+    @Override
     public java.math.BigDecimal sumHeldAmount(UUID walletId) {
         return springDataRepository.sumHeldAmount(
                 walletId,

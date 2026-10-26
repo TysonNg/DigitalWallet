@@ -1,6 +1,7 @@
 package com.tyson.digitalwallet.ddd.application.usecase.wallet.impl;
 
 import com.tyson.digitalwallet.ddd.application.exception.*;
+import com.tyson.digitalwallet.ddd.application.port.outbox.*;
 import com.tyson.digitalwallet.ddd.application.port.payment.*;
 import com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.*;
@@ -25,6 +26,7 @@ public class CreateWithdrawalUseCaseImpl implements CreateWithdrawalUseCase {
     private final WalletPinAttemptService pins;
     private final TransactionTemplate tx;
     private final PayoutGatewayRegistry gateways;
+    private final OutboxEventWriter outbox;
 
     public CreateWithdrawalUseCaseImpl(
             WalletRepository wallets,
@@ -33,7 +35,8 @@ public class CreateWithdrawalUseCaseImpl implements CreateWithdrawalUseCase {
             PasswordHasher hasher,
             WalletPinAttemptService pins,
             TransactionTemplate tx,
-            PayoutGatewayRegistry gateways) {
+            PayoutGatewayRegistry gateways,
+            OutboxEventWriter outbox) {
         this.wallets = wallets;
         this.withdrawals = withdrawals;
         this.attempts = attempts;
@@ -41,6 +44,7 @@ public class CreateWithdrawalUseCaseImpl implements CreateWithdrawalUseCase {
         this.pins = pins;
         this.tx = tx;
         this.gateways = gateways;
+        this.outbox = outbox;
     }
 
     @Override
@@ -75,7 +79,7 @@ public class CreateWithdrawalUseCaseImpl implements CreateWithdrawalUseCase {
                         throw new AppException(
                                 ErrorCode.WITHDRAWAL_ALREADY_IN_PROGRESS,
                                 "This wallet already has a withdrawal holding funds. Check"
-                                    + " withdrawal history before creating another.");
+                                        + " withdrawal history before creating another.");
                     }
                     var quote =
                             gateways.get(c.provider())
@@ -111,6 +115,14 @@ public class CreateWithdrawalUseCaseImpl implements CreateWithdrawalUseCase {
                                             .checkpoint(
                                                     "currency_exponent",
                                                     Integer.toString(quote.currencyExponent())));
+                    outbox.append(
+                            OutboxEvent.create(
+                                    "WITHDRAWAL",
+                                    r.getId().toString(),
+                                    "WITHDRAWAL_PROCESS_REQUESTED",
+                                    1,
+                                    "withdrawal-process",
+                                    Map.of("withdrawalId", r.getId().toString())));
                     return WithdrawalResponse.from(r, a);
                 });
     }

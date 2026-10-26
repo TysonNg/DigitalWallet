@@ -17,5 +17,8 @@ public interface WithdrawalRepository {
 
     List<UUID> findPendingIds();
 
+    /** Started payouts only; fresh requests remain owned by the message consumer. */
+    List<UUID> findRecoveryIds();
+
     java.math.BigDecimal sumHeldAmount(UUID walletId);
 }

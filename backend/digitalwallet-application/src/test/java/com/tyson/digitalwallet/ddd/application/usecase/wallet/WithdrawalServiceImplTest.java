@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.tyson.digitalwallet.ddd.application.port.lock.DistributedLockService;
+import com.tyson.digitalwallet.ddd.application.port.outbox.*;
 import com.tyson.digitalwallet.ddd.application.port.payment.*;
 import com.tyson.digitalwallet.ddd.application.port.security.PasswordHasher;
 import com.tyson.digitalwallet.ddd.application.usecase.wallet.command.CreateWithdrawalCommand;
@@ -39,6 +40,7 @@ public class WithdrawalServiceImplTest {
     private final Map<UUID, PayoutAttempt> executions = new HashMap<>();
     private Wallet wallet;
     private Services service;
+    private final OutboxEventWriter outbox = mock(OutboxEventWriter.class);
 
     @Before
     public void setup() {
@@ -109,7 +111,7 @@ public class WithdrawalServiceImplTest {
         service =
                 new Services(
                         new CreateWithdrawalUseCaseImpl(
-                                wallets, requests, attempts, hasher, pins, tx, registry),
+                                wallets, requests, attempts, hasher, pins, tx, registry, outbox),
                         new GetWithdrawalHistoryUseCaseImpl(wallets, requests, attempts, tx),
                         new ProcessWithdrawalUseCaseImpl(
                                 wallets,
@@ -417,6 +419,33 @@ public class WithdrawalServiceImplTest {
                         null));
         balance("800000");
         assertEquals(2, stored.size());
+    }
+
+    @Test
+    public void creationAppendsOneGenericEventAndReplayDoesNotAppendAgain() {
+        UUID id = create();
+        assertEquals(id, create());
+        var event = org.mockito.ArgumentCaptor.forClass(OutboxEvent.class);
+        verify(outbox, times(1)).append(event.capture());
+        assertEquals("WITHDRAWAL", event.getValue().aggregateType());
+        assertEquals(id.toString(), event.getValue().aggregateId());
+        assertEquals("WITHDRAWAL_PROCESS_REQUESTED", event.getValue().eventType());
+        assertEquals(1, event.getValue().schemaVersion());
+        assertEquals("withdrawal-process", event.getValue().destination());
+        assertEquals(Map.of("withdrawalId", id.toString()), event.getValue().payload());
+    }
+
+    @Test
+    public void blockedDifferentKeyDoesNotAppendAnotherEvent() {
+        create();
+        assertSecondRequestBlocked();
+        verify(outbox, times(1)).append(any());
+    }
+
+    @Test
+    public void outboxWriteFailureIsNotSwallowed() {
+        doThrow(new IllegalStateException("outbox unavailable")).when(outbox).append(any());
+        assertThrows(IllegalStateException.class, this::create);
     }
 
     private record Services(

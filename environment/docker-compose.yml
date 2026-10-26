@@ -15,6 +15,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-admin123}
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:19092
       - TOKEN_SECRET=${TOKEN_SECRET}
       - ACCESS_TOKEN_EXPIRATION=${ACCESS_TOKEN_EXPIRATION}
       - REFRESH_TOKEN_EXPIRATION=${REFRESH_TOKEN_EXPIRATION}
@@ -32,6 +33,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     networks:
       - digital-wallet-network
@@ -87,6 +90,46 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-digital_wallet}"]
       interval: 5s
       timeout: 5s
+      retries: 5
+    networks:
+      - digital-wallet-network
+
+  kafka:
+    image: apache/kafka:4.1.2
+    hostname: kafka
+    ports:
+      # Only expose the client listener to this computer.
+      - "127.0.0.1:9092:9092"
+    environment:
+      # KRaft: the same local node stores messages and manages cluster metadata.
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      CLUSTER_ID: FYJBDcjx0_OBuUxsb5Y3cg
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      # LISTENERS binds sockets; ADVERTISED_LISTENERS tells clients where to reconnect.
+      KAFKA_LISTENERS: EXTERNAL://0.0.0.0:9092,INTERNAL://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:9092,INTERNAL://kafka:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+
+      # One broker means internal topics can only have one replica.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "kafka:19092"]
+      interval: 15s
+      timeout: 10s
+      start_period: 30s
       retries: 5
     networks:
       - digital-wallet-network
@@ -147,6 +190,7 @@ services:
       - digital-wallet-network
 
 volumes:
+  kafka_data:
   postgres_data:
   redis_data:
   pgadmin_data:

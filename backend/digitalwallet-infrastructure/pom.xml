@@ -19,6 +19,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.tyson.digitalwallet</groupId>
             <artifactId>digitalwallet-application</artifactId>
             <version>${project.version}</version>

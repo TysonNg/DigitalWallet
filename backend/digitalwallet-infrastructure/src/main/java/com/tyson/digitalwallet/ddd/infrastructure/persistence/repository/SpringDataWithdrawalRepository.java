@@ -47,6 +47,24 @@ public interface SpringDataWithdrawalRepository
                     Collection<com.tyson.digitalwallet.ddd.domain.model.enums.WithdrawalStatus>
                             statuses);
 
+    @Query(
+            value =
+                    """
+                    SELECT w.id FROM withdrawal_requests w
+                    WHERE w.status = 'PROCESSING'
+                       OR (w.status = 'SUCCEEDED' AND w.updated_at <= :successCutoff)
+                       OR (w.status = 'PENDING' AND EXISTS (
+                           SELECT 1 FROM payout_attempts a WHERE a.withdrawal_id=w.id
+                           AND (a.status <> 'PENDING'
+                                OR a.provider_metadata->>'account_started' = 'true'
+                                OR a.provider_metadata->>'transfer_started' = 'true'
+                                OR a.provider_metadata->>'payout_started' = 'true'
+                                OR a.provider_metadata->>'compensation_pending' = 'true')))
+                    ORDER BY w.updated_at ASC LIMIT 100
+                    """,
+            nativeQuery = true)
+    List<UUID> findRecoveryIds(@Param("successCutoff") java.time.Instant successCutoff);
+
     boolean existsByWalletIdAndStatusIn(
             UUID walletId,
             Collection<com.tyson.digitalwallet.ddd.domain.model.enums.WithdrawalStatus> statuses);

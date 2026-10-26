@@ -4,6 +4,56 @@ spring:
       path: "/api/v1"
   application:
     name: digital-wallet
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    client-id: ${spring.application.name}
+    # Application-defined extensions, bound by KafkaBusinessProperties (not Boot built-ins).
+    provisioning:
+      enabled: ${KAFKA_TOPIC_PROVISIONING_ENABLED:true}
+    topics:
+      withdrawal-process:
+        name: ${WITHDRAWAL_KAFKA_TOPIC:wallet.withdrawal.process.v1}
+        partitions: ${WITHDRAWAL_KAFKA_PARTITIONS:3}
+        replication-factor: ${WITHDRAWAL_KAFKA_REPLICATION_FACTOR:1}
+      withdrawal-process-dlt:
+        name: ${WITHDRAWAL_KAFKA_DLT_TOPIC:wallet.withdrawal.process.v1.dlt}
+        partitions: ${WITHDRAWAL_KAFKA_PARTITIONS:3}
+        replication-factor: ${WITHDRAWAL_KAFKA_REPLICATION_FACTOR:1}
+    withdrawal-consumer:
+      retry-interval: 1s
+      retries: 2
+      dlt-ack-timeout: 12s
+    outbox:
+      enabled: ${OUTBOX_PUBLISHER_ENABLED:true}
+      batch-size: ${OUTBOX_PUBLISHER_BATCH_SIZE:20}
+      poll-interval: ${OUTBOX_PUBLISHER_POLL_INTERVAL:1s}
+      initial-delay: 5s
+      ack-timeout: 12s
+      initial-backoff: 1s
+      max-backoff: 5m
+    groups:
+      withdrawal-worker: ${WITHDRAWAL_KAFKA_GROUP_ID:wallet-withdrawal-workers}
+    admin:
+      fail-fast: true
+      properties:
+        "[request.timeout.ms]": 5000
+        "[default.api.timeout.ms]": 10000
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        "[enable.idempotence]": true
+        "[max.block.ms]": 5000
+        "[request.timeout.ms]": 5000
+        "[delivery.timeout.ms]": 10000
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+    listener:
+      ack-mode: record
   jpa:
     hibernate:
       ddl-auto: update
@@ -127,3 +177,6 @@ management:
 
 server:
   port: 3006
+
+withdrawal:
+  processing-mode: ${WITHDRAWAL_PROCESSING_MODE:kafka}

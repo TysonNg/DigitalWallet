@@ -66,7 +66,16 @@ public class ProcessWithdrawalUseCaseImpl implements ProcessWithdrawalUseCase {
     }
 
     private void processLocked(UUID id) {
-        var r = tx.execute(s -> required(id));
+        var r =
+                tx.execute(
+                        s -> {
+                            var current = required(id);
+                            if (current.getStatus() == WithdrawalStatus.PENDING) {
+                                current.markProcessing();
+                                withdrawals.save(current);
+                            }
+                            return current;
+                        });
         if (r.getStatus() == WithdrawalStatus.FAILED
                 || r.getStatus() == WithdrawalStatus.RETURNED
                 || r.getStatus() == WithdrawalStatus.REVIEW_REQUIRED) return;

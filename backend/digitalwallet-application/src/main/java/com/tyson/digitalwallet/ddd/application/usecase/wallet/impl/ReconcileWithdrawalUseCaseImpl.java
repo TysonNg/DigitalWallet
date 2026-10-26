@@ -19,14 +19,17 @@ public class ReconcileWithdrawalUseCaseImpl implements ReconcileWithdrawalUseCas
     private final WithdrawalRepository withdrawals;
     private final PayoutNotificationInbox inbox;
     private final ProcessWithdrawalUseCase processor;
+    private final WithdrawalProcessingPolicy policy;
 
     public ReconcileWithdrawalUseCaseImpl(
             WithdrawalRepository withdrawals,
             PayoutNotificationInbox inbox,
-            ProcessWithdrawalUseCase processor) {
+            ProcessWithdrawalUseCase processor,
+            WithdrawalProcessingPolicy policy) {
         this.withdrawals = withdrawals;
         this.inbox = inbox;
         this.processor = processor;
+        this.policy = policy;
     }
 
     @Override
@@ -39,7 +42,8 @@ public class ReconcileWithdrawalUseCaseImpl implements ReconcileWithdrawalUseCas
                 log.warn("Payout notification {} awaits retry", notification.eventId());
             }
         }
-        for (var id : withdrawals.findPendingIds()) {
+        for (var id :
+                policy.usesKafka() ? withdrawals.findRecoveryIds() : withdrawals.findPendingIds()) {
             try {
                 processor.process(id);
             } catch (RuntimeException ex) {
