@@ -112,6 +112,11 @@ export async function streamAiChat(
             }
         }
     } finally {
+        try {
+            await reader.cancel();
+        } catch {
+            // Preserve the original stream failure if cancellation also fails.
+        }
         reader.releaseLock();
     }
 }

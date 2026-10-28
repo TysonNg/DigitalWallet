@@ -52,6 +52,15 @@ public class ChatFinancialAssistantUseCaseImpl implements ChatFinancialAssistant
 
     @Override
     public ChatAssistantResponse chat(ChatAssistantCommand command) {
+        return respond(command, null);
+    }
+
+    @Override
+    public ChatAssistantResponse stream(ChatAssistantCommand command, java.util.function.Consumer<String> onContent) {
+        return respond(command, java.util.Objects.requireNonNull(onContent));
+    }
+
+    private ChatAssistantResponse respond(ChatAssistantCommand command, java.util.function.Consumer<String> onContent) {
         FinancialAgentTools tools = financialAgentTools.forUser(command.userId());
         // 1. Nạp ngữ cảnh động của người dùng hiện tại
         String userName = "Quý khách";
@@ -73,6 +82,7 @@ public class ChatFinancialAssistantUseCaseImpl implements ChatFinancialAssistant
         // Demo mode uses deterministic local retrieval and intent parsing.
         if (localKnowledgeBaseService.isOfflineMode()) {
             String answer = localKnowledgeBaseService.generateSmartResponse(command.message(), userName, wallet, relevantPolicies, tools);
+            if (onContent != null) onContent.accept(answer);
             DraftTransferPayload draftTransfer = tools.getDraftTransfer();
             return new ChatAssistantResponse(answer, draftTransfer);
         }
@@ -113,20 +123,46 @@ public class ChatFinancialAssistantUseCaseImpl implements ChatFinancialAssistant
                 ((command.conversationId() == null || command.conversationId().isBlank())
                         ? "default" : command.conversationId());
         String answer;
+        StringBuilder emitted = new StringBuilder();
         try {
-            answer = chatClient.prompt()
+            var request = chatClient.prompt()
                     .system(spec -> spec.text("{context}").param("context", systemPrompt))
                     .user(spec -> spec.text("{message}").param("message", command.message()))
                     .tools(tools)
                     .advisors(advisor -> advisor.advisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                            .param(ChatMemory.CONVERSATION_ID, conversationId))
-                    .call().content();
+                            .param(ChatMemory.CONVERSATION_ID, conversationId));
+            if (onContent == null) {
+                answer = request.call().content();
+            } else {
+                // Closing the stream cancels its subscription on send failure or interruption.
+                try (var fragments = request.stream().content().toStream(1)) {
+                    var iterator = fragments.iterator();
+                    while (iterator.hasNext()) {
+                        if (Thread.currentThread().isInterrupted()) {
+                            throw new java.util.concurrent.CancellationException("AI stream interrupted");
+                        }
+                        String fragment = iterator.next();
+                        if (!fragment.isEmpty()) {
+                            emitted.append(fragment);
+                            onContent.accept(fragment);
+                        }
+                    }
+                }
+                answer = emitted.toString();
+            }
             if (answer == null || answer.isBlank()) throw new IllegalStateException("Empty AI response");
         } catch (Exception e) {
+            // Never append a second answer after partial output, or restart cancelled work.
+            if (onContent != null && (emitted.length() > 0 || Thread.currentThread().isInterrupted()
+                    || e instanceof java.util.concurrent.CancellationException
+                    || reactor.core.Exceptions.isCancel(e))) {
+                throw new IllegalStateException("AI stream interrupted or failed after output", e);
+            }
             log.warn("AI provider failed; using local knowledge", e);
             // Fresh request state prevents a partially failed tool chain from leaking a draft.
             tools = financialAgentTools.forUser(command.userId());
             answer = localKnowledgeBaseService.generateSmartResponse(command.message(), userName, wallet, relevantPolicies, tools);
+            if (onContent != null) onContent.accept(answer);
         }
 
         // 6. Kiểm tra xem tool có sinh ra lệnh chuyển tiền nháp hay không

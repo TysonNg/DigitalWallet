@@ -72,7 +72,7 @@ test("a done event with data calls onDone only once", async (context) => {
     assert.equal(res.body!.locked, false);
 });
 
-test("server error rejects for REST fallback before tokens and after partial output", async (context) => {
+test("server error rejects before tokens and after partial output", async (context) => {
     for (const prefix of ["", 'event: token\ndata: {"content":"partial"}\n\n']) {
         for (const errorData of ['{"error":"AI unavailable"}', "AI unavailable"]) {
             const res = response(
@@ -120,5 +120,22 @@ test("read failures release the reader without calling onDone", async (context) 
     const { events, handlers } = callbacks();
     await assert.rejects(streamAiChat("hello", "conversation", handlers), /connection lost/);
     assert.deepEqual(events, []);
+    assert.equal(body.locked, false);
+});
+
+test("done cancels the response body instead of leaving upstream open", async (context) => {
+    let cancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+            controller.enqueue(new TextEncoder().encode("event: done\ndata: {}\n\n"));
+        },
+        cancel() {
+            cancelled = true;
+        },
+    });
+    context.mock.method(globalThis, "fetch", async () => new Response(body));
+    const { handlers } = callbacks();
+    await streamAiChat("hello", "conversation", handlers);
+    assert.equal(cancelled, true);
     assert.equal(body.locked, false);
 });

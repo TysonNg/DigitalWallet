@@ -15,7 +15,7 @@ import {
     Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { sendAiChatAction, clearAiConversationAction } from "../actions/ai.actions";
+import { clearAiConversationAction } from "../actions/ai.actions";
 import { streamAiChat } from "../services/ai-stream";
 import { ChatMessage, DraftTransferPayload } from "../types/ai.types";
 import { DraftTransferCard } from "./draft-transfer-card";
@@ -55,6 +55,9 @@ export function AiChatDrawer({
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [conversationId, setConversationId] = useState(createConversationId);
     const requestInFlight = useRef(false);
+    const streamController = useRef<AbortController | null>(null);
+
+    useEffect(() => () => streamController.current?.abort(), []);
 
     // State cho Modal chuyển tiền an toàn (Human-in-the-loop)
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
@@ -88,6 +91,8 @@ export function AiChatDrawer({
         if (!queryText || requestInFlight.current) return;
 
         requestInFlight.current = true;
+        const controller = new AbortController();
+        streamController.current = controller;
 
         const userMsg: ChatMessage = {
             id: "msg-" + Date.now(),
@@ -109,81 +114,56 @@ export function AiChatDrawer({
         setIsLoading(true);
 
         let streamedText = "";
-        let hasStreamedToken = false;
 
         try {
-            await streamAiChat(queryText, conversationId, {
-                onToken: (token) => {
-                    hasStreamedToken = true;
-                    streamedText += token;
-                    setMessages((prev) =>
-                        prev.map((m) =>
-                            m.id === assistantMsgId ? { ...m, content: streamedText } : m
-                        )
-                    );
+            await streamAiChat(
+                queryText,
+                conversationId,
+                {
+                    onToken: (token) => {
+                        streamedText += token;
+                        setMessages((prev) =>
+                            prev.map((m) =>
+                                m.id === assistantMsgId ? { ...m, content: streamedText } : m
+                            )
+                        );
+                    },
+                    onDraftTransfer: (draft) => {
+                        setMessages((prev) =>
+                            prev.map((m) =>
+                                m.id === assistantMsgId ? { ...m, draftTransfer: draft } : m
+                            )
+                        );
+                    },
+                    onError: (error) => {
+                        toast.error(error);
+                    },
+                    onDone: () => {
+                        setIsLoading(false);
+                    },
                 },
-                onDraftTransfer: (draft) => {
-                    setMessages((prev) =>
-                        prev.map((m) =>
-                            m.id === assistantMsgId ? { ...m, draftTransfer: draft } : m
-                        )
-                    );
-                },
-                onError: (error) => {
-                    toast.error(error);
-                },
-                onDone: () => {
-                    setIsLoading(false);
-                },
-            });
+                controller.signal
+            );
         } catch (streamErr) {
-            console.warn("SSE stream failed, falling back to REST action:", streamErr);
-            // Fallback sang Server Action nếu stream gặp lỗi trước khi nhận token
-            if (!hasStreamedToken) {
-                try {
-                    const res = await sendAiChatAction(queryText, conversationId);
-                    if (res.success && res.data) {
-                        setMessages((prev) =>
-                            prev.map((m) =>
-                                m.id === assistantMsgId
-                                    ? {
-                                          ...m,
-                                          content: res.data!.answer,
-                                          draftTransfer: res.data!.draftTransfer,
-                                      }
-                                    : m
-                            )
-                        );
-                    } else {
-                        setMessages((prev) =>
-                            prev.map((m) =>
-                                m.id === assistantMsgId
-                                    ? {
-                                          ...m,
-                                          content:
-                                              "⚠️ " +
-                                              (res.message ||
-                                                  "Đã xảy ra lỗi khi kết nối với máy chủ AI."),
-                                      }
-                                    : m
-                            )
-                        );
-                    }
-                } catch {
-                    setMessages((prev) =>
-                        prev.map((m) =>
-                            m.id === assistantMsgId
-                                ? {
-                                      ...m,
-                                      content:
-                                          "⚠️ Không thể kết nối với dịch vụ Trợ lý AI. Vui lòng thử lại sau.",
-                                  }
-                                : m
-                        )
-                    );
-                }
-            }
+            if (controller.signal.aborted) return;
+            console.warn("AI stream failed:", streamErr);
+            // Do not replay a request whose tools or memory may already have been processed.
+            const errorText = "Không thể hoàn tất phản hồi AI. Vui lòng thử lại.";
+            setMessages((prev) =>
+                prev.map((message) =>
+                    message.id === assistantMsgId
+                        ? {
+                              ...message,
+                              content: streamedText
+                                  ? `${streamedText}\n\n⚠️ ${errorText}`
+                                  : `⚠️ ${errorText}`,
+                              draftTransfer: undefined,
+                          }
+                        : message
+                )
+            );
         } finally {
+            streamController.current = null;
             requestInFlight.current = false;
             setIsLoading(false);
         }

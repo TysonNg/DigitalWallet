@@ -12,7 +12,7 @@ function drawer() {
     let cursor = 0;
     let finish!: () => void;
     let fail!: (error: Error) => void;
-    let finishFallback!: () => void;
+
     let callbacks: { onDraftTransfer: (draft: unknown) => void };
     const conversations: string[] = [];
     const queries: string[] = [];
@@ -62,12 +62,9 @@ function drawer() {
             };
         if (name.endsWith("ai.actions"))
             return {
-                sendAiChatAction: (_: string, id: string) => {
-                    conversations.push(id);
-                    return new Promise((done) => {
-                        finishFallback = () =>
-                            done({ success: true, data: { answer: "fallback reply" } });
-                    });
+                clearAiConversationAction: async () => ({ success: true }),
+                sendAiChatAction: async () => {
+                    throw new Error("Unexpected replay of AI request");
                 },
             };
         if (name.endsWith("transfer-modal")) return { TransferModal };
@@ -128,7 +125,6 @@ function drawer() {
         },
         finish: () => finish(),
         fail: () => fail(new Error("stream unavailable")),
-        finishFallback: () => finishFallback(),
     };
 }
 
@@ -218,29 +214,20 @@ test("transfer form initialization preserves explicit values and manual defaults
     assert.deepEqual(initializeTransferForm("default"), { amount: 200000, description: "default" });
 });
 
-test("reset stays blocked while the server-action fallback is pending", async (context) => {
+test("stream failure does not replay the request and allows a new conversation", async (context) => {
     context.mock.method(console, "warn", () => {});
     const ui = drawer();
     const sending = ui.start();
     ui.fail();
-    await Promise.resolve();
-    assert.equal(ui.conversations.length, 2);
-    assert.equal(ui.conversations[0], ui.conversations[1]);
-    assert.equal(ui.reset().disabled, true);
-    ui.click(ui.reset());
-    assert.equal(
-        ui.count(
-            (element) =>
-                element.type === "span" &&
-                String(element.props.className).includes("text-[10px] text-slate-400 block")
-        ),
-        2
-    );
-    ui.finishFallback();
     await sending;
+    assert.equal(ui.conversations.length, 1);
     assert.equal(ui.reset().disabled, false);
+    ui.click(ui.reset());
+    const next = ui.start();
+    assert.notEqual(ui.conversations[0], ui.conversations[1]);
+    ui.finish();
+    await next;
 });
-
 test("completed reset clears the selected transfer and starts a new conversation", async () => {
     const ui = drawer();
     await ui.draft(valid);
@@ -315,7 +302,7 @@ test("modal keeps the exact draft note while the action retains existing normali
                     },
                     useRef(initial: unknown) {
                         const index = cursor++;
-                        return state[index] ??= { current: initial };
+                        return (state[index] ??= { current: initial });
                     },
                     useEffect: (effect: () => void) => {
                         if (mount) effects.push(effect);
@@ -357,8 +344,12 @@ test("modal keeps the exact draft note while the action retains existing normali
         effects.forEach((effect) => effect());
         mount = false;
         cursor = 0;
-        const findForm = (node: unknown, target = "form"): ReactElement<Record<string, unknown>> | undefined => {
-            if (Array.isArray(node)) return node.map((child) => findForm(child, target)).find(Boolean);
+        const findForm = (
+            node: unknown,
+            target = "form"
+        ): ReactElement<Record<string, unknown>> | undefined => {
+            if (Array.isArray(node))
+                return node.map((child) => findForm(child, target)).find(Boolean);
             if (!isValidElement(node)) return undefined;
             const element = node as ReactElement<Record<string, unknown>>;
             return element.type === target ? element : findForm(element.props.children, target);

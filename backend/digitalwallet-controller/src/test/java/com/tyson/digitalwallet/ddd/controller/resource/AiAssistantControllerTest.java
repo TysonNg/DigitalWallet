@@ -143,9 +143,14 @@ public class AiAssistantControllerTest {
     public void streamChat_returnsSseEmitter() throws Exception {
         ChatAssistantRequestDto requestDto = new ChatAssistantRequestDto("Phí nạp tiền?", "conv-456");
 
-        ChatAssistantResponse mockResponse = new ChatAssistantResponse("Phí nạp Stripe là 2.5%", null);
-        when(chatFinancialAssistantUseCase.chat(any(ChatAssistantCommand.class))).thenReturn(mockResponse);
-
+        org.mockito.Mockito.when(chatFinancialAssistantUseCase.stream(any(), any())).thenAnswer(call -> {
+            java.util.function.Consumer<String> onContent = call.getArgument(1);
+            onContent.accept("Phí nạp ");
+            onContent.accept("Stripe");
+            return new ChatAssistantResponse("Phí nạp Stripe", new DraftTransferPayload(
+                    UUID.randomUUID(), UUID.randomUUID(), "Nam", "nam@example.com",
+                    BigDecimal.valueOf(50000), "test", BigDecimal.ZERO, true, "OK"));
+        });
         MvcResult result = mockMvc.perform(post("/ai/chat/stream")
                         .principal(principal)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -153,6 +158,11 @@ public class AiAssistantControllerTest {
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        assertTrue(result.getRequest().isAsyncStarted());
+        result.getAsyncResult(5000);
+        String body = mockMvc.perform(asyncDispatch(result)).andReturn().getResponse().getContentAsString();
+        assertEquals(2, body.split("event:token", -1).length - 1);
+        assertTrue(body.indexOf("event:token") < body.indexOf("event:draft_transfer"));
+        assertTrue(body.indexOf("event:draft_transfer") < body.indexOf("event:done"));
+        org.mockito.Mockito.verify(chatFinancialAssistantUseCase, org.mockito.Mockito.never()).chat(any());
     }
 }

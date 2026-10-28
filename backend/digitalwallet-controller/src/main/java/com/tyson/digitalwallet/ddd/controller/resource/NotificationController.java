@@ -3,9 +3,12 @@ package com.tyson.digitalwallet.ddd.controller.resource;
 import com.tyson.digitalwallet.ddd.application.usecase.notification.NotificationUseCase;
 import com.tyson.digitalwallet.ddd.controller.common.ApiResponse;
 import com.tyson.digitalwallet.ddd.controller.dto.response.notification.NotificationResponseDto;
+import com.tyson.digitalwallet.ddd.controller.security.WalletAccess;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,8 +24,9 @@ public class NotificationController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<List<NotificationResponseDto>>> getNotificationsByUserId(
-            @PathVariable("userId") UUID userId
+            @PathVariable("userId") UUID userId, Principal principal
     ) {
+        requireOwner(principal, userId);
         List<NotificationResponseDto> notifications = notificationUseCase.getNotificationsByUserId(userId).stream()
                 .map(NotificationResponseDto::from)
                 .toList();
@@ -31,8 +35,9 @@ public class NotificationController {
 
     @GetMapping("/user/{userId}/unread-count")
     public ResponseEntity<ApiResponse<Long>> getUnreadCount(
-            @PathVariable("userId") UUID userId
+            @PathVariable("userId") UUID userId, Principal principal
     ) {
+        requireOwner(principal, userId);
         long count = notificationUseCase.countUnreadByUserId(userId);
         return ApiResponse.ok("Get unread notifications count successfully", count);
     }
@@ -40,17 +45,25 @@ public class NotificationController {
     @PatchMapping("/{id}/read")
     public ResponseEntity<ApiResponse<Void>> markAsRead(
             @PathVariable("id") UUID id,
-            @RequestParam("userId") UUID userId
+            @RequestParam("userId") UUID userId, Principal principal
     ) {
+        requireOwner(principal, userId);
         notificationUseCase.markAsRead(id, userId);
         return ApiResponse.ok("Notification marked as read successfully", null);
     }
 
     @PatchMapping("/user/{userId}/read-all")
     public ResponseEntity<ApiResponse<Void>> markAllAsRead(
-            @PathVariable("userId") UUID userId
+            @PathVariable("userId") UUID userId, Principal principal
     ) {
+        requireOwner(principal, userId);
         notificationUseCase.markAllAsRead(userId);
         return ApiResponse.ok("All notifications marked as read successfully", null);
+    }
+
+    private static void requireOwner(Principal principal, UUID userId) {
+        if (!WalletAccess.currentUser(principal).equals(userId)) {
+            throw new AccessDeniedException("Cannot access another user's notifications");
+        }
     }
 }

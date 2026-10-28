@@ -64,19 +64,16 @@ public class AiAssistantController {
         FutureTask<Void> task = new FutureTask<>(() -> {
             try {
                 ChatAssistantCommand command = new ChatAssistantCommand(userId, request.message(), request.conversationId());
-                ChatAssistantResponse response = chatFinancialAssistantUseCase.chat(command);
-
-                // Stream the answer text in natural chunks
-                String answer = response.answer();
-                if (answer != null) {
-                    String[] words = answer.split("(?<=\\s)|(?<=\\n)");
-                    for (String word : words) {
-                        emitter.send(SseEmitter.event()
-                                .name("token")
-                                .data(Map.of("content", word)));
+                ChatAssistantResponse response = chatFinancialAssistantUseCase.stream(command, fragment -> {
+                    if (Thread.currentThread().isInterrupted()) {
+                        throw new java.util.concurrent.CancellationException("Client disconnected");
                     }
-                }
-
+                    try {
+                        emitter.send(SseEmitter.event().name("token").data(Map.of("content", fragment)));
+                    } catch (java.io.IOException e) {
+                        throw new java.io.UncheckedIOException(e);
+                    }
+                });
                 // Nếu có giao dịch nháp do Function Calling sinh ra, gửi sự kiện draft_transfer
                 if (response.draftTransfer() != null) {
                     emitter.send(SseEmitter.event()
@@ -99,6 +96,7 @@ public class AiAssistantController {
         }, null);
         emitter.onTimeout(() -> task.cancel(true));
         emitter.onError(error -> task.cancel(true));
+        emitter.onCompletion(() -> task.cancel(true));
         try {
             aiChatExecutor.execute(task);
         } catch (java.util.concurrent.RejectedExecutionException e) {
