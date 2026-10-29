@@ -1,0 +1,30 @@
+{
+    "receiveQr": {
+        "receive": "Receive",
+        "title": "Your receive QR",
+        "description": "Share this QR or link so someone can send money to your wallet.",
+        "close": "Close",
+        "loading": "Loading your QR…",
+        "failed": "Unable to load receive details. Please try again.",
+        "imageFailed": "Unable to load the QR image. Please retry.",
+        "imageAlt": "Personal wallet receive QR code",
+        "retry": "Try again",
+        "download": "Download PNG",
+        "copyLink": "Copy link",
+        "copied": "Receive link copied.",
+        "copyFailed": "Unable to copy the link. Please try again.",
+        "invalid": "This receive link is invalid.",
+        "loginRequired": "Sign in to view the recipient.",
+        "login": "Sign in to continue",
+        "recipientTitle": "Send to this wallet",
+        "review": "Review the recipient before continuing. You will enter the amount and confirm in the transfer form.",
+        "resolving": "Looking up the current recipient…",
+        "name": "Recipient",
+        "walletId": "Wallet ID",
+        "currency": "Currency",
+        "amount": "Transfer amount",
+        "enterAmount": "Enter amount",
+        "quickAmount": "Quick select amount",
+        "continue": "Continue to transfer"
+    }
+}

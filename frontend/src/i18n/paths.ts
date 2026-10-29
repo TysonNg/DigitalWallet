@@ -1,3 +1,4 @@
+import { isReceiveUuid } from "../features/wallet/receive-qr";
 import { isLocale, type Locale } from "./routing";
 
 export function safeReturnTo(value: string | null | undefined, locale: string): string {
@@ -7,6 +8,14 @@ export function safeReturnTo(value: string | null | undefined, locale: string): 
         return fallback;
     try {
         const url = new URL(value, "https://wallet.invalid");
+        const receiveToken = url.pathname.match(/^\/(?:vi\/|en\/)?receive\/([^/]+)$/)?.[1];
+        if (
+            url.origin === "https://wallet.invalid" &&
+            receiveToken &&
+            isReceiveUuid(receiveToken)
+        ) {
+            return `/${selected}/receive/${receiveToken}`;
+        }
         if (
             url.origin !== "https://wallet.invalid" ||
             !/^\/(?:vi\/|en\/)?dashboard\/?$/.test(url.pathname)

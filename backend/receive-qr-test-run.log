@@ -1,0 +1,677 @@
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (C:\Users\immin\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.7\byte-buddy-agent-1.17.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+23:45:29.396 [main] INFO com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=c502e015-d663-4733-84dc-72e68d02b777 operation=upload result=success elapsedMs=5
+23:45:29.458 [main] WARN com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=8acff9d6-b133-4f3e-8ecc-357172ed5f35 operation=upload result=failed elapsedMs=19
+23:45:29.490 [main] INFO com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=d1bc4eaa-9c72-4ab2-92f7-517fa0829d60 operation=upload result=recovered elapsedMs=3
+23:45:29.509 [main] INFO com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=c045d988-a07e-46a5-81ab-faa8dea7194e operation=delete result=success elapsedMs=0
+23:45:29.510 [main] WARN com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=c045d988-a07e-46a5-81ab-faa8dea7194e operation=upload result=failed elapsedMs=3
+23:45:29.526 [main] INFO com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=2b73cbcc-5b48-4ede-8407-cd71807fb2c2 operation=delete result=success elapsedMs=0
+23:45:29.527 [main] WARN com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=2b73cbcc-5b48-4ede-8407-cd71807fb2c2 operation=upload result=failed elapsedMs=3
+23:45:29.538 [main] WARN com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=8c605026-26aa-45c8-b852-c7d15fb82dc2 operation=delete result=retry elapsedMs=0
+23:45:29.540 [main] INFO com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=8c605026-26aa-45c8-b852-c7d15fb82dc2 operation=delete result=success elapsedMs=0
+23:45:29.548 [main] WARN com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=e6589892-dca8-4d4a-b98d-a82709599759 operation=delete result=retry elapsedMs=0
+23:45:30.910 [main] INFO com.tyson.digitalwallet.ddd.application.receiveqr.ReceiveQrService -- mediaId=9e528845-9de5-425c-8a98-c38442737c48 walletId=9b872941-33b7-49c0-9542-cd2656d47cc9 operation=receive-qr result=generated
+23:45:30.977 [main] INFO com.tyson.digitalwallet.ddd.application.receiveqr.ReceiveQrService -- mediaId=d6e4e756-98c4-492f-8bc3-b8c4f263ca13 walletId=f1457916-8eb7-405c-95cd-1eda81a02e58 operation=receive-qr result=generated
+23:45:30.992 [main] INFO com.tyson.digitalwallet.ddd.application.receiveqr.ReceiveQrService -- mediaId=f51bc0a0-4457-46d4-b75f-7fe5cf51c701 walletId=6ae5cd22-2742-435a-9fc6-c861a71acc2e operation=receive-qr result=generated
+23:45:31.018 [main] INFO com.tyson.digitalwallet.ddd.application.receiveqr.ReceiveQrService -- mediaId=239814c3-8942-46e6-9e35-125ed00acf3f walletId=f6ab36b7-b056-492a-a841-4ecb9a1c6f98 operation=receive-qr result=generated
+23:45:34.718 [main] WARN com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Payment currency mismatch for order 30534590-b729-4f11-83ae-1386e17a7c0f: wallet USD, received vnd
+23:45:34.738 [main] WARN com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Payment currency mismatch for order ae2648a0-e20c-48a8-89cb-37fb8eed5ef8: wallet VND, received null
+23:45:34.773 [main] WARN com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Payment gateway mismatch for order 55207bf5-cec4-425d-be5e-eec3d6f39dcd
+23:45:34.788 [main] WARN com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Payment amount mismatch for order a2d2eaa6-9192-4833-960a-d7804f27ec43: expected 500000.00, received 500001
+23:45:34.806 [main] WARN com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Invalid webhook signature received for gateway: STRIPE. Reason: Invalid signature
+23:45:34.835 [main] WARN com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Payment amount mismatch for order 3d922ef2-44e0-4cc2-8286-bdfed19e2b8d: expected 500000.00, received 499999
+23:45:34.991 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Processing successful payment for order ae0846be-aa7b-45a1-9f9f-6dc23603deba, amount: 500000.00
+23:45:35.024 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Payment order ae0846be-aa7b-45a1-9f9f-6dc23603deba successfully fulfilled. Transaction ID: c922aa18-a9ec-455b-bc6b-b93c13a5cc38
+23:45:35.043 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Processing successful payment for order 466f6db7-16eb-4ce0-a80b-f4cac84d8c79, amount: 500000.00
+23:45:35.045 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Payment order 466f6db7-16eb-4ce0-a80b-f4cac84d8c79 successfully fulfilled. Transaction ID: 8494205c-45f0-47bf-93f1-9741d0489132
+23:45:35.049 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Payment order 466f6db7-16eb-4ce0-a80b-f4cac84d8c79 is already processed (current status=SUCCESS). Skipping webhook.
+23:45:35.071 [main] WARN com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Payment amount mismatch for order fefe8a31-8ea8-4af0-8f61-8238f580dab2: expected 500000.00, received null
+23:45:35.090 [main] WARN com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ProcessPaymentWebhookUseCaseImpl -- Payment currency mismatch for order d13d7217-5454-43cb-a7ed-d660a2660ed1: wallet VND, received usd
+23:45:35.781 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Found 1 pending payment orders older than 15 minutes to reconcile
+23:45:35.824 [main] WARN com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- RECONCILIATION: Dropped webhook detected for order 8a2ec912-080b-4d46-bda5-696f8d7037b8. Gateway confirmed SUCCESS, depositing 100000 to wallet 9906f041-fe98-47d5-80fd-57b2563d86b5
+23:45:35.826 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Successfully fulfilled order 8a2ec912-080b-4d46-bda5-696f8d7037b8 during reconciliation. Transaction ID: 6ebf93e5-3364-423e-9888-b86aa205c772
+23:45:35.836 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Found 1 pending payment orders older than 15 minutes to reconcile
+23:45:35.837 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Payment order 86c24f78-4585-4635-aa33-62be644d7873 marked as CANCELLED by gateway during reconciliation.
+23:45:35.850 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Found 1 pending payment orders older than 15 minutes to reconcile
+23:45:35.853 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Payment order ef9c6dc9-d48d-4c83-8df1-662406473e80 not paid and exceeded 15 minutes. Marking as EXPIRED.
+23:45:35.859 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Found 1 pending payment orders older than 15 minutes to reconcile
+23:45:35.860 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Payment order bc569bd6-63ea-45a7-be4d-f21234cea464 has no gatewayOrderId and timed out. Marking as EXPIRED.
+23:45:35.869 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Found 1 pending payment orders older than 15 minutes to reconcile
+23:45:35.870 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Payment order 2586ea00-6945-4409-baa6-906e7aa13bc5 marked as FAILED by gateway during reconciliation.
+23:45:35.880 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Found 1 pending payment orders older than 15 minutes to reconcile
+23:45:35.884 [main] INFO com.tyson.digitalwallet.ddd.application.usecase.payment.impl.ReconcilePendingPaymentOrdersUseCaseImpl -- Payment order 024e5f6f-95ae-4d59-8f27-4d9aca12b35a is no longer PENDING (status=SUCCESS), skipping reconciliation.
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (C:\Users\immin\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.7\byte-buddy-agent-1.17.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+23:45:57.356 [main] INFO org.hibernate.validator.internal.util.Version -- HV000001: Hibernate Validator 9.1.0.Final
+23:45:59.896 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:45:59.904 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:45:59.916 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 10 ms
+23:46:00.496 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:00.497 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:00.498 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:00.911 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:00.912 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:00.913 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:00.995 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:00.997 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:00.997 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:01.121 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:01.121 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:01.121 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:01.320 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:01.320 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:01.321 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:02.200 [main] WARN com.tyson.digitalwallet.ddd.controller.ratelimit.RateLimitAspect -- Rate limit exceeded for [testAuthLimit] with key [ip_192.168.1.100] on method [testMethod()]
+23:46:02.270 [main] WARN com.tyson.digitalwallet.ddd.controller.ratelimit.RateLimitAspect -- Rate limit exceeded for [testTransferLimit] with key [user_47db15ca-f694-4277-9e6b-474612e31a4e] on method [testMethod()]
+23:46:02.687 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:02.688 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:02.688 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:02.780 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:02.781 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:02.782 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:02.897 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:02.898 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:02.900 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 2 ms
+23:46:02.966 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:02.966 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:02.967 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:03.574 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:03.575 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:03.575 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:03.620 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:03.620 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:03.621 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:06.921 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:06.924 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:06.930 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 4 ms
+23:46:07.394 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:07.407 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:07.407 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:07.577 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:07.578 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:07.578 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:08.909 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:08.909 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:08.909 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:08.994 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:08.996 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:08.999 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:09.664 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:09.665 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:09.665 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:09.836 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:09.837 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:09.838 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:10.220 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:10.220 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:10.221 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:10.340 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:10.340 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:10.341 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:10.404 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:10.404 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:10.404 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:11.955 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:11.955 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:11.955 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:12.029 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:12.030 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:12.030 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:13.593 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:13.595 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:13.597 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 2 ms
+23:46:13.822 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:13.822 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:13.824 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:14.052 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:14.053 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:14.053 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:14.205 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:14.206 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:14.208 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:14.342 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:14.342 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:14.342 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:14.350 [main] INFO com.tyson.digitalwallet.ddd.controller.resource.PaymentController -- Received Stripe webhook call
+23:46:14.716 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:14.718 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:14.718 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:14.973 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:14.974 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:14.980 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 6 ms
+23:46:15.251 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:15.252 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:15.252 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:15.374 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:15.375 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:15.375 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:15.446 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:15.446 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:15.447 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:15.541 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:15.542 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:15.544 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:15.621 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:15.622 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:15.624 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 2 ms
+23:46:15.634 [main] INFO com.tyson.digitalwallet.ddd.controller.resource.PaymentController -- Received PayOS webhook call
+23:46:15.679 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:15.681 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:15.682 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:15.786 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:15.787 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:15.788 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:15.871 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:15.871 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:15.872 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:15.922 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:15.922 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:15.924 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 2 ms
+23:46:16.002 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:16.003 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:16.004 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+23:46:16.156 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:16.157 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:16.158 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+23:46:16.262 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+23:46:16.266 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+23:46:16.268 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (C:\Users\immin\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.7\byte-buddy-agent-1.17.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+Oct 29, 2026 11:46:54 PM org.springframework.ai.chat.model.MessageAggregator lambda$aggregate$3
+SEVERE: Aggregation Error
+java.lang.IllegalStateException: provider disconnected
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.ChatFinancialAssistantUseCaseImplTest.upstreamFailureAfterContentDoesNotAppendFallbackAnswer(ChatFinancialAssistantUseCaseImplTest.java:101)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+Oct 29, 2026 11:46:54 PM org.springframework.ai.chat.model.MessageAggregator lambda$aggregate$3
+SEVERE: Aggregation Error
+java.lang.IllegalStateException: provider disconnected
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.ChatFinancialAssistantUseCaseImplTest.upstreamFailureAfterContentDoesNotAppendFallbackAnswer(ChatFinancialAssistantUseCaseImplTest.java:101)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+Oct 29, 2026 11:46:54 PM org.springframework.ai.chat.model.MessageAggregator lambda$aggregate$3
+SEVERE: Aggregation Error
+java.lang.IllegalStateException: provider disconnected
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.ChatFinancialAssistantUseCaseImplTest.upstreamFailureAfterContentDoesNotAppendFallbackAnswer(ChatFinancialAssistantUseCaseImplTest.java:101)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+Oct 29, 2026 11:46:54 PM org.springframework.ai.chat.model.MessageAggregator lambda$aggregate$3
+SEVERE: Aggregation Error
+java.lang.IllegalStateException: provider disconnected
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.ChatFinancialAssistantUseCaseImplTest.upstreamFailureAfterContentDoesNotAppendFallbackAnswer(ChatFinancialAssistantUseCaseImplTest.java:101)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+Oct 29, 2026 11:46:54 PM org.springframework.ai.chat.model.MessageAggregator lambda$aggregate$3
+SEVERE: Aggregation Error
+java.lang.IllegalStateException: provider disconnected
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.ChatFinancialAssistantUseCaseImplTest.upstreamFailureAfterContentDoesNotAppendFallbackAnswer(ChatFinancialAssistantUseCaseImplTest.java:101)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+Oct 29, 2026 11:46:54 PM org.springframework.ai.chat.model.MessageAggregator lambda$aggregate$3
+SEVERE: Aggregation Error
+java.lang.IllegalStateException: provider disconnected
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.ChatFinancialAssistantUseCaseImplTest.upstreamFailureAfterContentDoesNotAppendFallbackAnswer(ChatFinancialAssistantUseCaseImplTest.java:101)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+23:46:57.803 [main] INFO com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader -- Replaced financial policy knowledge with 0 chunks
+Oct 29, 2026 11:46:58 PM org.springframework.ai.transformer.splitter.TextSplitter createDocuments
+INFO: Splitting up document into 14 chunks.
+23:46:58.350 [main] INFO com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader -- Replaced financial policy knowledge with 15 chunks
+23:46:58.669 [main] INFO com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader -- Replaced financial policy knowledge with 1 chunks
+23:46:58.872 [main] INFO com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader -- Replaced financial policy knowledge with 1 chunks
+23:46:59.110 [main] ERROR com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader -- Failed to ingest knowledge base: Conflicting knowledge resources named fees.md
+java.lang.IllegalStateException: Conflicting knowledge resources named fees.md
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.readChunks(KnowledgeBaseLoader.java:138)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.lambda$ingestKnowledgeBase$0(KnowledgeBaseLoader.java:115)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:137)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.ingestKnowledgeBase(KnowledgeBaseLoader.java:103)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.sync(KnowledgeBaseLoader.java:64)
+	at org.junit.Assert.assertThrows(Assert.java:1001)
+	at org.junit.Assert.assertThrows(Assert.java:981)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoaderTest.conflictingResourceNamesFailWithoutDeletingExistingChunks(KnowledgeBaseLoaderTest.java:130)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+23:46:59.503 [main] ERROR com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader -- Failed to ingest knowledge base: Cannot read knowledge resources
+java.lang.IllegalStateException: Cannot read knowledge resources
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.readChunks(KnowledgeBaseLoader.java:157)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.lambda$ingestKnowledgeBase$0(KnowledgeBaseLoader.java:115)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:137)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.ingestKnowledgeBase(KnowledgeBaseLoader.java:103)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.sync(KnowledgeBaseLoader.java:64)
+	at org.junit.Assert.assertThrows(Assert.java:1001)
+	at org.junit.Assert.assertThrows(Assert.java:981)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoaderTest.unreadableResourcePreservesExistingChunks(KnowledgeBaseLoaderTest.java:149)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+Caused by: java.io.IOException: unreadable
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.readChunks(KnowledgeBaseLoader.java:134)
+	... 34 common frames omitted
+23:46:59.687 [main] INFO com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader -- Replaced financial policy knowledge with 0 chunks
+23:46:59.711 [main] INFO com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader -- System is running in demo/offline mode (OPENAI_API_KEY is not set or is demo-key). Remote vector embedding ingestion skipped; Local Knowledge Base is active.
+23:46:59.870 [main] INFO com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader -- Replaced financial policy knowledge with 1 chunks
+23:47:00.140 [main] ERROR com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader -- Failed to ingest knowledge base: embedding provider failed after partial write
+java.lang.IllegalStateException: embedding provider failed after partial write
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoaderTest.lambda$setUp$1(KnowledgeBaseLoaderTest.java:53)
+	at org.mockito.internal.stubbing.StubbedInvocationMatcher.answer(StubbedInvocationMatcher.java:42)
+	at org.mockito.internal.handler.MockHandlerImpl.handle(MockHandlerImpl.java:103)
+	at org.mockito.internal.handler.NullResultGuardian.handle(NullResultGuardian.java:29)
+	at org.mockito.internal.handler.InvocationNotifierHandler.handle(InvocationNotifierHandler.java:34)
+	at org.mockito.internal.creation.bytebuddy.access.MockMethodInterceptor.doIntercept(MockMethodInterceptor.java:84)
+	at org.mockito.internal.creation.bytebuddy.access.MockMethodInterceptor.doIntercept(MockMethodInterceptor.java:58)
+	at org.mockito.internal.creation.bytebuddy.access.MockMethodInterceptor$DispatcherDefaultingToRealMethod.interceptAbstract(MockMethodInterceptor.java:163)
+	at org.springframework.ai.vectorstore.VectorStore$MockitoMock$TmUALR6p.add(Unknown Source)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.lambda$ingestKnowledgeBase$0(KnowledgeBaseLoader.java:118)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:137)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.ingestKnowledgeBase(KnowledgeBaseLoader.java:103)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.sync(KnowledgeBaseLoader.java:64)
+	at org.junit.Assert.assertThrows(Assert.java:1001)
+	at org.junit.Assert.assertThrows(Assert.java:981)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoaderTest.embeddingFailureRollsBackDeletionAndPartialInsertForBothEntryPoints(KnowledgeBaseLoaderTest.java:100)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+23:47:00.509 [main] ERROR com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader -- Failed to ingest knowledge base: embedding provider failed after partial write
+java.lang.IllegalStateException: embedding provider failed after partial write
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoaderTest.lambda$setUp$1(KnowledgeBaseLoaderTest.java:53)
+	at org.mockito.internal.stubbing.StubbedInvocationMatcher.answer(StubbedInvocationMatcher.java:42)
+	at org.mockito.internal.handler.MockHandlerImpl.handle(MockHandlerImpl.java:103)
+	at org.mockito.internal.handler.NullResultGuardian.handle(NullResultGuardian.java:29)
+	at org.mockito.internal.handler.InvocationNotifierHandler.handle(InvocationNotifierHandler.java:34)
+	at org.mockito.internal.creation.bytebuddy.access.MockMethodInterceptor.doIntercept(MockMethodInterceptor.java:84)
+	at org.mockito.internal.creation.bytebuddy.access.MockMethodInterceptor.doIntercept(MockMethodInterceptor.java:58)
+	at org.mockito.internal.creation.bytebuddy.access.MockMethodInterceptor$DispatcherDefaultingToRealMethod.interceptAbstract(MockMethodInterceptor.java:163)
+	at org.springframework.ai.vectorstore.VectorStore$MockitoMock$TmUALR6p.add(Unknown Source)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.lambda$ingestKnowledgeBase$0(KnowledgeBaseLoader.java:118)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:137)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoader.ingestKnowledgeBase(KnowledgeBaseLoader.java:103)
+	at org.junit.Assert.assertThrows(Assert.java:1001)
+	at org.junit.Assert.assertThrows(Assert.java:981)
+	at com.tyson.digitalwallet.ddd.infrastructure.ai.loader.KnowledgeBaseLoaderTest.embeddingFailureRollsBackDeletionAndPartialInsertForBothEntryPoints(KnowledgeBaseLoaderTest.java:102)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+23:47:00.714 [main] INFO com.tyson.digitalwallet.ddd.infrastructure.ai.service.LocalKnowledgeBaseService -- LocalKnowledgeBaseService initialized with 12 policy sections from knowledge-base markdown files.
+23:47:00.737 [main] INFO com.tyson.digitalwallet.ddd.infrastructure.ai.service.LocalKnowledgeBaseService -- LocalKnowledgeBaseService initialized with 12 policy sections from knowledge-base markdown files.
+23:47:01.742 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.ai.adapter.PgVectorKnowledgeAdapter -- Similarity search in vector_store failed (falling back to local knowledge base): offline
+23:47:04.766 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.distributed.redisson.impl.RedisDistributedLockServiceImpl -- Kh�ng th? chi?m Distributed Lock cho key: lock:wallet:transfer:busy (?ang c� giao d?ch kh�c x? l�)
+23:47:06.124 [main] ERROR com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Stripe circuit breaker fallback triggered for order [2dbb711e-8079-42b3-993a-260960e89355]: Stripe API gateway down
+23:47:06.765 [main] ERROR com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.PayOsPaymentAdapter -- PayOS circuit breaker fallback triggered for order [16c29bb9-fa18-4042-b428-47793235c7f1]: PayOS network connection timeout
+23:47:06.776 [main] ERROR com.tyson.digitalwallet.ddd.infrastructure.adapter.MailSenderImpl -- MailSender circuit breaker fallback triggered for [user@example.com] - subject [Test Subject]: SMTP connect timeout
+23:47:06.776 [main] ERROR com.tyson.digitalwallet.ddd.infrastructure.adapter.MailSenderImpl -- MailSender template circuit breaker fallback triggered for [user@example.com] - template [otp-template]: Thymeleaf/SMTP error
+23:47:06.901 [main] ERROR com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.PayOsPaymentAdapter -- Failed to verify PayOS webhook: Data not integrity
+vn.payos.exception.WebhookException: Data not integrity
+	at vn.payos.service.blocking.webhooks.WebhooksServiceImpl.verify(WebhooksServiceImpl.java:73)
+	at com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.PayOsPaymentAdapter.verifyWebhook(PayOsPaymentAdapter.java:120)
+	at com.tyson.digitalwallet.ddd.infrastructure.persistence.adapter.payment.PayOsWebhookValidationTest.tamperedPayOsDataCannotReachCreditValidation(PayOsWebhookValidationTest.java:37)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+23:47:08.212 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Stripe secret key is not configured. Stripe card payment gateway will be unavailable.
+23:47:08.218 [main] INFO com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Verified paid Stripe checkout session: cs_test, amount: 500000, currency: vnd
+23:47:08.219 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Stripe secret key is not configured. Stripe card payment gateway will be unavailable.
+23:47:08.221 [main] ERROR com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Failed to verify Stripe webhook: No signatures found matching the expected signature for payload
+com.stripe.exception.SignatureVerificationException: No signatures found matching the expected signature for payload
+	at com.stripe.net.Webhook$Signature.verifyHeader(Webhook.java:145)
+	at com.stripe.net.Webhook.constructEvent(Webhook.java:74)
+	at com.stripe.net.Webhook.constructEvent(Webhook.java:51)
+	at com.stripe.net.Webhook.constructEvent(Webhook.java:32)
+	at com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter.verifyWebhook(StripePaymentAdapter.java:146)
+	at com.tyson.digitalwallet.ddd.infrastructure.persistence.adapter.payment.StripeWebhookValidationTest.tamperedSignedPayloadIsRejected(StripeWebhookValidationTest.java:61)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+23:47:08.222 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Stripe secret key is not configured. Stripe card payment gateway will be unavailable.
+23:47:08.225 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Stripe secret key is not configured. Stripe card payment gateway will be unavailable.
+23:47:08.231 [main] INFO com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Verified paid Stripe checkout session: cs_test, amount: 500000, currency: vnd
+23:47:08.234 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Stripe secret key is not configured. Stripe card payment gateway will be unavailable.
+23:47:08.236 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Stripe secret key is not configured. Stripe card payment gateway will be unavailable.
+23:47:08.240 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Stripe secret key is not configured. Stripe card payment gateway will be unavailable.
+23:47:08.242 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Stripe secret key is not configured. Stripe card payment gateway will be unavailable.
+23:47:08.246 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Stripe secret key is not configured. Stripe card payment gateway will be unavailable.
+23:47:08.254 [main] WARN com.tyson.digitalwallet.ddd.infrastructure.adapter.payment.StripePaymentAdapter -- Stripe secret key is not configured. Stripe card payment gateway will be unavailable.
+23:47:08.916 [main] INFO org.hibernate.orm.core -- HHH000001: Hibernate ORM core version 7.4.1.Final
+23:47:10.689 [main] WARN org.hibernate.orm.connections.pooling -- HHH10001002: Using built-in connection pool (not intended for production use)
+23:47:10.914 [main] INFO org.hibernate.orm.connections.pooling -- HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:deposit;DB_CLOSE_DELAY=-1]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.3.232
+	Default catalog/schema: DEPOSIT/PUBLIC
+	Autocommit mode: false
+	Isolation level: READ_COMMITTED
+	JDBC fetch size: 100
+	Pool: DriverManagerConnectionProvider
+	Minimum pool size: 1
+	Maximum pool size: 20
+23:47:13.679 [main] INFO org.hibernate.orm.core -- HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Oct 29, 2026 11:47:14 PM org.springframework.data.jpa.repository.query.QueryEnhancerFactories <clinit>
+INFO: Hibernate is in classpath; If applicable, HQL parser will be used.
+23:47:17.010 [main] WARN org.hibernate.orm.connections.pooling -- HHH10001002: Using built-in connection pool (not intended for production use)
+23:47:17.020 [main] INFO org.hibernate.orm.connections.pooling -- HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:withdrawal;MODE=PostgreSQL;DB_CLOSE_DELAY=-1]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.3.232
+	Default catalog/schema: WITHDRAWAL/PUBLIC
+	Autocommit mode: false
+	Isolation level: READ_COMMITTED
+	JDBC fetch size: 100
+	Pool: DriverManagerConnectionProvider
+	Minimum pool size: 1
+	Maximum pool size: 20
+23:47:17.246 [main] INFO org.hibernate.orm.core -- HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+23:47:18.928 [main] INFO com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=477d55e6-a77b-4980-a86c-747b11b8a160 operation=upload result=success elapsedMs=51
+23:47:18.932 [main] INFO com.tyson.digitalwallet.ddd.application.receiveqr.ReceiveQrService -- mediaId=477d55e6-a77b-4980-a86c-747b11b8a160 walletId=f39dcc65-3226-4e34-88bd-0f3070438d6a operation=receive-qr result=generated
+23:47:19.192 [main] INFO com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=86c97e1f-72bf-46e2-b2a8-d08bf10b8031 operation=upload result=success elapsedMs=19
+23:47:19.196 [main] INFO com.tyson.digitalwallet.ddd.application.receiveqr.ReceiveQrService -- mediaId=86c97e1f-72bf-46e2-b2a8-d08bf10b8031 walletId=9d87847d-0321-4f6f-b34d-1d5e23d2131c operation=receive-qr result=generated
+23:47:19.244 [main] INFO com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=5a648a86-c595-4445-af4d-b60a953e1810 operation=upload result=success elapsedMs=14
+23:47:19.259 [main] INFO com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=86c97e1f-72bf-46e2-b2a8-d08bf10b8031 operation=delete result=success elapsedMs=3
+23:47:19.366 [main] INFO com.tyson.digitalwallet.ddd.application.media.MediaService -- mediaId=aeeb52d3-ed3c-4205-a816-10b131a3efb3 operation=upload result=success elapsedMs=19
+23:47:19.366 [main] INFO com.tyson.digitalwallet.ddd.application.receiveqr.ReceiveQrService -- mediaId=aeeb52d3-ed3c-4205-a816-10b131a3efb3 walletId=062f1e4c-9540-40a5-977a-eee91ae9a05f operation=receive-qr result=generated

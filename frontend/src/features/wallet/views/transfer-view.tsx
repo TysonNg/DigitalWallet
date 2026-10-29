@@ -84,7 +84,7 @@ export function TransferView() {
 
     const lookupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Handle initial recipient from URL query param if present
+    // Handle initial recipient and amount from URL query param if present
     useEffect(() => {
         const queryRecipient =
             searchParams.get("recipient") ||
@@ -92,6 +92,13 @@ export function TransferView() {
             searchParams.get("phone");
         if (queryRecipient) {
             handleIdentifierChange(queryRecipient);
+        }
+        const queryAmount = searchParams.get("amount");
+        if (queryAmount) {
+            const parsed = Number(queryAmount);
+            if (!isNaN(parsed) && parsed > 0) {
+                setAmount(parsed);
+            }
         }
     }, [searchParams]);
 

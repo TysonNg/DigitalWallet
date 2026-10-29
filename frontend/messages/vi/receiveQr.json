@@ -1,0 +1,30 @@
+{
+    "receiveQr": {
+        "receive": "Nhận tiền",
+        "title": "Mã QR nhận tiền của bạn",
+        "description": "Chia sẻ mã QR hoặc liên kết này để người khác chuyển tiền vào ví của bạn.",
+        "close": "Đóng",
+        "loading": "Đang tải mã QR…",
+        "failed": "Không thể tải thông tin nhận tiền. Vui lòng thử lại.",
+        "imageFailed": "Không thể tải ảnh QR. Vui lòng thử lại.",
+        "imageAlt": "Mã QR nhận tiền của ví cá nhân",
+        "retry": "Thử lại",
+        "download": "Tải ảnh PNG",
+        "copyLink": "Sao chép liên kết",
+        "copied": "Đã sao chép liên kết nhận tiền.",
+        "copyFailed": "Không thể sao chép liên kết. Vui lòng thử lại.",
+        "invalid": "Liên kết nhận tiền không hợp lệ.",
+        "loginRequired": "Đăng nhập để xem thông tin người nhận.",
+        "login": "Đăng nhập để tiếp tục",
+        "recipientTitle": "Chuyển tiền đến ví này",
+        "review": "Kiểm tra người nhận trước khi tiếp tục. Bạn sẽ nhập số tiền và xác nhận tại biểu mẫu chuyển tiền.",
+        "resolving": "Đang tra cứu thông tin người nhận hiện tại…",
+        "name": "Người nhận",
+        "walletId": "Mã ví",
+        "currency": "Loại tiền",
+        "amount": "Số tiền chuyển",
+        "enterAmount": "Nhập số tiền",
+        "quickAmount": "Chọn nhanh số tiền",
+        "continue": "Tiếp tục chuyển tiền"
+    }
+}

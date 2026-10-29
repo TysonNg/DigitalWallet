@@ -2,6 +2,8 @@
 
 import { useTranslations, useLocale } from "next-intl";
 
+import { useState } from "react";
+import { ReceiveQrDialog } from "@/features/wallet/components/receive-qr-dialog";
 import { Wallet, MoreHorizontal, Plus, ArrowUpRight, Send } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -22,6 +24,8 @@ export function WalletCards({
     onWithdrawClick,
     onTransferClick,
 }: WalletCardsProps) {
+    const [receiving, setReceiving] = useState(false);
+    const receive = useTranslations("receiveQr");
     const t = useTranslations("dashboard");
     const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
     const common = useTranslations("common");
@@ -30,6 +34,7 @@ export function WalletCards({
 
     return (
         <div className="grid grid-cols-1 gap-5">
+            {receiving && <ReceiveQrDialog onClose={() => setReceiving(false)} />}
             {/* 1. Ví chính */}
             <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
                 <div>
@@ -59,7 +64,15 @@ export function WalletCards({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 mt-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-6">
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setReceiving(true)}
+                        aria-haspopup="dialog"
+                    >
+                        {receive("receive")}
+                    </Button>
                     {onDepositClick ? (
                         <Button
                             size="sm"

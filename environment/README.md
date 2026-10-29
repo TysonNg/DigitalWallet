@@ -76,3 +76,7 @@ docker compose -f environment/docker-compose.yml down
 docker compose -f environment/docker-compose.yml down -v
 ```
 
+
+## Private media storage
+
+MinIO, its private bucket initializer and application-scoped credentials are configured in Compose. Existing `.env` files need the media variables from `.env.example` before starting Compose. See [media storage setup, API and backup instructions](../docs/architecture/media-storage.md).

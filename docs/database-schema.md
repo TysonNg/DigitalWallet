@@ -59,3 +59,7 @@ erDiagram
    - Ràng buộc `UNIQUE(user_id)` trên bảng `wallets`.
 4. **Độ tuổi hợp lệ (`chk_users_dob`)**:
    - `CHECK (dob <= CURRENT_DATE)`: Ngày sinh không thể nằm ở tương lai.
+
+## Media metadata (V19)
+
+`media_files` references `users(id)` through `owner_id`. It stores the bucket/object key, original display name, verified content type, byte size, lifecycle status (`PENDING`, `READY`, `DELETING`, `DELETED`) and UTC timestamps. Image bytes reside in private object storage. Metadata tombstones remain after deletion for idempotent API behavior. See [media storage architecture and operations](architecture/media-storage.md).
