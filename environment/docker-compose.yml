@@ -1,11 +1,40 @@
 name: digital-wallet
 services:
+  nginx:
+    image: digital-wallet-nginx:latest
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: digital_wallet_nginx
+    restart: always
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - digital-wallet-network
+
   backend:
     image: digital-wallet-backend:latest
     build:
       context: ../backend
-    container_name: digital_wallet_backend
+    # container_name: digital_wallet_backend # Disabled to allow scaling (--scale backend=N)
     restart: always
+    expose:
+      - "3006"
     ports:
       - "3006:3006"
       - "8080:3006"
@@ -54,8 +83,10 @@ services:
     build:
       context: ../frontend
       dockerfile: Dockerfile
-    container_name: digital_wallet_frontend
+    # container_name: digital_wallet_frontend # Disabled to allow scaling (--scale frontend=N)
     restart: always
+    expose:
+      - "3000"
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:

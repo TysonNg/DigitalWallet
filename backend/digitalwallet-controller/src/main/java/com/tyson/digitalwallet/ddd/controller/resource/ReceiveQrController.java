@@ -7,6 +7,7 @@ import com.tyson.digitalwallet.ddd.application.usecase.receiveqr.ResolveReceiveR
 import com.tyson.digitalwallet.ddd.controller.common.ApiResponse;
 import java.security.Principal;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ public class ReceiveQrController {
   private final GetOrCreateReceiveQrUseCase getOrCreateReceiveQrUseCase;
   private final ResolveReceiveRecipientUseCase resolveReceiveRecipientUseCase;
 
+  @Autowired
   public ReceiveQrController(
       GetOrCreateReceiveQrUseCase getOrCreateReceiveQrUseCase,
       ResolveReceiveRecipientUseCase resolveReceiveRecipientUseCase) {

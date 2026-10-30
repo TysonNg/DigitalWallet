@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,7 @@ public class MediaController {
   private final GetMediaContentUseCase getMediaContentUseCase;
   private final DeleteMediaUseCase deleteMediaUseCase;
 
+  @Autowired
   public MediaController(
       UploadMediaUseCase uploadMediaUseCase,
       GetMediaMetadataUseCase getMediaMetadataUseCase,

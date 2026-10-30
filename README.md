@@ -19,8 +19,13 @@ DigitalWallet/
 ├── frontend/                     # Mã nguồn Giao diện người dùng (Next.js / React)
 │   └── README.md
 │
-├── deploy/                       # Cấu hình môi trường triển khai & hạ tầng
-│   ├── docker-compose.yml             # Khởi chạy PostgreSQL 16 & Redis 7
+├── environment/                       # Cấu hình môi trường triển khai & hạ tầng
+│   ├── docker-compose.yml             # Khởi chạy toàn bộ hạ tầng (Postgres, Redis, Kafka, Nginx, BFF, Backend)
+│   ├── nginx/                         # Cấu hình Nginx SSL Termination & Load Balancer
+│   │   ├── nginx.conf                 # Cấu hình chính Nginx (Worker, SSL, Gzip, Logs)
+│   │   ├── conf.d/default.conf        # Cấu hình HTTPS (443), HTTP redirect (80), upstream
+│   │   ├── ssl/                       # Thư mục chứng chỉ SSL/TLS trên host (được mount vào container)
+│   │   └── Dockerfile                 # Dockerfile đóng gói Nginx Alpine tinh gọn
 │   └── README.md
 │
 ├── docs/                         # Tài liệu thiết kế hệ thống & CSDL
@@ -50,12 +55,15 @@ DigitalWallet/
 ### Cách 1: Khởi chạy toàn bộ hệ thống bằng Docker Compose (Khuyên dùng)
 Chỉ cần chạy **1 câu lệnh duy nhất** tại thư mục gốc của dự án:
 ```bash
-docker compose -f deploy/docker-compose.yml up -d --build
+docker compose -f environment/docker-compose.yml up -d --build
 ```
 Lệnh trên sẽ tự động build và khởi động toàn bộ:
-- **Frontend (Next.js BFF)**: [http://localhost:3000](http://localhost:3000)
-- **Backend API**: [http://localhost:8080/api/v1](http://localhost:8080/api/v1)
+- **Nginx Gateway (HTTPS/SSL & LB)**: [https://localhost](https://localhost) (Tự động chuyển hướng từ HTTP `80` sang HTTPS `443`)
+- **Frontend (Next.js BFF)**: [https://localhost](https://localhost) (hoặc trực tiếp [http://localhost:3000](http://localhost:3000))
+- **Backend API**: [https://localhost/api/v1](https://localhost/api/v1) (hoặc trực tiếp [http://localhost:3006/api/v1](http://localhost:3006/api/v1))
 - **pgAdmin 4**: [http://localhost:5050](http://localhost:5050)
+- **Grafana Dashboard**: [http://localhost:3001](http://localhost:3001) (admin/admin)
+- **Prometheus Metrics**: [http://localhost:9090](http://localhost:9090)
 - **PostgreSQL 16**: `localhost:5432` (User: `admin`, Password: `admin123`, DB: `digital_wallet`)
 - **Redis 7**: `localhost:6379`
 
@@ -65,7 +73,7 @@ Lệnh trên sẽ tự động build và khởi động toàn bộ:
 
 #### 1. Khởi chạy Database & Cache:
 ```bash
-docker compose -f deploy/docker-compose.yml up -d postgres redis
+docker compose -f environment/docker-compose.yml up -d postgres redis
 ```
 
 #### 2. Khởi chạy Backend (Spring Boot):
@@ -107,4 +115,4 @@ Frontend web sẽ hoạt động tại `http://localhost:3000`.
 ## 📚 Tài liệu chi tiết
 - Chi tiết kiến trúc phân tầng: [docs/architecture.md](docs/architecture.md)
 - Thiết kế cơ sở dữ liệu & ERD: [docs/database-schema.md](docs/database-schema.md)
-- Hướng dẫn hạ tầng Docker: [deploy/README.md](deploy/README.md)
+- Hướng dẫn hạ tầng Docker: [environment/README.md](environment/README.md)
