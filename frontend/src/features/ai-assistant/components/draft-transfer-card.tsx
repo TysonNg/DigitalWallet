@@ -53,7 +53,7 @@ export function DraftTransferCard({ payload, onConfirm }: DraftTransferCardProps
                 <div className="flex justify-between items-start">
                     <span className="text-slate-500">Lời nhắn:</span>
                     <span className="font-normal text-slate-700 italic max-w-[200px] text-right truncate">
-                        "{payload.note}"
+                        &quot;{payload.note}&quot;
                     </span>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AdminUser } from "../types/admin.types";
 import { Shield, ShieldCheck, Check, Info } from "lucide-react";
 
@@ -41,13 +41,13 @@ export function RoleAssignmentModal({
     onClose,
     onSave,
 }: RoleAssignmentModalProps) {
-    const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+    const [previousUser, setPreviousUser] = useState(user);
+    const [selectedRoles, setSelectedRoles] = useState<string[]>(user?.roles || ["ROLE_USER"]);
 
-    useEffect(() => {
-        if (user) {
-            setSelectedRoles(user.roles || ["ROLE_USER"]);
-        }
-    }, [user]);
+    if (user !== previousUser) {
+        setPreviousUser(user);
+        setSelectedRoles(user?.roles || ["ROLE_USER"]);
+    }
 
     if (!isOpen || !user) return null;
 

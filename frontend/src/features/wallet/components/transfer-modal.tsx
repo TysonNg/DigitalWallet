@@ -9,7 +9,6 @@ import {
     CheckCircle2,
     Loader2,
     BookmarkPlus,
-    User as UserIcon,
     AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -109,10 +108,17 @@ export function TransferModal({
     // Debounce timer ref
     const lookupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Initialize or reset when modal opens or initialRecipient changes
+    const [previousInputs, setPreviousInputs] = useState<unknown[] | null>(null);
+    const inputs = [isOpen, initialRecipient, currency, initialAmount, initialDescription, defaultDescription];
+
     useEffect(() => {
+        if (!isOpen) pendingTransferRef.current = null;
+    }, [isOpen]);
+
+    // Adjust state before children render when a different form is requested.
+    if (!previousInputs || inputs.some((value, index) => value !== previousInputs[index])) {
+        setPreviousInputs(inputs);
         if (!isOpen) {
-            pendingTransferRef.current = null;
             setPendingTransfer(null);
             setIdentifier("");
             setReceiverWalletId("");
@@ -122,10 +128,7 @@ export function TransferModal({
             setSaveBeneficiary(false);
             setBeneficiaryNickname("");
             setIsAddressBookOpen(false);
-            return;
-        }
-
-        if (initialRecipient) {
+        } else if (initialRecipient) {
             setIdentifier(initialRecipient.identifier);
             setReceiverWalletId(initialRecipient.walletId);
             setVerifiedRecipient({
@@ -140,7 +143,7 @@ export function TransferModal({
         const form = initializeTransferForm(defaultDescription, initialAmount, initialDescription);
         setAmount(form.amount);
         setDescription(form.description);
-    }, [isOpen, initialRecipient, currency, initialAmount, initialDescription, defaultDescription]);
+    }
 
     // Handle debounced lookup when user types in the identifier input
     const handleIdentifierChange = (value: string) => {
@@ -172,8 +175,8 @@ export function TransferModal({
                     setVerifiedRecipient(null);
                     setReceiverWalletId("");
                     const msg =
-                        res.errorCode && apiErr.has(res.errorCode as any)
-                            ? apiErr(res.errorCode as any)
+                        res.errorCode && apiErr.has(res.errorCode)
+                            ? apiErr(res.errorCode)
                             : res.message || t("recipientNotFound");
                     setLookupError(msg);
                 }
@@ -300,8 +303,8 @@ export function TransferModal({
             onClose();
         } catch (err: unknown) {
             let msg = t("anErrorOccurredWhileTransferringMoney");
-            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
-                msg = apiErr(err.errorCode as any);
+            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode)) {
+                msg = apiErr(err.errorCode);
             } else if (err instanceof Error) {
                 msg = err.message;
             }

@@ -28,7 +28,12 @@ RUN mvn clean package -DskipTests -B && \
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/* && useradd --system --uid 10001 app
+
 COPY --from=builder /build/app.jar app.jar
+
+USER app
 
 EXPOSE 3006
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -12,7 +12,7 @@ import {
     reconcileWalletAction,
 } from "../actions/admin.actions";
 import { toast } from "sonner";
-import { AdminStats, AdminUser, TrialBalance, WalletReconciliation } from "../types/admin.types";
+import { AdminStats, AdminUser, TrialBalance } from "../types/admin.types";
 
 export function useAdminStatsQuery(initialData?: AdminStats | null) {
     return useQuery({

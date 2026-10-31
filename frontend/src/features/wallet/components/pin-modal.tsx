@@ -16,8 +16,11 @@ interface PinModalProps {
     errorMessage?: string | null;
 }
 
-export function PinModal({
-    isOpen,
+export function PinModal(props: PinModalProps) {
+    return props.isOpen ? <PinModalForm {...props} /> : null;
+}
+
+function PinModalForm({
     onClose,
     onConfirm,
     title = "Xác nhận mã PIN ví",
@@ -34,28 +37,14 @@ export function PinModal({
     const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
     useEffect(() => {
-        if (isOpen) {
-            setPin(["", "", "", "", "", ""]);
-            setLocalError(null);
-            setTimeout(() => {
-                inputsRef.current[0]?.focus();
-            }, 100);
-        }
-    }, [isOpen]);
-
-    useEffect(() => {
-        if (errorMessage) {
-            setLocalError(errorMessage);
-            triggerShake();
-        }
-    }, [errorMessage]);
+        const timer = setTimeout(() => inputsRef.current[0]?.focus(), 100);
+        return () => clearTimeout(timer);
+    }, []);
 
     const triggerShake = () => {
         setShake(true);
         setTimeout(() => setShake(false), 500);
     };
-
-    if (!isOpen) return null;
 
     const handleChange = (index: number, value: string) => {
         setLocalError(null);
@@ -206,10 +195,10 @@ export function PinModal({
                 </div>
 
                 {/* Error Banner */}
-                {localError && (
+                {(localError || errorMessage) && (
                     <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200/80 text-xs text-rose-600 flex items-start space-x-2">
                         <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                        <span className="leading-snug">{localError}</span>
+                        <span className="leading-snug">{localError || errorMessage}</span>
                     </div>
                 )}
 

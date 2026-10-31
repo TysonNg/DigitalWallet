@@ -22,17 +22,6 @@ interface PaymentOrderRequest {
     gateway: PaymentGatewayType;
 }
 
-interface PaymentOrderResponse {
-    id: string;
-    walletId: string;
-    userId: string;
-    amount: number;
-    gateway: PaymentGatewayType;
-    gatewayOrderId: string;
-    status: "PENDING" | "SUCCESS" | "FAILED";
-    checkoutUrl: string;
-}
-
 /**
  * Simulates BFF payment order creator with transparent token renewal
  */
@@ -82,7 +71,7 @@ async function createPaymentOrderFlow(
 
     // 401 transparent token refresh
     if (res.status === 401 && session.refreshToken) {
-        const newAccessToken = await refreshSession(session as any, refreshTokens);
+        const newAccessToken = await refreshSession(session, refreshTokens);
         headers = {
             "Content-Type": "application/json",
             Authorization: `Bearer ${newAccessToken}`,

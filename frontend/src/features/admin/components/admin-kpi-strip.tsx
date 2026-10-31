@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminStats } from "../types/admin.types";
-import { Users, Wallet, ArrowLeftRight, ShieldAlert, CircleDollarSign } from "lucide-react";
+import { Users, Wallet, ArrowLeftRight, CircleDollarSign } from "lucide-react";
 
 interface AdminKpiStripProps {
     stats?: AdminStats | null;

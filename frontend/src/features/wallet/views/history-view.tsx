@@ -9,14 +9,8 @@ import {
     ArrowUpRight,
     Search,
     X,
-    Filter,
-    Calendar,
-    ChevronDown,
-    ChevronUp,
     Copy,
     Check,
-    CreditCard,
-    FileText,
     Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -35,8 +29,6 @@ interface TimelineGroup {
 
 export function HistoryView() {
     const t = useTranslations("dashboard");
-    const walletT = useTranslations("wallet");
-    const common = useTranslations("common");
     const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
     const searchParams = useSearchParams();
 

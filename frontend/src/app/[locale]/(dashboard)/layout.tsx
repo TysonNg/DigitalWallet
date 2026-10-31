@@ -17,7 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         return null;
     }
 
-    return <DashboardShell user={session.user as any}>{children}</DashboardShell>;
+    return <DashboardShell user={session.user}>{children}</DashboardShell>;
 }
 
 export const metadata = { robots: { index: false, follow: false } };

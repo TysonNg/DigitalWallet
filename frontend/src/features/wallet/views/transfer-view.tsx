@@ -9,7 +9,6 @@ import {
     CheckCircle2,
     Loader2,
     BookmarkPlus,
-    User as UserIcon,
     AlertCircle,
     ArrowRight,
     Search,
@@ -38,7 +37,6 @@ export function TransferView() {
     const t = useTranslations("wallet");
     const dashT = useTranslations("dashboard");
     const apiErr = useTranslations("apiErrors");
-    const common = useTranslations("common");
     const locale = useLocale() === "vi" ? "vi-VN" : "en-US";
     const searchParams = useSearchParams();
 
@@ -50,10 +48,15 @@ export function TransferView() {
     const formatVND = (value: number) =>
         new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
 
+    const queryRecipient = searchParams.get("recipient") || searchParams.get("walletId") || searchParams.get("phone") || "";
+    const queryAmount = searchParams.get("amount");
+    const parsedAmount = Number(queryAmount);
+    const initialAmount = Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : 200000;
+
     // Form states
-    const [identifier, setIdentifier] = useState<string>("");
+    const [identifier, setIdentifier] = useState<string>(queryRecipient);
     const [receiverWalletId, setReceiverWalletId] = useState<string>("");
-    const [amount, setAmount] = useState<number>(200000);
+    const [amount, setAmount] = useState<number>(initialAmount);
     const [description, setDescription] = useState<string>(t("defaultTransferDescription"));
     const [error, setError] = useState<string | null>(null);
 
@@ -84,23 +87,36 @@ export function TransferView() {
 
     const lookupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Handle initial recipient and amount from URL query param if present
+    const [previousQuery, setPreviousQuery] = useState({ recipient: queryRecipient, amount: queryAmount });
+
+    if (previousQuery.recipient !== queryRecipient || previousQuery.amount !== queryAmount) {
+        setPreviousQuery({ recipient: queryRecipient, amount: queryAmount });
+        if (previousQuery.amount !== queryAmount) setAmount(initialAmount);
+        if (previousQuery.recipient !== queryRecipient) {
+            setIdentifier(queryRecipient);
+            setReceiverWalletId("");
+            setVerifiedRecipient(null);
+            setLookupError(null);
+        }
+    }
+
     useEffect(() => {
-        const queryRecipient =
-            searchParams.get("recipient") ||
-            searchParams.get("walletId") ||
-            searchParams.get("phone");
-        if (queryRecipient) {
-            handleIdentifierChange(queryRecipient);
-        }
-        const queryAmount = searchParams.get("amount");
-        if (queryAmount) {
-            const parsed = Number(queryAmount);
-            if (!isNaN(parsed) && parsed > 0) {
-                setAmount(parsed);
+        if (!queryRecipient || identifier !== queryRecipient) return;
+        let cancelled = false;
+        lookupRecipientAction(queryRecipient).then((res) => {
+            if (cancelled) return;
+            if (res.success && res.data) {
+                setVerifiedRecipient(res.data);
+                setReceiverWalletId(res.data.walletId);
+                setLookupError(null);
+            } else {
+                setLookupError(res.errorCode && apiErr.has(res.errorCode) ? apiErr(res.errorCode) : res.message || t("recipientNotFound"));
             }
-        }
-    }, [searchParams]);
+        }).catch(() => {
+            if (!cancelled) setLookupError(t("recipientNotFound"));
+        });
+        return () => { cancelled = true; };
+    }, [queryRecipient, identifier, apiErr, t]);
 
     const handleIdentifierChange = (value: string) => {
         setIdentifier(value);
@@ -131,8 +147,8 @@ export function TransferView() {
                     setVerifiedRecipient(null);
                     setReceiverWalletId("");
                     const msg =
-                        res.errorCode && apiErr.has(res.errorCode as any)
-                            ? apiErr(res.errorCode as any)
+                        res.errorCode && apiErr.has(res.errorCode)
+                            ? apiErr(res.errorCode)
                             : res.message || t("recipientNotFound");
                     setLookupError(msg);
                 }
@@ -204,8 +220,8 @@ export function TransferView() {
             toast.success(t("transferSuccess", { amount: formatVND(amount) }));
         } catch (err: unknown) {
             let msg = t("anErrorOccurredWhileTransferringMoney");
-            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
-                msg = apiErr(err.errorCode as any);
+            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode)) {
+                msg = apiErr(err.errorCode);
             } else if (err instanceof Error) {
                 msg = err.message;
             }

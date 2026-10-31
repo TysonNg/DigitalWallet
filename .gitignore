@@ -52,3 +52,10 @@ frontend/out/
 .env.*.local
 environment/.env
 *.backup
+### Production runtime and backups ###
+environment/.env.prod
+environment/certbot/
+environment/backups/
+environment/.deployed-image-tag
+environment/.previous-image-tag
+environment/.deploy.lock

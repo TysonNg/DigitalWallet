@@ -8,10 +8,7 @@ import {
     Bot,
     User as UserIcon,
     RotateCcw,
-    ChevronDown,
     Zap,
-    CheckCircle2,
-    AlertCircle,
     Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -95,13 +92,13 @@ export function AiChatDrawer({
         streamController.current = controller;
 
         const userMsg: ChatMessage = {
-            id: "msg-" + Date.now(),
+            id: "msg-" + crypto.randomUUID(),
             role: "user",
             content: queryText,
             timestamp: new Date(),
         };
 
-        const assistantMsgId = "msg-" + (Date.now() + 1);
+        const assistantMsgId = "msg-" + crypto.randomUUID();
         const initialAssistantMsg: ChatMessage = {
             id: assistantMsgId,
             role: "assistant",

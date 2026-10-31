@@ -47,10 +47,6 @@ interface RefreshSession {
     refreshToken?: string;
     user?: {
         id: string;
-        email: string;
-        fullName: string;
-        phoneNumber?: string;
-        status: any;
         roles?: string[];
         authorities?: string[];
     };

@@ -298,7 +298,7 @@ export async function changePasswordAction(input: {
     newPassword: string;
 }): Promise<ActionResponse<null>> {
     let t: (key: string) => string = (k) => k;
-    let apiErrors: ((key: string) => string) | null = null;
+    let apiErrors: Awaited<ReturnType<typeof getTranslations>> | null = null;
     try {
         const [authErr, errs] = await Promise.all([
             getTranslations("authErrors"),
@@ -339,9 +339,9 @@ export async function changePasswordAction(input: {
         };
     } catch (error) {
         if (error instanceof BackendError) {
-            const hasTranslation = error.errorCode && apiErrors && (apiErrors as any).has?.(error.errorCode);
-            const translated = hasTranslation && apiErrors
-                ? apiErrors(error.errorCode as any)
+            const hasTranslation = error.errorCode && apiErrors && apiErrors.has(error.errorCode);
+            const translated = hasTranslation && apiErrors && error.errorCode
+                ? apiErrors(error.errorCode)
                 : error.message;
             return {
                 success: false,

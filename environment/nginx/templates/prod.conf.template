@@ -1,0 +1,65 @@
+upstream backend_cluster {
+    server backend:3006;
+    keepalive 32;
+}
+upstream frontend_cluster {
+    server frontend:3000;
+    keepalive 32;
+}
+server {
+    listen 80;
+    server_name ${DOMAIN};
+    location = /health { default_type text/plain; return 200 "healthy\n"; }
+    location ^~ /.well-known/acme-challenge/ { root /var/www/certbot; }
+    location / { return 301 https://${DOMAIN}$request_uri; }
+}
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMAIN};
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    client_max_body_size 6M;
+    server_tokens off;
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options SAMEORIGIN always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    location = /health { default_type text/plain; return 200 "healthy\n"; }
+    # Actuator stays reachable inside Docker for probes and Prometheus only.
+    location ~ ^/(api/v1/)?actuator(?:/|$) { return 404; }
+    location /api/v1/ws {
+        proxy_pass http://backend_cluster;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_read_timeout 3600s;
+    }
+    location /api/v1 {
+        proxy_pass http://backend_cluster;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_read_timeout 90s;
+        # Do not retry financial mutations on a second upstream.
+        proxy_next_upstream off;
+    }
+    location / {
+        proxy_pass http://frontend_cluster;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_read_timeout 180s;
+        proxy_next_upstream off;
+    }
+}

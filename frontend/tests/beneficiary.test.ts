@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import viMessages from "../messages/vi.json";
+import enMessages from "../messages/en.json";
 import type { BeneficiaryDto, RecipientLookupDto } from "../src/features/wallet/types/wallet.types";
 
 interface MockApiResponse<T> {
@@ -99,8 +101,6 @@ test("Prevent transferring to self detection logic", () => {
 });
 
 test("Resolves localized error message from machine-readable errorCode in vi and en", () => {
-    const viMessages = require("../messages/vi.json");
-    const enMessages = require("../messages/en.json");
 
     const sampleCodes = [
         "USER_NOT_FOUND",
@@ -108,7 +108,7 @@ test("Resolves localized error message from machine-readable errorCode in vi and
         "BENEFICIARY_ALREADY_EXISTS",
         "INSUFFICIENT_BALANCE",
         "CANNOT_ADD_SELF_AS_BENEFICIARY"
-    ];
+    ] as const;
 
     for (const code of sampleCodes) {
         assert.ok(viMessages.apiErrors[code], `vi.json missing apiErrors.${code}`);

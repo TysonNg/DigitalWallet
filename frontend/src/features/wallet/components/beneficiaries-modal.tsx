@@ -81,8 +81,8 @@ export function BeneficiariesModal({
     });
 
     const resolveErrorMessage = (err: unknown, defaultMessage: string): string => {
-        if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
-            return apiErr(err.errorCode as any);
+        if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode)) {
+            return apiErr(err.errorCode);
         }
         if (err instanceof Error && err.message) {
             return err.message;
@@ -102,8 +102,8 @@ export function BeneficiariesModal({
                 setLookupResult(res.data);
             } else {
                 const message =
-                    res.errorCode && apiErr.has(res.errorCode as any)
-                        ? apiErr(res.errorCode as any)
+                    res.errorCode && apiErr.has(res.errorCode)
+                        ? apiErr(res.errorCode)
                         : res.message || t("recipientNotFound");
                 setLookupError(message);
             }

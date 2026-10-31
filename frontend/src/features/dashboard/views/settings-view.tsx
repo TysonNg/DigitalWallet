@@ -8,9 +8,7 @@ import {
     Phone,
     Shield,
     KeyRound,
-    Lock,
     CheckCircle2,
-    Calendar,
     BadgeCheck,
     Globe,
     AlertCircle,
@@ -38,7 +36,6 @@ interface SettingsViewProps {
 export function SettingsView({ user }: SettingsViewProps) {
     const t = useTranslations("dashboard");
     const apiErr = useTranslations("apiErrors");
-    const common = useTranslations("common");
 
     const { data: myWallet, refetch: refetchWallet } = useMyWalletQuery();
     const setupPinMutation = useSetupPinMutation();
@@ -143,8 +140,8 @@ export function SettingsView({ user }: SettingsViewProps) {
             refetchWallet();
         } catch (err: unknown) {
             let msg = "Thiết lập mã PIN thất bại";
-            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
-                msg = apiErr(err.errorCode as any);
+            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode)) {
+                msg = apiErr(err.errorCode);
             } else if (err instanceof Error) {
                 msg = err.message;
             }
@@ -191,8 +188,8 @@ export function SettingsView({ user }: SettingsViewProps) {
             refetchWallet();
         } catch (err: unknown) {
             let msg = "Đổi mã PIN thất bại";
-            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode as any)) {
-                msg = apiErr(err.errorCode as any);
+            if (err instanceof ActionError && err.errorCode && apiErr.has(err.errorCode)) {
+                msg = apiErr(err.errorCode);
             } else if (err instanceof Error) {
                 msg = err.message;
             }

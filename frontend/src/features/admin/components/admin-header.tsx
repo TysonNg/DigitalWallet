@@ -2,7 +2,7 @@
 
 import { User } from "@/features/auth/types/auth.types";
 import { Link } from "@/i18n/navigation";
-import { ShieldAlert, RefreshCw, ArrowLeft, Wallet } from "lucide-react";
+import { ShieldAlert, RefreshCw, Wallet } from "lucide-react";
 
 interface AdminHeaderProps {
     currentUser?: User;

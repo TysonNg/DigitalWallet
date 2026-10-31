@@ -9,9 +9,6 @@ import {
     Lock,
     Unlock,
     Filter,
-    Calendar,
-    Phone,
-    Wallet,
     RotateCcw,
     Snowflake,
     Scale,
@@ -177,7 +174,6 @@ export function AdminUserTable({
                             </tr>
                         ) : (
                             filteredUsers.map((user) => {
-                                const isAdmin = user.roles?.includes("ROLE_ADMIN");
                                 const isSuspended = user.status === "SUSPENDED";
 
                                 return (

@@ -4,6 +4,16 @@ Hệ thống backend lõi cho **Ví điện tử (Digital Wallet)** được xâ
 
 ---
 
+## CI/CD và bản demo VPS
+
+- Frontend: Next.js 16, React 19, TypeScript; backend: Java 21, Spring Boot đa module.
+- [CI và xuất bản GHCR](docs/ci-cd.md): kiểm tra code/test/build trước khi xuất bản image theo commit SHA.
+- [Triển khai VPS với HTTPS](docs/deployment.md): Compose production, secrets, health check, backup và rollback.
+- [Checklist demo và CV](docs/demo-checklist.md): các luồng cần kiểm tra và bằng chứng cần lưu.
+- Trạng thái: chưa có VPS/domain; cấu hình triển khai đã chuẩn bị, chưa có link demo công khai.
+
+---
+
 ## 🏗️ Cấu trúc dự án (Enterprise Monorepo)
 
 ```text
@@ -39,13 +49,13 @@ DigitalWallet/
 
 ## 🛠️ Công nghệ cốt lõi
 
-- **Ngôn ngữ & Nền tảng**: Java 21+, Spring Boot 3.x / 4.x
+- **Ngôn ngữ & Nền tảng**: Java 21+, Spring Boot 4.x
 - **Kiến trúc phần mềm**: Domain-Driven Design (DDD), Clean Architecture / Hexagonal
 - **Cơ sở dữ liệu**: PostgreSQL 16 (Quan hệ 1-1, Check Constraints `balance >= 0`, Unique Email/Phone)
 - **Database Migration**: Flyway (Quản lý phiên bản CSDL tự động)
 - **Bộ nhớ đệm & Phiên**: Redis 7 (Quản lý Blacklist Token, Idempotency, Session Store)
 - **Bảo mật**: Spring Security, Stateless Authentication (JWT), Băm mật khẩu chuẩn **Argon2id** (OWASP #1)
-- **Giao diện & BFF**: Next.js 15 (App Router, React 19, TypeScript), Tailwind CSS, Iron Session (BFF Token Encryption)
+- **Giao diện & BFF**: Next.js 16 (App Router, React 19, TypeScript), Tailwind CSS, Iron Session (BFF Token Encryption)
 - **Đóng gói & Hạ tầng**: Docker, Docker Compose (Multi-stage build)
 
 ---
