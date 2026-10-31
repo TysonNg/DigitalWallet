@@ -20,7 +20,7 @@ cp environment/.env.prod.example environment/.env.prod
 chmod 600 environment/.env.prod
 ```
 
-Điền `.env.prod` bằng trình soạn thảo trên VPS. Tạo các secret khác nhau bằng `openssl rand -hex 32`; không gửi chúng lên chat hay commit Git. SESSION_SECRET tối thiểu 32 ký tự. Điền SMTP thật nếu cần OTP. Với portfolio chỉ dùng Stripe test mode/PayOS sandbox phù hợp; các tính năng không có credential chưa được coi là đã kiểm chứng.
+Điền `.env.prod` bằng trình soạn thảo trên VPS. Tạo các secret khác nhau bằng `openssl rand -hex 32`; không gửi chúng lên chat hay commit Git. SESSION_SECRET tối thiểu 32 ký tự. Điền SMTP thật nếu cần OTP. Với portfolio chỉ dùng Stripe test mode/PayOS sandbox phù hợp; các tính năng không có credential chưa được coi là đã kiểm chứng. OpenAI để trống sẽ dùng chế độ offline `demo-key` hiện có của ứng dụng.
 
 Nếu package private, đăng nhập GHCR trên VPS bằng cơ chế chính thức với token chỉ đọc package và `--password-stdin`. Không lưu token trong repository.
 

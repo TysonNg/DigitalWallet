@@ -64,7 +64,7 @@ services:
       - MEDIA_S3_BUCKET=${MEDIA_S3_BUCKET:-digital-wallet-media}
       - MEDIA_S3_ACCESS_KEY=${MEDIA_S3_ACCESS_KEY:?Set MEDIA_S3_ACCESS_KEY}
       - MEDIA_S3_SECRET_KEY=${MEDIA_S3_SECRET_KEY:?Set MEDIA_S3_SECRET_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-demo-key}
       - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_JPA_SHOW_SQL=false
@@ -180,6 +180,7 @@ services:
       - "--appendonly"
       - "yes"
   kafka:
+    restart: unless-stopped
     image: apache/kafka:4.1.2
     hostname: kafka
     environment:

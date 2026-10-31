@@ -118,6 +118,50 @@ jobs:
         with:
           context: ${{ matrix.context }}
           push: false
+          load: ${{ matrix.image == 'nginx' }}
+          tags: digitalwallet-ci/${{ matrix.image }}:check
           platforms: linux/amd64
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+      - name: Check production Nginx TLS configuration
+        if: matrix.image == 'nginx'
+        shell: bash
+        run: |
+          cert_dir="$RUNNER_TEMP/certs/live/wallet.example.com"
+          mkdir -p "$cert_dir"
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -subj '/CN=wallet.example.com' \
+            -keyout "$cert_dir/privkey.pem" -out "$cert_dir/fullchain.pem" 2>/dev/null
+          docker run --rm --add-host backend:127.0.0.1 --add-host frontend:127.0.0.1 \
+            -e DOMAIN=wallet.example.com -e 'NGINX_ENVSUBST_FILTER=^DOMAIN$' \
+            -v "$GITHUB_WORKSPACE/environment/nginx/templates/prod.conf.template:/etc/nginx/templates/default.conf.template:ro" \
+            -v "$RUNNER_TEMP/certs:/etc/letsencrypt:ro" \
+            digitalwallet-ci/nginx:check nginx -t
+
+  production-config:
+    name: Production config checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      IMAGE_PREFIX: ghcr.io/tysonng/digitalwallet
+      IMAGE_TAG: sha-0000000000000000000000000000000000000000
+      DOMAIN: wallet.example.com
+      POSTGRES_USER: ci_validate
+      POSTGRES_PASSWORD: validation-only
+      TOKEN_SECRET: validation-only-123456789012345678901234567890
+      SESSION_SECRET: validation-only-123456789012345678901234567890
+      MAIL_USERNAME: validation@example.com
+      MAIL_PASSWORD: validation-only
+      MINIO_ROOT_USER: validation
+      MINIO_ROOT_PASSWORD: validation-only
+      MEDIA_S3_ACCESS_KEY: validation
+      MEDIA_S3_SECRET_KEY: validation-only
+      GRAFANA_ADMIN_PASSWORD: validation-only
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Validate production Compose without printing credentials
+        run: docker compose -f environment/docker-compose.prod.yml config --quiet
+      - name: Check deployment script syntax
+        run: bash -n environment/scripts/deploy.sh environment/scripts/backup-db.sh
